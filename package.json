@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "jest __tests__",
-    "start": "ts-node src/index.ts",
-    "dev": "ts-node-dev src/index.ts",
+    "start": "bun run src/index.ts",
+    "dev": "bun run --hot src/index.ts",
     "build": "rm -rf ./dist/* && npm run lint && tsc",
     "lint": "npx eslint **/*.ts",
     "db:format": "prisma format",
@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "@prisma/client": "^5.20.0",
-    "@types/bun": "^1.1.10"
+    "@types/bun": "latest",
+    "hono": "^4.6.3"
   }
 }
