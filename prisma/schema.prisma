@@ -12,3 +12,22 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model NumberplateRequest {
+  id      Int    @id @default(autoincrement())
+  city    String @default("MS") @db.VarChar(3)
+  letters String @db.VarChar(2)
+  numbers String @db.VarChar(4)
+  status  Status @default(UNCHECKED)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  expiresAt DateTime?
+}
+
+enum Status {
+  UNCHECKED
+  NOT_AVAILABLE
+  AVAILABLE
+  RESERVED
+}
