@@ -25,9 +25,28 @@ model NumberplateRequest {
   expiresAt DateTime?
 }
 
+model RequestParams {
+  id           String     @id @default(cuid())
+  salutation   Salutation @default(HERR)
+  lastname     String
+  birthdate    DateTime
+  street       String
+  streetNumber String
+  zipcode      Int
+  city         String
+}
+
 enum Status {
   UNCHECKED
   NOT_AVAILABLE
   AVAILABLE
   RESERVED
+}
+
+enum Salutation {
+  HERR
+  FRAU
+  FIRMA
+  VEREIN
+  JURISTISCHE_PERSON
 }
