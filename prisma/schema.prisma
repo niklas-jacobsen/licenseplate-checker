@@ -17,7 +17,7 @@ model NumberplateRequest {
   city          String      @default("MS") @db.VarChar(3)
   letterRequest String      @db.VarChar(2)
   numberRequest String      @db.VarChar(4)
-  ckeckstatus   CheckStatus @default(UNCHECKED)
+  checkstatus   CheckStatus @default(UNCHECKED)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

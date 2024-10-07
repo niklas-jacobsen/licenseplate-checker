@@ -6,7 +6,7 @@
   "scripts": {
     "test": "jest __tests__",
     "start": "bun run src/index.ts",
-    "dev": "bun run --hot src/index.ts",
+    "dev": "bun run --watch src/index.ts",
     "build": "rm -rf ./dist/* && npm run lint && tsc",
     "lint": "npx eslint **/*.ts",
     "db:format": "prisma format",
@@ -28,6 +28,8 @@
   "dependencies": {
     "@prisma/client": "^5.20.0",
     "@types/bun": "latest",
-    "hono": "^4.6.3"
+    "dotenv": "^16.4.5",
+    "hono": "^4.6.3",
+    "prismock": "^1.33.3"
   }
 }
