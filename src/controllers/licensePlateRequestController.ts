@@ -1,9 +1,9 @@
 import { CheckStatus, Prisma } from "@prisma/client";
 import { prisma } from "../../prisma/data-source";
 
-class numberplateRequestController {
-  async create(data: Prisma.NumberplateRequestCreateInput) {
-    return prisma.numberplateRequest.create({ data });
+class licenseplateRequestController {
+  async create(data: Prisma.LicenseplateRequestCreateInput) {
+    return prisma.licenseplateRequest.create({ data });
   }
 
   async getById(id: {
@@ -11,7 +11,7 @@ class numberplateRequestController {
     letterRequest: string;
     numberRequest: string;
   }) {
-    return prisma.numberplateRequest.findUnique({
+    return prisma.licenseplateRequest.findUnique({
       where: {
         city_letterRequest_numberRequest: {
           city: id.city,
@@ -30,7 +30,7 @@ class numberplateRequestController {
     },
     checkstatus: CheckStatus
   ) {
-    return prisma.numberplateRequest.update({
+    return prisma.licenseplateRequest.update({
       where: {
         city_letterRequest_numberRequest: {
           city: id.city,
@@ -45,8 +45,8 @@ class numberplateRequestController {
   }
 
   //   async delete(id: string) {
-  //     return prisma.numberplateRequest.delete({ where: { id } });
+  //     return prisma.licenseplateRequest.delete({ where: { id } });
   //   }
 }
 
-export default numberplateRequestController;
+export default licenseplateRequestController;

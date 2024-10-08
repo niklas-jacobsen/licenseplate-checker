@@ -13,7 +13,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model NumberplateRequest {
+model LicenseplateRequest {
   city          String      @default("MS") @db.VarChar(3)
   letterRequest String      @db.VarChar(2)
   numberRequest String      @db.VarChar(4)
@@ -25,7 +25,7 @@ model NumberplateRequest {
   @@id([city, letterRequest, numberRequest])
 }
 
-model NumberplateResults {
+model LicenseplateResults {
   city              String            @db.VarChar(3)
   letters           String            @db.VarChar(2)
   numbers           Int
