@@ -1,21 +1,5 @@
 import { z } from "zod";
 
-export const zRequestScheme = z.object({
-  city: z.string(),
-  letters: z.string(),
-  numbers: z.string(),
-});
-
-export const zPlateIdScheme = z.object({
-  id: zRequestScheme,
-});
-
-export const zResponseScheme = z.object({
-  city: z.string(),
-  letters: z.string(),
-  numbers: z.number(),
-});
-
 //allows only 1-3 letter strings with up to three "?" substitutions or instead a single "*" as a wildcard character
 export const zLicensePlateCitySchema = z.string().refine(
   (val) =>
@@ -49,3 +33,19 @@ export const zLicensePlateNumbersSchema = z.string().refine(
       "Input must be 1-4 characters long, with numbers (1-9) or '?', or '*' alone.",
   }
 );
+
+export const zRequestScheme = z.object({
+  city: zLicensePlateCitySchema,
+  letters: zLicensePlateLettersSchema,
+  numbers: zLicensePlateNumbersSchema,
+});
+
+export const zPlateIdScheme = z.object({
+  id: zRequestScheme,
+});
+
+export const zResponseScheme = z.object({
+  city: z.string(),
+  letters: z.string(),
+  numbers: z.number(),
+});
