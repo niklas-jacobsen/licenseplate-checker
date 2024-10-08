@@ -1,19 +1,13 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
-import { z } from "zod";
-import numberplateRequestController from "../controllers/numberPlateRequestController";
+import { zRequestScheme } from "../validators/zodSchemes";
+import licenseplateRequestController from "../controllers/licensePlateRequestController";
 
-export const numberPlateRequestRouter = new Hono();
+export const licensePlateRequestRouter = new Hono();
 
-const requestController = new numberplateRequestController();
+const requestController = new licenseplateRequestController();
 
-const zRequestScheme = z.object({
-  city: z.string(),
-  letters: z.string(),
-  numbers: z.string(),
-});
-
-numberPlateRequestRouter.post(
+licensePlateRequestRouter.post(
   "/new",
   zValidator("json", zRequestScheme),
   async (c) => {
