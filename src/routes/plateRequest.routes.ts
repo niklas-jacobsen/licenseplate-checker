@@ -20,12 +20,20 @@ numberPlateRequestRouter.post("/new", async (c) => {
       numberRequest: body.id.numberRequest,
     })
   )
-    return c.json({ message: "error" }, 400);
+    return c.json(
+      { message: "A request with these parameters already exists" },
+      400
+    );
 
   await requestController.create({
     city: body.id.city,
     letterRequest: body.id.letterRequest,
     numberRequest: body.id.numberRequest,
   });
-  return c.text("Request added");
+  return c.json(
+    {
+      message: `Request ${body.id.city}-${body.id.letterRequest}-${body.id.numberRequest} was created successfully`,
+    },
+    200
+  );
 });
