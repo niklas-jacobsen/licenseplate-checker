@@ -30,6 +30,7 @@ licensePlateRequestRouter.post(
       letterRequest: body.letters,
       numberRequest: body.numbers,
     });
+
     return c.json(
       {
         message: `Request ${body.city}-${body.letters}-${body.numbers} was created successfully`,

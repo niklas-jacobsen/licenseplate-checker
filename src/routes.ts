@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { indexRouter } from "./routes/index.routes";
-import { licensePlateRequestRouter } from "./routes/plateRequest.routes";
+import { licensePlateRequestRouter } from "./routes/licensePlateRequest.routes";
 
 const router = new Hono();
 
