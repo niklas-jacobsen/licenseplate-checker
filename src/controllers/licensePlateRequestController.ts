@@ -1,22 +1,24 @@
 import { CheckStatus, Prisma } from "@prisma/client";
 import { prisma } from "../../prisma/data-source";
 
-class licenseplateRequestController {
+export interface LicensePlateRequestType {
+  city: string;
+  letters: string;
+  numbers: string;
+}
+
+class LicenseplateRequestController {
   async create(data: Prisma.LicenseplateRequestCreateInput) {
     return prisma.licenseplateRequest.create({ data });
   }
 
-  async getById(id: {
-    city: string;
-    letterRequest: string;
-    numberRequest: string;
-  }) {
+  async getById(id: LicensePlateRequestType) {
     return prisma.licenseplateRequest.findUnique({
       where: {
         city_letterRequest_numberRequest: {
           city: id.city,
-          letterRequest: id.letterRequest,
-          numberRequest: id.numberRequest,
+          letterRequest: id.letters,
+          numberRequest: id.numbers,
         },
       },
     });
@@ -49,4 +51,4 @@ class licenseplateRequestController {
   //   }
 }
 
-export default licenseplateRequestController;
+export default LicenseplateRequestController;
