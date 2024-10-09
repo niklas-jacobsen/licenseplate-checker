@@ -14,7 +14,7 @@ export const zLicensePlateCitySchema = z.string().refine(
 //allows only 1-2 letter strings with up to two "?" substitutions or instead a single "*" as a wildcard character
 export const zLicensePlateLettersSchema = z.string().refine(
   (val) =>
-    (val.length >= 1 && val.length <= 2 && /^[a-zA-ZÖÜäöü\?]*$/.test(val)) ||
+    (val.length >= 1 && val.length <= 2 && /^[a-zA-Z\?]*$/.test(val)) ||
     val === "*", // Allows 1-2 letters, "?", or exactly "*"
   {
     message:
