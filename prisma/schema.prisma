@@ -25,17 +25,18 @@ model LicenseplateRequest {
   @@id([city, letterRequest, numberRequest])
 }
 
-model LicenseplateResults {
+model LicenseplateQueries {
+  id                String            @id @default(cuid())
   city              String            @db.VarChar(3)
   letters           String            @db.VarChar(2)
   numbers           Int
   reservationStatus ReservationStatus
+  expiresOn         DateTime?
 
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  expiresAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@id([city, letters, numbers])
+  @@unique([id, city, letters, numbers])
 }
 
 model RequestParams {
@@ -47,6 +48,9 @@ model RequestParams {
   streetNumber String
   zipcode      Int
   city         String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum CheckStatus {
