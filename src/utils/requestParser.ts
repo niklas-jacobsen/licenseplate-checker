@@ -1,8 +1,8 @@
 import { zRequestScheme } from "../validators/zodSchemes";
 import LicenseplateRequestController, {
   LicensePlateRequestType,
-} from "../controllers/licensePlateRequestController";
-import { LicensePlateQueryType } from "../controllers/licensePlateQueryController";
+} from "../controllers/licensePlateRequest.controller";
+import { LicensePlateQueryType } from "../controllers/licensePlateQuery.controller";
 import { z } from "zod";
 
 export async function checkDataEntryAlreadyExists(
