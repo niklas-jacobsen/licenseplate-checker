@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { zRequestScheme } from "../validators/zodSchemes";
-import LicenseplateRequestController from "../controllers/licensePlateRequestController";
+import LicenseplateRequestController from "../controllers/licensePlateRequest.controller";
 import { checkDataEntryAlreadyExists } from "../utils/requestParser";
 
 export const licensePlateRequestRouter = new Hono();
