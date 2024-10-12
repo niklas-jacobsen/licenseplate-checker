@@ -13,6 +13,14 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model CityAbbreviation {
+  id   String @id @db.VarChar(3)
+  name String
+
+  //licenseplateRequests LicenseplateRequest[]
+  //licenseplateQuery LicenseplateQuery[]
+}
+
 model LicenseplateRequest {
   city          String      @default("MS") @db.VarChar(3)
   letterRequest String      @db.VarChar(2)
@@ -22,10 +30,12 @@ model LicenseplateRequest {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  //cityAbbreviation CityAbbreviation @relation(fields: [city], references: [id])
+
   @@id([city, letterRequest, numberRequest])
 }
 
-model LicenseplateQueries {
+model LicenseplateQuery {
   id                String            @id @default(cuid())
   city              String            @db.VarChar(3)
   letters           String            @db.VarChar(2)
@@ -36,10 +46,12 @@ model LicenseplateQueries {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  //cityAbbreviation CityAbbreviation @relation(fields: [city], references: [id])
+
   @@unique([id, city, letters, numbers])
 }
 
-model RequestParams {
+model RequestBody {
   id           String     @id @default(cuid())
   salutation   Salutation @default(HERR)
   lastname     String
