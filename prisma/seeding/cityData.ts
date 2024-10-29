@@ -337,7 +337,7 @@ export const cityData = [
   },
   {
     id: "BS",
-    name: "Brunswick (Braunschweig)",
+    name: "Braunschweig",
   },
   {
     id: "BSB",
@@ -1029,7 +1029,7 @@ export const cityData = [
   },
   {
     id: "H",
-    name: "Hanover (Hannover)",
+    name: "Hannover",
   },
   {
     id: "HA",
@@ -1157,7 +1157,7 @@ export const cityData = [
   },
   {
     id: "HM",
-    name: "Hamelin(Hameln)-Pyrmont",
+    name: "Hameln-Pyrmont",
   },
   {
     id: "HMU",
@@ -1317,7 +1317,7 @@ export const cityData = [
   },
   {
     id: "K",
-    name: "Cologne (Köln)",
+    name: "Köln",
   },
   {
     id: "KA",
@@ -1381,7 +1381,7 @@ export const cityData = [
   },
   {
     id: "KLE",
-    name: "Cleves (Kleve)",
+    name: "Kleve",
   },
   {
     id: "KLT",
@@ -1397,7 +1397,7 @@ export const cityData = [
   },
   {
     id: "KN",
-    name: "Constance (Konstanz)",
+    name: "Konstanz",
   },
   {
     id: "KO",
@@ -1629,7 +1629,7 @@ export const cityData = [
   },
   {
     id: "M",
-    name: "Munich (München)",
+    name: "München",
   },
   {
     id: "MA",
@@ -1853,7 +1853,7 @@ export const cityData = [
   },
   {
     id: "N",
-    name: "Nuremberg (Nürnberg)",
+    name: "Nürnberg",
   },
   {
     id: "NAB",
