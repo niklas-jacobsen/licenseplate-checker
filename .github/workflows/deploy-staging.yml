@@ -69,6 +69,8 @@ jobs:
         run: |-
           echo ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
           echo ${{ secrets.SERVICE_ACCOUNT }}
+          echo ${{ github.sha }}
+          echo ${{ env.PROJECT_ID }}
 
       # BEGIN - Docker auth and build
       #
