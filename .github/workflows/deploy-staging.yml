@@ -27,9 +27,11 @@
 #
 # 3. Change the values in the "env" block to match your values.
 
-name: "Build and Deploy to Cloud Run"
+name: "Build and Deploy to Staging Cloud Run"
 
 on:
+  workflow_dispatch:
+
   push:
     branches:
       - "staging"
