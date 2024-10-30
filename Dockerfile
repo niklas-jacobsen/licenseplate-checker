@@ -21,6 +21,7 @@ FROM base AS prerelease
 COPY --from=install /temp/dev/node_modules node_modules
 COPY . .
 
+RUN bunx prisma generate
 # [optional] tests & build
 # RUN bun test
 RUN bun run build
@@ -30,8 +31,6 @@ FROM base AS release
 COPY --from=install /temp/prod/node_modules node_modules
 COPY --from=prerelease /usr/src/app/index.ts .
 COPY --from=prerelease /usr/src/app/package.json .
-
-RUN bunx prisma generate
 
 # run the app
 USER bun
