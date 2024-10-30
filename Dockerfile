@@ -31,7 +31,7 @@ COPY --from=install /temp/prod/node_modules node_modules
 COPY --from=prerelease /usr/src/app/index.ts .
 COPY --from=prerelease /usr/src/app/package.json .
 
-#RUN bunx prisma generate
+RUN bunx prisma generate
 
 # run the app
 USER bun
