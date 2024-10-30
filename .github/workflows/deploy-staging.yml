@@ -65,6 +65,11 @@ jobs:
           workload_identity_provider: "${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}"
           service_account: "${{ secrets.SERVICE_ACCOUNT }}"
 
+      - name: "test secrets"
+        run: |-
+          echo ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
+          echo ${{ secrets.SERVICE_ACCOUNT }}
+
       # BEGIN - Docker auth and build
       #
       # If you already have a container image, you can omit these steps.
