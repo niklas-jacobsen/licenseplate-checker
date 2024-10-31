@@ -40,8 +40,6 @@ env:
   PROJECT_ID: "licenseplate-checker"
   REGION: "europe-west10"
   SERVICE: "licenseplate-checker-staging"
-  WORKLOAD_IDENTITY_PROVIDER: "projects/683398294242/locations/global/workloadIdentityPools/github/providers/staging-provider"
-  SERVICE_ACCOUNT: "staging-sa@licenseplate-checker.iam.gserviceaccount.com"
 
 jobs:
   deploy:
@@ -64,15 +62,16 @@ jobs:
         name: "Authenticate to Google Cloud"
         uses: "google-github-actions/auth@f112390a2df9932162083945e46d439060d66ec2" # google-github-actions/auth@v2
         with:
-          service_account: "${{ env.SERVICE_ACCOUNT }}"
-          workload_identity_provider: "${{ env.WORKLOAD_IDENTITY_PROVIDER }}"
+          service_account: "${{ secrets.SERVICE_ACCOUNT }}"
+          workload_identity_provider: "${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}"
 
-      - name: "test secrets"
-        run: |-
-          echo ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
-          echo ${{ secrets.SERVICE_ACCOUNT }}
-          echo ${{ github.sha }}
-          echo ${{ env.PROJECT_ID }}
+      - name: "Set up Cloud SDK"
+        uses: "google-github-actions/setup-gcloud@v2"
+        with:
+          version: "latest"
+
+      - name: "Use gcloud CLI"
+        run: "gcloud info"
 
       # BEGIN - Docker auth and build
       #
