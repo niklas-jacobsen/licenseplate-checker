@@ -24,7 +24,7 @@ COPY . .
 ARG DATABASE_URL
 ENV DATABASE_URL=$DATABASE_URL
 
-RUN npx prisma generate
+RUN bunx prisma generate
 # [optional] tests & build
 # RUN bun test
 RUN bun run build
@@ -39,7 +39,7 @@ COPY --from=prerelease /usr/src/app/package.json .
 USER bun
 EXPOSE 3000
 
-RUN npx prisma migrate deploy
+RUN bunx prisma migrate deploy
 
 ENTRYPOINT [ "bun", "run", "start" ]
 
