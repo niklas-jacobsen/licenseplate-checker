@@ -21,7 +21,10 @@ FROM base AS prerelease
 COPY --from=install /temp/dev/node_modules node_modules
 COPY . .
 
-RUN bunx prisma generate
+ARG DATABASE_URL
+ENV DATABASE_URL=$DATABASE_URL
+
+RUN npx prisma generate
 # [optional] tests & build
 # RUN bun test
 RUN bun run build
@@ -36,7 +39,7 @@ COPY --from=prerelease /usr/src/app/package.json .
 USER bun
 EXPOSE 3000
 
-#RUN bunx prisma migrate deploy
+RUN npx prisma migrate deploy
 
 ENTRYPOINT [ "bun", "run", "start" ]
 
