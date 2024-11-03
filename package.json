@@ -34,5 +34,8 @@
     "hono": "^4.6.3",
     "prisma": "^5.20.0",
     "zod": "^3.23.8"
+  },
+  "prisma": {
+    "schema": "prisma/schema.prisma"
   }
 }
