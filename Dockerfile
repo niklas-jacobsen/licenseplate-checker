@@ -3,6 +3,9 @@
 FROM oven/bun:1 AS base
 WORKDIR /usr/src/app
 
+ARG DATABASE_URL
+ENV DATABASE_URL=$DATABASE_URL
+
 # install dependencies into temp directory
 # this will cache them and speed up future builds
 FROM base AS install
@@ -21,9 +24,6 @@ FROM base AS prerelease
 COPY --from=install /temp/dev/node_modules node_modules
 COPY . .
 
-ARG DATABASE_URL
-ENV DATABASE_URL=$DATABASE_URL
-
 RUN bunx prisma generate
 # [optional] tests & build
 # RUN bun test
@@ -31,6 +31,10 @@ RUN bun run build
 
 # copy production dependencies and source code into final image
 FROM base AS release
+
+ARG DATABASE_URL
+ENV DATABASE_URL=$DATABASE_URL
+
 COPY --from=install /temp/prod/node_modules node_modules
 COPY --from=prerelease /usr/src/app .
 
