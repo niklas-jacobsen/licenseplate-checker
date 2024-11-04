@@ -3,6 +3,8 @@
 FROM oven/bun:1 AS base
 WORKDIR /usr/src/app
 
+ENV HOST 0.0.0.0
+
 ARG DATABASE_URL
 ENV DATABASE_URL=$DATABASE_URL
 
