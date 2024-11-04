@@ -42,7 +42,7 @@ COPY --from=prerelease /usr/src/app .
 USER bun
 EXPOSE 3000
 
-RUN bunx prisma migrate deploy
+#RUN bunx prisma migrate deploy
 
 ENTRYPOINT [ "bun", "run", "start" ]
 
