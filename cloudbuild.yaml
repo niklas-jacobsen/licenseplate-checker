@@ -6,7 +6,7 @@ steps:
         'build',
 
         '--build-arg',
-        'DATABASE_URL=$$DATABASE_URL',
+        'DATABASE_URL=$DATABASE_URL',
 
         '-t',
         'europe-west10-docker.pkg.dev/licenseplate-checker/licenseplate-checker-staging/licenseplate-checker-staging-image',
