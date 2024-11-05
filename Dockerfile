@@ -37,14 +37,16 @@ FROM base AS release
 ARG DATABASE_URL
 ENV DATABASE_URL=$DATABASE_URL
 
+RUN echo "DATABASE_URL is: $DATABASE_URL"
+
 COPY --from=install /temp/prod/node_modules node_modules
 COPY --from=prerelease /usr/src/app .
 
 # run the app
 USER bun
-EXPOSE 3000
+EXPOSE 8080
 
-#RUN bunx prisma migrate deploy
+RUN bunx prisma migrate deploy
 
 ENTRYPOINT [ "bun", "run", "start" ]
 
