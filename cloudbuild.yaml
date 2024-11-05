@@ -43,5 +43,5 @@ logsBucket: gs://licenseplate-checker-logs
 # Define secrets
 availableSecrets:
   secretManager:
-    - versionName: projects/licenseplate-checker/secrets/STAGING_DATABASE_URL/versions/1
+    - versionName: 'projects/licenseplate-checker/secrets/STAGING_DATABASE_URL/versions/1'
       env: 'DATABASE_URL'
