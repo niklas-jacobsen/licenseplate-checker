@@ -5,7 +5,7 @@ steps:
     args:
       - -c
       - |
-        docker build --build-arg=DATABASE_URL=$${STAGING_DATABASE_URL} -t europe-west10-docker.pkg.dev/licenseplate-checker/licenseplate-checker-staging/licenseplate-checker-staging-image .
+        docker build --build-arg=DATABASE_URL=$${STAGING_DATABASE_URL} -t europe-west10-docker.pkg.dev/licenseplate-checker/licenseplate-checker-staging/licenseplate-checker-image .
     secretEnv: ['STAGING_DATABASE_URL']
 
   # Push image to Artifact Registry
@@ -13,7 +13,7 @@ steps:
     args:
       [
         'push',
-        'europe-west10-docker.pkg.dev/licenseplate-checker/licenseplate-checker-staging/licenseplate-checker-staging-image',
+        'europe-west10-docker.pkg.dev/licenseplate-checker/licenseplate-checker-staging/licenseplate-checker-image',
       ]
 
   # Deploy to Cloud Run
@@ -24,7 +24,7 @@ steps:
       - 'deploy'
       - 'licenseplate-checker-staging-service'
       - '--image'
-      - 'europe-west10-docker.pkg.dev/licenseplate-checker/licenseplate-checker-staging/licenseplate-checker-staging-image'
+      - 'europe-west10-docker.pkg.dev/licenseplate-checker/licenseplate-checker-staging/licenseplate-checker-image'
       - '--region'
       - 'europe-west10'
       - '--platform'
