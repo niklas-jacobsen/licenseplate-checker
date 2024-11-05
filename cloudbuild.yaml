@@ -5,7 +5,7 @@ steps:
       [
         "build",
         "-t",
-        "europe-west10-docker.pkg.dev/licenseplate-checker/licenseplate-checker-staging/licenseplate-checker-image",
+        "europe-west10-docker.pkg.dev/licenseplate-checker/licenseplate-checker-staging/licenseplate-checker-staging-image",
         ".",
       ]
 
@@ -14,7 +14,7 @@ steps:
     args:
       [
         "push",
-        "europe-west10-docker.pkg.dev/licenseplate-checker/licenseplate-checker-staging/licenseplate-checker-image",
+        "europe-west10-docker.pkg.dev/licenseplate-checker/licenseplate-checker-staging/licenseplate-checker-staging-image",
       ]
 
   # Deploy to Cloud Run
@@ -23,9 +23,9 @@ steps:
     args:
       - "run"
       - "deploy"
-      - "licenseplate-checker-service"
+      - "licenseplate-checker-service-staging"
       - "--image"
-      - "europe-west10-docker.pkg.dev/licenseplate-checker/licenseplate-checker-staging/licenseplate-checker-image"
+      - "europe-west10-docker.pkg.dev/licenseplate-checker/licenseplate-checker-staging/licenseplate-checker-staging-image"
       - "--region"
       - "europe-west10"
       - "--platform"
