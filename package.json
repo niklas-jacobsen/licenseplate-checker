@@ -37,5 +37,8 @@
   },
   "prisma": {
     "schema": "prisma/schema.prisma"
+  },
+  "prettier": {
+    "singleQuote": true
   }
 }
