@@ -9,7 +9,7 @@ steps:
         ".",
 
         "--build-arg",
-        "DATABASE_URL=$$DATABASE_URL",
+        "DATABASE_URL=$DATABASE_URL",
       ]
     secretEnv: ["DATABASE_URL"]
 
