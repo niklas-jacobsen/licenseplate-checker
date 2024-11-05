@@ -3,7 +3,7 @@
 FROM oven/bun:1 AS base
 WORKDIR /usr/src/app
 
-ENV HOST 0.0.0.0
+ENV HOST=0.0.0.0
 
 # install dependencies into temp directory
 # this will cache them and speed up future builds
