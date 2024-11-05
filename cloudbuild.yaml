@@ -5,8 +5,7 @@ steps:
       [
         'build',
 
-        '--build-arg',
-        'DATABASE_URL=$${STAGING_DATABASE_URL}',
+        '--build-arg=DATABASE_URL=$${STAGING_DATABASE_URL}',
 
         '-t',
         'europe-west10-docker.pkg.dev/licenseplate-checker/licenseplate-checker-staging/licenseplate-checker-staging-image',
@@ -43,5 +42,5 @@ logsBucket: gs://licenseplate-checker-logs
 # Define secrets
 availableSecrets:
   secretManager:
-    - versionName: projects/$PROJECT_ID/secrets/STAGING_DATABASE_URL/versions/latest
+    - versionName: projects/683398294242/secrets/STAGING_DATABASE_URL/versions/latest
       env: STAGING_DATABASE_URL
