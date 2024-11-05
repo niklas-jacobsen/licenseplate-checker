@@ -1,16 +1,11 @@
 steps:
   # Build Docker image
   - name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
     args:
-      [
-        'build',
-
-        '--build-arg=DATABASE_URL=$${STAGING_DATABASE_URL}',
-
-        '-t',
-        'europe-west10-docker.pkg.dev/licenseplate-checker/licenseplate-checker-staging/licenseplate-checker-staging-image',
-        '.',
-      ]
+      - -c
+      - |
+        build --build-arg=DATABASE_URL=$${STAGING_DATABASE_URL} -t europe-west10-docker.pkg.dev/licenseplate-checker/licenseplate-checker-staging/licenseplate-checker-staging-image .
     secretEnv: ['STAGING_DATABASE_URL']
 
   # Push image to Artifact Registry
