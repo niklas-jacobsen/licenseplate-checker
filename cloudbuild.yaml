@@ -7,7 +7,11 @@ steps:
         "-t",
         "europe-west10-docker.pkg.dev/licenseplate-checker/licenseplate-checker-staging/licenseplate-checker-staging-image",
         ".",
+
+        "--build-arg",
+        "DATABASE_URL=$$DATABASE_URL",
       ]
+    secretEnv: ["DATABASE_URL"]
 
   # Push image to Artifact Registry
   - name: "gcr.io/cloud-builders/docker"
@@ -23,7 +27,7 @@ steps:
     args:
       - "run"
       - "deploy"
-      - "licenseplate-checker-service-staging"
+      - "licenseplate-checker-staging-service"
       - "--image"
       - "europe-west10-docker.pkg.dev/licenseplate-checker/licenseplate-checker-staging/licenseplate-checker-staging-image"
       - "--region"
@@ -34,3 +38,9 @@ steps:
 
 # Specify logs bucket
 logsBucket: gs://licenseplate-checker-logs
+
+# Define secrets
+availableSecrets:
+  secretManager:
+    - versionName: projects/licenseplate-checker/secrets/STAGING_DATABASE_URL/versions/1
+      env: "DATABASE_URL"

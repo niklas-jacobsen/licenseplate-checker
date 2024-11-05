@@ -5,9 +5,6 @@ WORKDIR /usr/src/app
 
 ENV HOST 0.0.0.0
 
-ARG DATABASE_URL
-ENV DATABASE_URL=$DATABASE_URL
-
 # install dependencies into temp directory
 # this will cache them and speed up future builds
 FROM base AS install
