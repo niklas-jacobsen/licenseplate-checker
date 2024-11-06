@@ -44,5 +44,5 @@ EXPOSE 8080
 #RUN bunx prisma migrate deploy
 
 # Use ENTRYPOINT to run the migration before starting the app
-ENTRYPOINT ["sh", "-c", "bunx prisma migrate deploy && bun run start"]
+ENTRYPOINT ["sh", "-c", "bunx prisma migrate deploy && bun run db:seed && bun run start"]
 

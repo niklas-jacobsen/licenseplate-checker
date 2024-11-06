@@ -14,6 +14,7 @@
     "db:generate": "npm run db:format && prisma generate",
     "db:migrate": "npm run db:generate && prisma migrate dev --name migration",
     "db:reset": "prisma migrate reset --force && npm run db:migrate",
+    "db:seed": "node prisma/seeding/seed.js",
     "start:migrate:prod": "prisma migrate deploy && node dist/src/index.js"
   },
   "keywords": [],
