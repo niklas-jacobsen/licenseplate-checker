@@ -1,5 +1,5 @@
-import { Prisma } from "@prisma/client";
-import { prisma } from "../../prisma/data-source";
+import { Prisma } from '@prisma/client';
+import { prisma } from '../../prisma/data-source';
 
 export interface CityDataType {
   id: string;
@@ -9,6 +9,10 @@ export interface CityDataType {
 class CityDataController {
   async create(data: Prisma.CityAbbreviationCreateInput) {
     return prisma.cityAbbreviation.create({ data });
+  }
+
+  async getAll() {
+    return prisma.cityAbbreviation.findMany();
   }
 }
 
