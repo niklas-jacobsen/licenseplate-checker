@@ -1,5 +1,5 @@
-import { CheckStatus, Prisma } from "@prisma/client";
-import { prisma } from "../../prisma/data-source";
+import { CheckStatus, Prisma } from '@prisma/client';
+import { prisma } from '../../prisma/data-source';
 
 export interface LicensePlateRequestType {
   city: string;

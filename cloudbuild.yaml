@@ -29,7 +29,7 @@ steps:
       - 'europe-west10'
       - '--platform'
       - 'managed'
-      - '--allow-unauthenticated' # Remove if you want restricted access
+      - '--allow-unauthenticated'
 
 # Specify logs bucket
 logsBucket: gs://licenseplate-checker-logs

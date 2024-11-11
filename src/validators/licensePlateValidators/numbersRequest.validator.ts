@@ -4,7 +4,7 @@ import { z } from 'zod';
 const zLicensePlateNumbersSchema = z.string().superRefine((val, ctx) => {
   // Allow the special case of a single "*"
   if (val === '*') {
-    return; // "*" is valid, so exit early
+    return;
   }
 
   // Check for length constraints
