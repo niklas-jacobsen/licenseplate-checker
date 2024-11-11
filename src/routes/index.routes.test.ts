@@ -16,8 +16,4 @@ describe('When GET /', async () => {
     const json = await res.json();
     expect(json).toEqual({ message: 'Licenseplate-Checker running' });
   });
-
-  it('should fail for testing PR workflow', async () => {
-    expect(1).toBe(2);
-  });
 });
