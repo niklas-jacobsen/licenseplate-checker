@@ -23,6 +23,8 @@
   "devDependencies": {
     "@types/bun": "latest",
     "@types/node": "^22.7.4",
+    "@types/bcrypt": "^5.0.2",
+    "@types/jsonwebtoken": "^9.0.7",
     "prismock": "^1.33.3",
     "ts-node": "^10.9.2",
     "typescript": "^5.6.2"
@@ -31,8 +33,11 @@
     "@hono/zod-validator": "^0.4.1",
     "@playwright/test": "^1.47.2",
     "@prisma/client": "^5.20.0",
+    "bcrypt": "^5.1.1",
     "dotenv": "^16.4.5",
     "hono": "^4.6.3",
+    "hono-rate-limiter": "^0.4.0",
+    "jsonwebtoken": "^9.0.2",
     "prisma": "^5.20.0",
     "zod": "^3.23.8"
   },
