@@ -1,18 +1,18 @@
-import { Hono } from "hono";
-import { zValidator } from "@hono/zod-validator";
-import { zRequestScheme } from "../validators/zodSchemes";
-import LicenseplateRequestController from "../controllers/licensePlateRequest.controller";
-import { checkDataEntryAlreadyExists } from "../utils/requestParser";
+import { Hono } from 'hono';
+import { zValidator } from '@hono/zod-validator';
+import { zRequestScheme } from '../validators/zodSchemes';
+import LicenseplateRequestController from '../controllers/LicensePlateRequest.controller';
+import { checkDataEntryAlreadyExists } from '../utils/requestParser';
 
 export const licensePlateRequestRouter = new Hono();
 
 const requestController = new LicenseplateRequestController();
 
 licensePlateRequestRouter.post(
-  "/new",
-  zValidator("json", zRequestScheme),
+  '/new',
+  zValidator('json', zRequestScheme),
   async (c) => {
-    const body = await c.req.valid("json");
+    const body = await c.req.valid('json');
 
     // if (
     //   await requestController.getById({
@@ -29,7 +29,7 @@ licensePlateRequestRouter.post(
     if (await checkDataEntryAlreadyExists(requestController, body)) {
       return c.json(
         {
-          message: "A request with these parameters already exists",
+          message: 'A request with these parameters already exists',
         },
         400
       );

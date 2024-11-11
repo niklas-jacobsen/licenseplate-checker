@@ -1,9 +1,9 @@
-import { zRequestScheme } from "../validators/zodSchemes";
+import { zRequestScheme } from '../validators/zodSchemes';
 import LicenseplateRequestController, {
   LicensePlateRequestType,
-} from "../controllers/licensePlateRequest.controller";
-import { LicensePlateQueryType } from "../controllers/licensePlateQuery.controller";
-import { z } from "zod";
+} from '../controllers/LicensePlateRequest.controller';
+import { LicensePlateQueryType } from '../controllers/LicensePlateQuery.controller';
+import { z } from 'zod';
 
 export async function checkDataEntryAlreadyExists(
   controller: LicenseplateRequestController,
@@ -21,7 +21,9 @@ export async function checkDataEntryAlreadyExists(
   return false;
 }
 
-export async function parseRequest(request: z.infer<typeof zRequestScheme>) {}
+export async function generateQueriesFromRequest(
+  request: z.infer<typeof zRequestScheme>
+) {}
 
 // // Function to generate combinations based on the rules
 // function generateCombinations(input: string, isNumber: boolean): string[] {

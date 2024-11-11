@@ -1,4 +1,4 @@
-import { prisma } from "../../prisma/data-source";
-import { LicensePlateRequestType } from "./licensePlateRequest.controller";
+import { prisma } from '../../prisma/data-source';
+import { LicensePlateRequestType } from './LicensePlateRequest.controller';
 
 export type LicensePlateQueryType = { id: string } & LicensePlateRequestType;

@@ -1,4 +1,4 @@
-import CityDataController from '../../src/controllers/cityData.controller';
+import CityDataController from '../../src/controllers/CityData.controller';
 import { prisma } from '../data-source';
 import { cityData } from './cityData';
 
