@@ -18,18 +18,20 @@ model CityAbbreviation {
   name String
 
   //licenseplateRequests LicenseplateRequest[]
-  //licenseplateQuery LicenseplateQuery[]
+  licenseplateQuery LicenseplateQuery[]
 }
 
 model LicenseplateRequest {
-  city          String      @default("MS") @db.VarChar(3)
+  city          String      @db.VarChar(3)
   letterRequest String      @db.VarChar(2)
   numberRequest String      @db.VarChar(4)
+  //userId        String
   checkstatus   CheckStatus @default(UNCHECKED)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  //user             User             @relation(fields: [userId], references: [id])
   //cityAbbreviation CityAbbreviation @relation(fields: [city], references: [id])
 
   @@id([city, letterRequest, numberRequest])
@@ -40,20 +42,27 @@ model LicenseplateQuery {
   city              String            @db.VarChar(3)
   letters           String            @db.VarChar(2)
   numbers           Int
+  userId            String
   reservationStatus ReservationStatus
   expiresOn         DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  //cityAbbreviation CityAbbreviation @relation(fields: [city], references: [id])
+  user             User             @relation(fields: [userId], references: [id])
+  cityAbbreviation CityAbbreviation @relation(fields: [city], references: [id])
 
   @@unique([id, city, letters, numbers])
 }
 
-model RequestBody {
-  id           String     @id @default(cuid())
-  salutation   Salutation @default(HERR)
+model User {
+  id         String     @id @default(cuid())
+  salutation Salutation
+
+  email    String @unique
+  password String
+
+  firstname    String
   lastname     String
   birthdate    DateTime
   street       String
@@ -63,6 +72,9 @@ model RequestBody {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  licenseplateQuery LicenseplateQuery[]
+  //licenseplateRequest LicenseplateRequest[]
 }
 
 enum CheckStatus {
