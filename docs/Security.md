@@ -17,7 +17,6 @@ It is recommended to first read the general README file located in the project's
 | Access to GitHub account                   | Low            | Enable two-factor authentication (2FA) and use a hardware security key; limit permissions; regularly review account access logs.                                                |
 | Access to Google Cloud                     | Low            | Use least-privilege access principles; implement identity and access management (IAM) roles with minimal required permissions; enable audit logging.                            |
 | Google Cloud data loss or data leak        | Low            | Regularly back up data to a separate location; use data encryption; implement monitoring; establish disaster recovery and incident response plans.                              |
-|                                            |                |
 
 ## Mitigations implemented
 

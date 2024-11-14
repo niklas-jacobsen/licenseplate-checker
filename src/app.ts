@@ -1,4 +1,4 @@
-import { Hono } from 'hono';
+import { Hono, Context, Next } from 'hono';
 import { secureHeaders } from 'hono/secure-headers';
 import auth from './middleware/auth';
 import limiter from './middleware/rateLimiter';
@@ -10,6 +10,5 @@ app.use(secureHeaders());
 app.use(limiter);
 app.use(corsMiddleware);
 app.use('/user/*', auth);
-
 app.route('', router);
 export default app;

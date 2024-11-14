@@ -8,8 +8,39 @@ export interface LicensePlateRequestType {
 }
 
 class LicenseplateRequestController {
-  async create(data: Prisma.LicenseplateRequestCreateInput) {
-    return prisma.licenseplateRequest.create({ data });
+  async createRequest(
+    city: string,
+    letterRequest: string,
+    numberRequest: string,
+    userId: string
+  ) {
+    try {
+      const cityExists = await prisma.cityAbbreviation.findUniqueOrThrow({
+        where: { id: city },
+      });
+
+      if (!cityExists) {
+        return console.error('error');
+      }
+
+      return prisma.licenseplateRequest.create({
+        data: {
+          city: city,
+          letterRequest: letterRequest,
+          numberRequest: numberRequest,
+          user: {
+            connect: {
+              id: userId,
+            },
+          },
+        },
+        include: {
+          user: true,
+        },
+      });
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   async getById(id: LicensePlateRequestType) {
