@@ -5,10 +5,16 @@ frequently performing a users requested license plate patterns on the correspond
 
 ## Table of Contents
 
+- [Dictionary](#dictionary)
 - [Techstack](#techstack)
 - [Running this project locally](#running-this-project-locally)
 - [Routes](#routes)
+- [Security](#security)
 - [Code analysis tools](#code-analysis-tools)
+
+## Dictionary
+
+A detailed list of definitions for terms used in this project can be found in [Dictionary](./docs/Dictionary.md)
 
 ## Techstack
 
@@ -34,6 +40,9 @@ PORT=ADD_BACKEND_PORT_HERE # Default: 8080
 # Node environment
 NODE_ENV=DEVELOPMENT
 
+# URLs allowed for cross origin resource sharing (CORS) seperated by commas ','
+ALLOWED_ORIGINS=ALLOWED_URLS
+
 # Postgres database URL
 DATABASE_URL=ADD_DATABASE_URL_HERE # Default can be copied from docker-compose.yml
 
@@ -50,7 +59,19 @@ JWT_SECRET=ADD_JWT_SECRET_HERE
 
 ## Routes
 
+The following routes are currently available
+
+- `GET /` - Index Route
+- `POST /auth/register` - Register a user account with `email` and `password`
+- `POST /auth/login` - Login with `email` and `password`
+- `POST /request/new` - Create a new licenseplate request with `city`, `letters` and `numbers`
+
+## Security
+
+Information on this topic can be found in the [Security.md](./docs/Security.md)
+
 ## Code analysis tools
 
 - prettier
 - eslint
+- GitHub CodeQL
