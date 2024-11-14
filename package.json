@@ -9,6 +9,8 @@
     "prettier": "prettier --write src/**/*.ts",
     "build": "rm -rf ./dist/* && tsc",
     "lint": "eslint --fix src/**/*.ts",
+    "test:unit": "bun test src/**/*.unit.test.ts",
+    "test:int": "bun test src/**/*.int.test.ts",
     "db:format": "prisma format",
     "db:generate": "bun run db:format && prisma generate",
     "db:migrate": "bun run db:generate && prisma migrate dev --name migration",
