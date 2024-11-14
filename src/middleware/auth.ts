@@ -1,11 +1,6 @@
-import { Secret, JwtPayload } from 'jsonwebtoken';
+import { JwtPayload } from 'jsonwebtoken';
 import AuthController from '../controllers/Authorization.controller';
 import { Context, Next } from 'hono';
-
-export const SECRET_KEY: Secret = process.env.JWT_SECRET ?? '';
-if (!SECRET_KEY) {
-  throw new Error('JWT_SECRET not set in .env');
-}
 
 export interface CustomRequest extends Request {
   token: string | JwtPayload;

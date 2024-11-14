@@ -1,8 +1,7 @@
 import app from './app';
-
-const PORT = process.env.PORT || 8080;
+import { ENV } from './env';
 
 export default {
-  port: PORT,
+  port: ENV.PORT,
   fetch: app.fetch,
 };

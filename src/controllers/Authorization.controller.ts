@@ -1,6 +1,6 @@
-import { Secret, verify, sign } from 'jsonwebtoken';
+import { verify, sign } from 'jsonwebtoken';
 import * as bcrypt from 'bcrypt';
-import { SECRET_KEY } from '../middleware/auth';
+import { ENV } from '../env';
 
 class AuthController {
   async hashPassword(plainPassword: string, saltRounds: number = 10) {
@@ -16,7 +16,7 @@ class AuthController {
       {
         sub: userId,
       },
-      SECRET_KEY,
+      ENV.JWT_SECRET,
       { expiresIn: '30 minutes' }
     );
     return token;
@@ -24,7 +24,7 @@ class AuthController {
 
   async verifyJWT(token: string) {
     try {
-      const payload = verify(token, SECRET_KEY);
+      const payload = verify(token, ENV.JWT_SECRET);
       return payload.sub;
     } catch (error) {
       console.error(error);
