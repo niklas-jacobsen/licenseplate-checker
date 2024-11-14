@@ -17,22 +17,22 @@ model CityAbbreviation {
   id   String @id @db.VarChar(3)
   name String
 
-  //licenseplateRequests LicenseplateRequest[]
-  licenseplateQuery LicenseplateQuery[]
+  licenseplateRequests LicenseplateRequest[]
+  licenseplateQuery    LicenseplateQuery[]
 }
 
 model LicenseplateRequest {
   city          String      @db.VarChar(3)
   letterRequest String      @db.VarChar(2)
   numberRequest String      @db.VarChar(4)
-  //userId        String
+  userId        String
   checkstatus   CheckStatus @default(UNCHECKED)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  //user             User             @relation(fields: [userId], references: [id])
-  //cityAbbreviation CityAbbreviation @relation(fields: [city], references: [id])
+  user             User             @relation(fields: [userId], references: [id])
+  cityAbbreviation CityAbbreviation @relation(fields: [city], references: [id])
 
   @@id([city, letterRequest, numberRequest])
 }
@@ -56,25 +56,23 @@ model LicenseplateQuery {
 }
 
 model User {
-  id         String     @id @default(cuid())
-  salutation Salutation
-
-  email    String @unique
-  password String
-
-  firstname    String
-  lastname     String
-  birthdate    DateTime
-  street       String
-  streetNumber String
-  zipcode      Int
-  city         String
+  id           String      @id @default(cuid())
+  email        String      @unique
+  password     String
+  salutation   Salutation?
+  firstname    String?
+  lastname     String?
+  birthdate    DateTime?
+  street       String?
+  streetNumber String?
+  zipcode      Int?
+  city         String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  licenseplateQuery LicenseplateQuery[]
-  //licenseplateRequest LicenseplateRequest[]
+  licenseplateQuery   LicenseplateQuery[]
+  licenseplateRequest LicenseplateRequest[]
 }
 
 enum CheckStatus {
