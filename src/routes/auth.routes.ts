@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { ENV } from '../env';
-import { auth } from '../middleware/auth';
+import auth from '../middleware/auth';
 import { zValidator } from '@hono/zod-validator';
 import UserController from '../controllers/User.controller';
 import { zUserScheme } from '../validators/zodSchemes';

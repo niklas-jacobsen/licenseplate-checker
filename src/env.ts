@@ -5,6 +5,10 @@ const zEnvScheme = z.object({
   NODE_ENV: z
     .enum(['development', 'staging', 'production', 'test'])
     .default('development'),
+  ALLOWED_ORIGINS: z
+    .string()
+    .min(1, 'ALLOWED_ORIGINS is required')
+    .transform((origins) => origins.split(',').map((origin) => origin.trim())),
   DATABASE_URL: z.string().min(1, { message: 'DATABASE_URL is required' }),
   JWT_SECRET: z.string().min(1, { message: 'JWT_SECRET is required' }),
   FORCE_SEED: z.coerce.boolean().default(false),

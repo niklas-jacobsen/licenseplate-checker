@@ -6,7 +6,7 @@ export interface CustomRequest extends Request {
   token: string | JwtPayload;
 }
 
-export const auth = async (c: Context, next: Next) => {
+const auth = async (c: Context, next: Next) => {
   const authController = new AuthController();
   try {
     const token = c.req.header('Authorization')?.replace('Bearer ', '');
@@ -28,3 +28,5 @@ export const auth = async (c: Context, next: Next) => {
     return c.json({ status: 'error', message: 'Could not authenticate' }, 401);
   }
 };
+
+export default auth;
