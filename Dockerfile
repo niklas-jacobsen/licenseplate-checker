@@ -24,8 +24,9 @@ COPY --from=install /temp/dev/node_modules node_modules
 COPY . .
 
 RUN bunx prisma generate
-# [optional] tests & build
-# RUN bun test
+# tests, lint & build
+RUN bun lint
+RUN bun test
 RUN bun run build
 
 # copy production dependencies and source code into final image
@@ -41,8 +42,6 @@ COPY --from=prerelease /usr/src/app .
 USER bun
 EXPOSE 8080
 
-#RUN bunx prisma migrate deploy
-
-# Use ENTRYPOINT to run the migration before starting the app
+# Run the migration before starting the app
 ENTRYPOINT ["sh", "-c", "bunx prisma migrate deploy && bun run db:seed && bun run start"]
 
