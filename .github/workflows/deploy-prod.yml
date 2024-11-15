@@ -30,24 +30,22 @@
 #
 # 3. Change the values in the "env" block to match your values.
 
-name: 'Build and Deploy to Staging Cloud Run'
+name: 'Build and Deploy to Production Cloud Run'
 
 on:
-  workflow_dispatch:
-
   push:
     branches:
-      - 'staging'
+      - 'main'
 
 env:
   PROJECT_ID: 'licenseplate-checker'
   REGION: 'europe-west10'
-  SERVICE: 'licenseplate-checker-staging'
+  SERVICE: 'licenseplate-checker-production'
 
 jobs:
   deploy:
     runs-on: 'ubuntu-latest'
-    environment: 'staging'
+    environment: 'production'
 
     permissions:
       contents: 'read'
@@ -65,8 +63,8 @@ jobs:
         name: 'Authenticate to Google Cloud'
         uses: 'google-github-actions/auth@f112390a2df9932162083945e46d439060d66ec2' # google-github-actions/auth@v2
         with:
-          service_account: '${{ secrets.SERVICE_ACCOUNT }}'
           workload_identity_provider: '${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}'
+          service_account: '${{ secrets.SERVICE_ACCOUNT }}'
 
       # BEGIN - Docker auth and build
       #
@@ -81,7 +79,7 @@ jobs:
       - name: 'Build and Push Container'
         run: |-
           DOCKER_TAG="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:${{ github.sha }}"
-          docker build --build-arg DATABASE_URL=${{ secrets.DATABASE_URL }} --tag "${DOCKER_TAG}" .
+          docker build --tag "${DOCKER_TAG}" .
           docker push "${DOCKER_TAG}"
       - name: 'Deploy to Cloud Run'
         # END - Docker auth and build

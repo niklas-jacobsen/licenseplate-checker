@@ -1,0 +1,34 @@
+services:
+  app:
+    container_name: licenseplate-checker
+    build: .
+    ports:
+      - '8080:8080'
+    environment:
+      PORT: 8080
+      DATABASE_URL: postgresql://postgres:admin@localhost:5432/mydb?schema=public
+      NODE_ENV: development
+      FORCE_SEED: false
+    depends_on:
+      - db
+    restart: always
+
+  db:
+    image: postgres:17
+    container_name: licenseplate-checker-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: mydb
+      POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 10s
+      retries: 5
+
+volumes:
+  postgres_data:

@@ -4,34 +4,49 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "jest __tests__",
     "start": "bun run src/index.ts",
     "dev": "bun run --watch src/index.ts",
-    "build": "rm -rf ./dist/* && npm run lint && tsc",
-    "lint": "npx eslint **/*.ts",
+    "prettier": "prettier --write src/**/*.ts",
+    "build": "rm -rf ./dist/* && tsc",
+    "lint": "eslint --fix src/**/*.ts",
+    "test:unit": "bun test src/**/*.unit.test.ts",
+    "test:int": "bun test src/**/*.int.test.ts",
     "db:format": "prisma format",
-    "db:generate": "npm run db:format && prisma generate",
-    "db:migrate": "npm run db:generate && prisma migrate dev --name migration",
-    "db:reset": "prisma migrate reset --force && npm run db:migrate",
+    "db:generate": "bun run db:format && prisma generate",
+    "db:migrate": "bun run db:generate && prisma migrate dev --name migration",
+    "db:reset": "prisma migrate reset --force && bun run db:migrate && bun run db:seed",
+    "db:seed": "bun run prisma/seeding/seed.js",
     "start:migrate:prod": "prisma migrate deploy && node dist/src/index.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@playwright/test": "^1.47.2",
-    "@types/node": "^22.7.4",
-    "prisma": "^5.20.0",
+    "@eslint/js": "^9.14.0",
+    "@types/bcrypt": "^5.0.2",
+    "@types/bun": "^1.1.13",
+    "@types/jsonwebtoken": "^9.0.7",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.3.3",
+    "prismock": "^1.33.3",
     "ts-node": "^10.9.2",
-    "typescript": "^5.6.2"
+    "typescript": "^5.6.2",
+    "typescript-eslint": "^8.14.0"
   },
   "dependencies": {
     "@hono/zod-validator": "^0.4.1",
+    "@playwright/test": "^1.47.2",
     "@prisma/client": "^5.20.0",
-    "@types/bun": "latest",
+    "bcrypt": "^5.1.1",
     "dotenv": "^16.4.5",
+    "eslint": "^9.14.0",
     "hono": "^4.6.3",
-    "prismock": "^1.33.3",
+    "hono-rate-limiter": "^0.4.0",
+    "jsonwebtoken": "^9.0.2",
+    "prisma": "^5.20.0",
     "zod": "^3.23.8"
+  },
+  "prisma": {
+    "schema": "prisma/schema.prisma"
   }
 }
