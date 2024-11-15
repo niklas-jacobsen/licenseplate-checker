@@ -52,6 +52,12 @@ FORCE_SEED="false"
 # JWT secret
 JWT_SECRET=ADD_JWT_SECRET_HERE
 
+# Time window in which the rate limit resets
+RATE_LIMIT_WINDOW=900000 # 900000ms equals 15 minutes
+
+# Maximum allowed requests per IP in the above time window
+RATE_LIMIT_MAX_REQUESTS=100
+
 ```
 
 4. run `bun install` to install dependencies
