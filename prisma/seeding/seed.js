@@ -1,14 +1,14 @@
-import CityDataController from '../../src/controllers/cityData.controller';
+import CityController from '../../src/controllers/City.controller';
 import { prisma } from '../data-source';
 import { cityData } from './cityData';
 
 const forceSeed = process.env.FORCE_SEED === 'true';
-const cityDataController = new CityDataController();
+const cityController = new CityController();
 
 async function seedCityData() {
   console.log('Starting seeding script.');
   try {
-    const existingCityData = await cityDataController.getAll();
+    const existingCityData = await cityController.getAll();
 
     if (existingCityData.length > 0 && !forceSeed) {
       console.log('Data already exists. Skipping seeding.');
@@ -20,7 +20,7 @@ async function seedCityData() {
         where: { id: city.id, name: city.name },
       });
       if (!cityExists) {
-        cityDataController.create({
+        cityController.create({
           id: city.id,
           name: city.name,
         });

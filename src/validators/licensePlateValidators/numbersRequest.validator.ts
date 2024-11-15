@@ -1,17 +1,17 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 //allows 1-4 digit strings with no leading zeroes, up to four "?" substitutions or instead a single "*" as a wildcard character
-export const zLicensePlateNumbersSchema = z.string().superRefine((val, ctx) => {
+const zLicensePlateNumbersSchema = z.string().superRefine((val, ctx) => {
   // Allow the special case of a single "*"
-  if (val === "*") {
-    return; // "*" is valid, so exit early
+  if (val === '*') {
+    return;
   }
 
   // Check for length constraints
   if (val.length < 1 || val.length > 4) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: "Input must be 1-4 characters long.",
+      message: 'Input must be 1-4 characters long.',
     });
     return;
   }
@@ -20,7 +20,7 @@ export const zLicensePlateNumbersSchema = z.string().superRefine((val, ctx) => {
   if (/^0/.test(val)) {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: "Input cannot have leading zeros.",
+      message: 'Input cannot have leading zeros.',
     });
     return;
   }
@@ -35,3 +35,5 @@ export const zLicensePlateNumbersSchema = z.string().superRefine((val, ctx) => {
     return;
   }
 });
+
+export default zLicensePlateNumbersSchema;

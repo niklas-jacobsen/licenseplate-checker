@@ -1,12 +1,13 @@
 import { Prisma } from '@prisma/client';
 import { prisma } from '../../prisma/data-source';
+import { where } from 'prismock/build/main/lib/operations';
 
-export interface CityDataType {
+export interface CityType {
   id: string;
   name: string;
 }
 
-class CityDataController {
+class CityController {
   async create(data: Prisma.CityAbbreviationCreateInput) {
     return prisma.cityAbbreviation.create({ data });
   }
@@ -14,6 +15,14 @@ class CityDataController {
   async getAll() {
     return prisma.cityAbbreviation.findMany();
   }
+
+  async getById(cityId: string) {
+    return prisma.cityAbbreviation.findFirst({
+      where: {
+        id: cityId,
+      },
+    });
+  }
 }
 
-export default CityDataController;
+export default CityController;

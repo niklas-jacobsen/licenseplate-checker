@@ -1,0 +1,30 @@
+name: 'Run Linter and Tests on Pull Request to Staging'
+
+on:
+  pull_request:
+    branches:
+      - 'staging'
+
+jobs:
+  lint-and-test:
+    runs-on: 'ubuntu-latest'
+
+    steps:
+      - name: 'Checkout code'
+        uses: 'actions/checkout@v4'
+
+      - name: 'Set up Bun'
+        uses: 'oven-sh/setup-bun@v2'
+        with:
+          bun-version: 'latest'
+
+      - name: 'Install dependencies'
+        run: 'bun install'
+
+      - name: 'Run ESLint'
+        run: 'bun lint'
+        continue-on-error: false
+
+      - name: 'Run Tests'
+        run: 'bun test'
+        continue-on-error: false
