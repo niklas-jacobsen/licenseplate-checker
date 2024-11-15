@@ -11,25 +11,16 @@ class AuthController {
     return bcrypt.compare(plainPassword, hashedPassword);
   }
 
-  generateJWT(userId: string) {
-    const token = sign(
-      {
-        sub: userId,
-      },
-      ENV.JWT_SECRET,
-      { expiresIn: '30 minutes' }
-    );
+  async generateJWT(userId: string, secret: string = ENV.JWT_SECRET) {
+    const token = sign({ sub: userId }, secret, {
+      expiresIn: '30 minutes',
+    });
     return token;
   }
 
-  async verifyJWT(token: string) {
-    try {
-      const payload = verify(token, ENV.JWT_SECRET);
-      return payload.sub;
-    } catch (error) {
-      console.error(error);
-      return false;
-    }
+  async verifyJWT(token: string, secret: string = ENV.JWT_SECRET) {
+    const payload = verify(token, secret);
+    return payload.sub;
   }
 }
 

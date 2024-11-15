@@ -10,5 +10,6 @@ app.use(secureHeaders());
 app.use(limiter);
 app.use(corsMiddleware);
 app.use('/user/*', auth);
+app.use('/request/*', auth);
 app.route('', router);
 export default app;
