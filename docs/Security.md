@@ -5,8 +5,14 @@ It is recommended to first read the general README file located in the project's
 
 ## Table of Contents
 
+- [Thread Model](#thread-model)
 - [Potential security concerns](#potential-security-concerns)
 - [Mitigations implemented](#mitigations-implemented)
+
+## Thread Model
+
+The thread model can be viewed [here](./assets/thread_model.png)
+It contains two versions, as the frontend is not yet implemented. The version including the frontend is for future reference.
 
 ## Potential security concerns
 
