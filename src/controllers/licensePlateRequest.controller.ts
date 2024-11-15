@@ -5,6 +5,7 @@ export interface LicensePlateRequestType {
   city: string;
   letters: string;
   numbers: string;
+  user: string;
 }
 
 class LicenseplateRequestController {
@@ -15,17 +16,21 @@ class LicenseplateRequestController {
     userId: string
   ) {
     try {
-      const cityExists = await prisma.cityAbbreviation.findUniqueOrThrow({
+      const cityExists = await prisma.cityAbbreviation.findFirstOrThrow({
         where: { id: city },
       });
 
       if (!cityExists) {
-        return console.error('error');
+        return new Error();
       }
 
       return prisma.licenseplateRequest.create({
         data: {
-          city: city,
+          cityAbbreviation: {
+            connect: {
+              id: city,
+            },
+          },
           letterRequest: letterRequest,
           numberRequest: numberRequest,
           user: {
@@ -36,6 +41,7 @@ class LicenseplateRequestController {
         },
         include: {
           user: true,
+          cityAbbreviation: true,
         },
       });
     } catch (error) {
@@ -46,10 +52,11 @@ class LicenseplateRequestController {
   async getById(id: LicensePlateRequestType) {
     return prisma.licenseplateRequest.findUnique({
       where: {
-        city_letterRequest_numberRequest: {
+        city_letterRequest_numberRequest_userId: {
           city: id.city,
           letterRequest: id.letters,
           numberRequest: id.numbers,
+          userId: id.user,
         },
       },
     });
@@ -60,15 +67,17 @@ class LicenseplateRequestController {
       city: string;
       letterRequest: string;
       numberRequest: string;
+      user: string;
     },
     checkstatus: CheckStatus
   ) {
     return prisma.licenseplateRequest.update({
       where: {
-        city_letterRequest_numberRequest: {
+        city_letterRequest_numberRequest_userId: {
           city: id.city,
           letterRequest: id.letterRequest,
           numberRequest: id.numberRequest,
+          userId: id.user,
         },
       },
       data: {
