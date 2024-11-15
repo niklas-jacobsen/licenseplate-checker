@@ -65,19 +65,41 @@ RATE_LIMIT_MAX_REQUESTS=100
 
 ## Routes
 
-The following routes are currently available
+The following routes are currently available.
+Testing them locally requires a tool like Postman or Insomnia.
 
 - `GET /` - Index Route
 - `POST /auth/register` - Register a user account with `email` and `password`
 - `POST /auth/login` - Login with `email` and `password`
 - `POST /request/new` - Create a new licenseplate request with `city`, `letters` and `numbers`
 
+More detailed documentation of the available routes can be found in [Routes](./docs/Routes.md)
+
+## Clean Code principles
+
+The following principles of clean code have been implemented.
+
+- Single purpose files and classes
+- Comprehensible file structure, with files serving only a single responsibility
+- Reusable code like validators and types
+- Clear error messages with appropriate status codes
+- Chained if-statements rather than if-else blocks to avoid nesting
+- Use of pure functions and intention revealing variables
+
 ## Security
 
-Information on this topic can be found in the [Security.md](./docs/Security.md)
+Hono was chosen as a framework as it provides many features out of the box resulting in less dependency on external packges.
+
+The `hono/secure-headers` module was used which provies a middleware for secure header configuration similar to [helmet](https://www.npmjs.com/package/helmet). Documentation can be found [here](https://hono.dev/docs/middleware/builtin/secure-headers#setting-content-security-policy)
+
+More information on the topic of risks and implemented measures can be found in [Security](./docs/Security.md)
 
 ## Code analysis tools
 
-- prettier
-- eslint
-- GitHub CodeQL
+**Prettier** - Used as an in editor extension as well as a step during linting to ensure code formatting is consistent and readable.
+
+**eslint** - Tool used for linting code before every commit and for every pull request created.
+
+**GitHub CodeQL** - Scanning code for security vulnerabilities on every commit and on a weekly basis. Prevents commits from containing secrets and detects vulnerabilites.
+
+**Dependabot** - Continuously checks for outdated dependencies with the ability to update them with a pull request. Also warns about vulnerabilities in modules.
