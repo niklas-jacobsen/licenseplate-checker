@@ -14,7 +14,7 @@
     "db:format": "prisma format",
     "db:generate": "bun run db:format && prisma generate",
     "db:migrate": "bun run db:generate && prisma migrate dev --name migration",
-    "db:reset": "prisma migrate reset --force && npm run db:migrate",
+    "db:reset": "prisma migrate reset --force && bun run db:migrate && bun run db:seed",
     "db:seed": "bun run prisma/seeding/seed.js",
     "start:migrate:prod": "prisma migrate deploy && node dist/src/index.js"
   },
