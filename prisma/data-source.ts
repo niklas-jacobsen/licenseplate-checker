@@ -1,5 +1,4 @@
 import { PrismaClient } from '@prisma/client';
-import * as dotenv from 'dotenv';
 import { PrismockClient } from 'prismock';
 import { ENV } from '../src/env';
 
