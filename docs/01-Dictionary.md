@@ -30,4 +30,4 @@ A licensePlateRequest is stored in the database with a reference to the user who
 
 > An object parsed from a licensePlateQuery containing no wildcard characters
 
-A licensePlateQuery is stored in the database with a reference to the user who created the intital licensePlateRequest and reservation status information
+A licensePlateQuery is stored in the database with a reference to the user who created the intital licensePlateRequest and reservation status information.
