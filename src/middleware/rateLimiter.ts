@@ -4,7 +4,7 @@ import { ENV } from '../env';
 const limiter = rateLimiter({
   windowMs: ENV.RATE_LIMIT_WINDOW,
   limit: ENV.RATE_LIMIT_MAX_REQUESTS,
-  standardHeaders: 'draft-6',
+  standardHeaders: false,
   keyGenerator: (c) => c.req.header('x-forwarded-for') ?? '',
 });
 
