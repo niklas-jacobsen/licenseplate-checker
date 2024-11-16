@@ -44,61 +44,6 @@ export async function performRequest() {
     return;
   }
 
-  //const toggleLinkSelector = "a#ctrl_toggle_link";
-  //await frame.click(toggleLinkSelector);
-  //await page.waitForTimeout(1000);
-
-  //const showInfoButtonSelector = "button#show_info";
-  //await frame.click(showInfoButtonSelector);
-
-  //await page.waitForTimeout(1000);
-
-  //const newIframeSelector = "iframe";
-  //await page.waitForSelector(newIframeSelector);
-  //const newFrameHandle = await page.$(newIframeSelector);
-  //const newFrame = await newFrameHandle?.contentFrame();
-
-  //if (!newFrame) {
-  // console.log("New iframe not found");
-  // await browser.close();
-  // return;
-  //}
-
-  //const versionDivSelector = "div.mdg_row";
-  //const expectedVersion = "3.3.6";
-
-  //const versionRow = await newFrame.$(versionDivSelector);
-  //if (versionRow) {
-  // const versionText = await versionRow.innerText();
-  // const versionMatch = versionText.match(/Version:\s*(.*)/);
-
-  // if (versionMatch && versionMatch[1]) {
-  //   const actualVersion = versionMatch[1].trim();
-  //   console.log(`Detected version: ${actualVersion}`);
-
-  //   if (actualVersion !== expectedVersion) {
-  //     console.error(
-  //       `Version mismatch: expected ${expectedVersion}, but found ${actualVersion}. Cancelling script.`
-  //     );
-  //     //await browser.close();
-  //     console.error("Browser would close");
-  //     return;
-  //   } else {
-  //     console.log(`Version match confirmed: ${actualVersion}`);
-  //   }
-  // } else {
-  //   console.error("Version number not found in the expected format.");
-  //   //await browser.close();
-  //   console.error("Browser would close");
-  //   return;
-  // }
-  //} else {
-  // console.error("Version information row not found.");
-  // //await browser.close();
-  // console.error("Browser would close");
-  //  return;
-  //}
-
   //Click the first "Weiter" button inside the iframe
   const firstWeiterButton = await frame.$(buttonSelectors.startForm);
 
@@ -124,5 +69,3 @@ export async function performRequest() {
 
   await browser.close();
 }
-
-performRequest();
