@@ -5,16 +5,42 @@ It is recommended to first read the general README file located in the project's
 
 ## Table of Contents
 
+- [Hono](#hono)
 - [Thread Model](#thread-model)
 - [Potential security concerns](#potential-security-concerns)
 - [Mitigations implemented](#mitigations-implemented)
+
+## Hono
+
+Hono was chosen as a framework as comes with many features out of the box, resulting in less dependency on external packges.
+The following built-in middlewares were used.
+
+**`hono/secure-headers`** \
+Secure header configuration with strong default settings similar to [helmet](https://www.npmjs.com/package/helmet).
+The following settings have been set beyond the defaults:
+
+**xContentTypeOptions 'nosniff'** - Enforces content types specified by Content-type header \
+**crossOriginOpenerPolicy 'same-origin'** - Helps prevent cross-origin data leaks and improves isolation for security. \
+**referrerPolicy: 'no-referrer'** - Ensures no referrer information is shared. \
+**X-Frame-Options 'false'** - Disables deprecated header \
+**X-XSS-Protection 'false'** - Disables deprecated header \
+<br>
+
+**`hono/cors`** \
+Ensures API calls can only happen from predefined sources that are specified in an environment variable.
+
+**`hono/zod-validator`** \
+Validates all inputs against custom zod schemes to ensure inputs are in the correct format and prevent injection of malicious data.
+
+**`hono-rate-limiter`** \
+IP-based rate limiting with refresh window and limit per window set in the environment variables. Provides response headers with rate limit information by default which have been disabled.
 
 ## Thread Model
 
 The thread model can be viewed [here](./assets/thread_model.png)
 It contains two versions, as the frontend is not yet implemented. The version including the frontend is for future reference.
 
-## Potential security concerns
+### Potential security concerns
 
 | **Risk**                                   | **Risk Level** | **Possible Mitigations**                                                                                                                                                        |
 | ------------------------------------------ | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -24,7 +50,7 @@ It contains two versions, as the frontend is not yet implemented. The version in
 | Access to Google Cloud                     | Low            | Use least-privilege access principles; implement identity and access management (IAM) roles with minimal required permissions; enable audit logging.                            |
 | Google Cloud data loss or data leak        | Low            | Regularly back up data to a separate location; use data encryption; implement monitoring; establish disaster recovery and incident response plans.                              |
 
-## Mitigations implemented
+### Mitigations implemented
 
 | **Security Objective**            | **Measure**                      | **Description**                                                                                                                                            |
 | --------------------------------- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
