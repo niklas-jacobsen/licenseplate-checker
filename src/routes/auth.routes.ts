@@ -3,7 +3,6 @@ import { zValidator } from '@hono/zod-validator';
 import { zUserScheme } from '../validators/zodSchemes';
 import UserController from '../controllers/User.controller';
 import AuthController from '../controllers/Authorization.controller';
-import { password } from 'bun';
 
 export const authRouter = new Hono();
 
