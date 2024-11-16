@@ -1,8 +1,9 @@
 # Routes
 
-This file provides more detailed information on available routes and how to use them
+This file provides detailed information on currently available routes and how to use them. \
+Testing them locally requires a tool like Postman or Insomnia.
 
-### `GET /` - Index Route
+### `GET /`
 
 Returns a default message indicating that the app is running
 
@@ -14,7 +15,9 @@ Returns a default message indicating that the app is running
 
 ---
 
-### `POST /auth/register` - Register a user account with `email` and `password`
+### `POST /auth/register`
+
+Register a user account with `email` and `password`
 
 **Request object:**
 
@@ -29,8 +32,8 @@ Returns a default message indicating that the app is running
 
 ```
 {
-	"id": string,
-	"email": string,
+    "id": string,
+    "email": string,
 	"password": string,
 	"salutation": SalutationList,
 	"firstname": string,
@@ -47,7 +50,9 @@ Returns a default message indicating that the app is running
 
 ---
 
-### `POST /auth/login` - Login with `email` and `password`
+### `POST /auth/login`
+
+Login with `email` and `password`
 
 **Request object:**
 
@@ -69,7 +74,9 @@ Returns a default message indicating that the app is running
 
 ---
 
-### `POST /request/new` - Create a new licenseplate request with `city`, `letters` and `numbers`
+### `POST /request/new`
+
+Create a new licenseplate request with `city`, `letters` and `numbers`
 
 **Request object:**
 

@@ -7,9 +7,16 @@ interface CityData {
   name: string;
 }
 
-function parseCityData(line: string): CityData | null {
+/**
+ * Parses a single line of text into a CityData object.
+ *
+ * @param line - A line of text from the cities file, formatted as "ID - Name, Municipality".
+ * @returns A CityData object if parsing is successful, or null if the line is invalid.
+ */
+function parseSingleCity(line: string): CityData | null {
+  // Splits "ID - Name, Municipality" into into id and name, discarding the municipality as it is not needed
   const [id, place] = line.split(' - ');
-  const [name, _municipality] = place.split(', ');
+  const name = place.split(', ')[0];
   if (!id || !name) {
     return null;
   }
@@ -21,8 +28,9 @@ async function createCitiesJson(filePath: string) {
     const data = await fs.promises.readFile(filePath, 'utf8');
     const lines = data.split('\n');
 
+    // Parse each line into CityData objects, filtering out invalid lines where either id or name is null
     const cities: CityData[] = lines
-      .map(parseCityData)
+      .map(parseSingleCity)
       .filter(Boolean) as CityData[];
 
     const jsonContent = JSON.stringify(cities, null, 2);
