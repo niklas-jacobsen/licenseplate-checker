@@ -14,6 +14,12 @@ app.use(
     referrerPolicy: 'no-referrer',
     xXssProtection: false,
     xFrameOptions: false,
+    contentSecurityPolicy: {
+      defaultSrc: ["'self'"],
+      frameAncestors: ["'self'"],
+      fontSrc: ["'self'"],
+      imgSrc: ["'self'"],
+    },
   })
 );
 app.use('*', limiter);
