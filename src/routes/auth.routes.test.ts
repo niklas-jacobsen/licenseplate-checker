@@ -1,11 +1,25 @@
-import { it, expect, describe } from 'bun:test';
+import { it, expect, describe, beforeAll, afterAll } from 'bun:test';
 import { Hono } from 'hono';
 import { authRouter } from './auth.routes';
+import { ENV } from '../env';
 
 const app = new Hono();
 app.route('/auth', authRouter);
 
+const jwtSecret = ENV.JWT_SECRET;
+const allowedOrigins = ENV.ALLOWED_ORIGINS;
+
 describe('POST /auth/register', () => {
+  beforeAll(() => {
+    ENV.JWT_SECRET = 'jwt_secret';
+
+    ENV.ALLOWED_ORIGINS = [
+      'http://localhost:3001',
+      'http://localhost:3000',
+      'http://localhost:8080',
+    ];
+  });
+
   it('should register a new user successfully', async () => {
     const res = await app.request('/auth/register', {
       method: 'POST',
@@ -135,5 +149,10 @@ describe('POST /auth/login', () => {
       body: JSON.stringify({ email: 'not-an-email', password: '' }),
       headers: { 'Content-Type': 'application/json' },
     });
+  });
+
+  afterAll(() => {
+    ENV.JWT_SECRET = jwtSecret;
+    ENV.ALLOWED_ORIGINS = allowedOrigins;
   });
 });

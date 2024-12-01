@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const zEnvScheme = z.object({
+export const zEnvScheme = z.object({
   PORT: z.coerce.number().positive().int().default(8080),
   NODE_ENV: z
     .enum(['development', 'staging', 'production', 'test'])
