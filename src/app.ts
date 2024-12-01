@@ -4,6 +4,7 @@ import auth from './middleware/auth';
 import limiter from './middleware/rateLimiter';
 import corsMiddleware from './middleware/cors';
 import router from './routes';
+import csrfMiddleware from './middleware/csrf';
 
 const app = new Hono();
 app.use(
@@ -15,8 +16,9 @@ app.use(
     xFrameOptions: false,
   })
 );
-app.use(limiter);
-app.use(corsMiddleware);
+app.use('*', limiter);
+app.use('*', corsMiddleware);
+app.use('*', csrfMiddleware);
 app.use('/user/*', auth);
 app.use('/request/*', auth);
 app.route('', router);
