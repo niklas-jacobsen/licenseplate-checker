@@ -1,27 +1,27 @@
 # Security
 
-This document contains further information on security aspects of this project.
+This document contains information on security aspects of this project.
 It is recommended to first read the general README file located in the project's root folder.
 
 ## Table of Contents
 
 - [Hono](#hono)
-- [Thread Model](#thread-model)
+- [Threat Model](#threat-model)
 - [Potential security concerns](#potential-security-concerns)
 - [Mitigations implemented](#mitigations-implemented)
 
 ## Hono
 
-Hono was chosen as a framework as comes with many features out of the box, resulting in less dependency on external packges.
-The following built-in middlewares were used.
+Hono was chosen as a framework as it comes with many features out of the box, resulting in less dependency on external packages.
+The following built-in middlewares were used:
 
 **`hono/secure-headers`** \
 Secure header configuration with strong default settings similar to [helmet](https://www.npmjs.com/package/helmet).
 The following settings have been set beyond the defaults:
 
-**xContentTypeOptions 'nosniff'** - Enforces content types specified by Content-type header \
-**crossOriginOpenerPolicy 'same-origin'** - Helps prevent cross-origin data leaks and improves isolation for security. \
-**referrerPolicy: 'no-referrer'** - Ensures no referrer information is shared. \
+**X-Content-Type-Options 'nosniff'** - Enforces content types specified by Content-type header \
+**Cross-Origin-Opener-Policy 'same-origin'** - Helps prevent cross-origin data leaks and improves isolation for security. \
+**Referrer-Policy: 'no-referrer'** - Ensures no referrer information is shared. \
 **X-Frame-Options 'false'** - Disables deprecated header \
 **X-XSS-Protection 'false'** - Disables deprecated header \
 <br>
@@ -30,14 +30,14 @@ The following settings have been set beyond the defaults:
 Ensures API calls can only happen from predefined sources that are specified in an environment variable.
 
 **`hono/zod-validator`** \
-Validates all inputs against custom zod schemes to ensure inputs are in the correct format and prevent injection of malicious data.
+Validates all inputs against custom zod schemas to ensure inputs are in the correct format and prevent injection of malicious data.
 
 **`hono-rate-limiter`** \
 IP-based rate limiting with refresh window and limit per window set in the environment variables. Provides response headers with rate limit information by default which have been disabled.
 
-## Thread Model
+## Threat Model
 
-The thread model can be viewed [here](./assets/thread_model.png)
+The threat model can be viewed [here](./assets/threat_model.png)
 It contains two versions, as the frontend is not yet implemented. The version including the frontend is for future reference.
 
 ### Potential security concerns
@@ -63,7 +63,7 @@ It contains two versions, as the frontend is not yet implemented. The version in
 |                                   | Authentication                   | JWTs with bcrypt hashing secure user authentication, reducing risk of unauthorized access and spoofed identities.                                          |
 | Change and Quality Control        | Branch Protection                | Pull requests from `dev` to `staging` require passing linting and testing checks, ensuring code quality and traceable changes.                             |
 |                                   | Code scanning                    | CodeQL analyzes code for potential security vulnerabilities, identifying weaknesses before deployment. Scans occur for every PR, on push and weekly        |
-|                                   | Dependency Management            | Dependabot checks for security risks in the projects dependencies and keeps them up to date.                                                               |
+|                                   | Dependency Management            | Dependabot checks for security risks in the project's dependencies and keeps them up to date.                                                              |
 | Threat Detection and Prevention   | Vulnerability Scanning           | Automated scans detect vulnerabilities in Docker images and the PostgreSQL database, reducing risks from known security issues.                            |
-|                                   | Cross-Origin Resource-Sharing    | Only allows requests from domains specified in the respective environment variable                                                                         |
+|                                   | Cross-Origin Resource-Sharing    | Configured to only allow requests from domains specified in the respective environment variable                                                            |
 | Service Reliability               | Rate Limiting                    | A rate limiter restricts each IP to 100 requests per 15 minutes, reducing risk of abuse and DoS attacks.                                                   |

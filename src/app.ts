@@ -4,6 +4,7 @@ import auth from './middleware/auth';
 import limiter from './middleware/rateLimiter';
 import corsMiddleware from './middleware/cors';
 import router from './routes';
+import csrfMiddleware from './middleware/csrf';
 
 const app = new Hono();
 app.use(
@@ -13,10 +14,17 @@ app.use(
     referrerPolicy: 'no-referrer',
     xXssProtection: false,
     xFrameOptions: false,
+    contentSecurityPolicy: {
+      defaultSrc: ["'self'"],
+      frameAncestors: ["'self'"],
+      fontSrc: ["'self'"],
+      imgSrc: ["'self'"],
+    },
   })
 );
-app.use(limiter);
-app.use(corsMiddleware);
+app.use('*', limiter);
+app.use('*', corsMiddleware);
+app.use('*', csrfMiddleware);
 app.use('/user/*', auth);
 app.use('/request/*', auth);
 app.route('', router);

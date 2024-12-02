@@ -3,17 +3,11 @@ import { cors } from 'hono/cors';
 import { Context, Next } from 'hono';
 import { ENV } from '../env';
 
-const corsMiddleware = createMiddleware(
-  async (
-    _c: Context,
-    next: Next,
-    allowedOrigins: string[] = ENV.ALLOWED_ORIGINS
-  ) => {
-    cors({
-      origin: allowedOrigins,
-    });
-    await next();
-  }
-);
+const corsMiddleware = cors({
+  origin: ENV.ALLOWED_ORIGINS,
+  allowMethods: ['GET', 'POST', 'OPTIONS'],
+  credentials: true,
+  allowHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
+});
 
 export default corsMiddleware;
