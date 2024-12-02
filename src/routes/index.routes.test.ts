@@ -1,4 +1,4 @@
-import { test, it, expect, describe } from 'bun:test';
+import { it, expect, describe } from 'bun:test';
 import { Hono } from 'hono';
 import { indexRouter } from './index.routes';
 

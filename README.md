@@ -39,6 +39,7 @@ To run this project locally follow these steps:
 
 1. Clone this repository
 2. Use the `docker-compose.yaml` to start the local docker containers for the app and postgres database
-3. Create an .env file following the scheme of the .env.example
+3. Create an .env file following the structure of the .env.example
 4. run `bun install` to install dependencies
-5. run `bun run dev` to start the service
+5. run `bun db:migrate`
+6. run `bun run dev` to start the service
