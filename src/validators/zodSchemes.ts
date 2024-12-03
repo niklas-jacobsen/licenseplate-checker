@@ -2,16 +2,7 @@ import { z } from 'zod';
 import zLicensePlateCitySchema from './licensePlateValidators/cityRequest.validator';
 import zLicensePlateLettersSchema from './licensePlateValidators/lettersRequest.validator';
 import zLicensePlateNumbersSchema from './licensePlateValidators/numbersRequest.validator';
-import zBirthdateSchema from './userValidators/birthdate.validator';
 import zPasswordSchema from './userValidators/password.validator';
-
-const SalutationEnum = z.enum([
-  'HERR',
-  'FRAU',
-  'FIRMA',
-  'VEREIN',
-  'JURISTISCHE_PERSON',
-]);
 
 export const zRequestScheme = z
   .object({
