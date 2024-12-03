@@ -22,6 +22,15 @@ class CityController {
       },
     });
   }
+
+  async getFullCity(cityId: string, name: string) {
+    return prisma.cityAbbreviation.findFirst({
+      where: {
+        id: cityId,
+        name: name,
+      },
+    });
+  }
 }
 
 export default CityController;
