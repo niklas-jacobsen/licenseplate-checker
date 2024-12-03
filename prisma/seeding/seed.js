@@ -16,15 +16,12 @@ async function seedCityData() {
     }
 
     for (const city of cityData) {
-      const cityExists = await prisma.cityAbbreviation.findFirst({
-        where: { id: city.id, name: city.name },
-      });
-      if (!cityExists) {
-        cityController.create({
-          id: city.id,
-          name: city.name,
-        });
+      const cityExists = checkCityExists(city);
+      if (cityExists) {
+        return;
       }
+
+      await createCity(city);
     }
     console.log('Database seeded successfully.');
   } catch (error) {
@@ -32,6 +29,28 @@ async function seedCityData() {
   } finally {
     await prisma.$disconnect();
   }
+}
+
+async function checkCityExists(uncheckedCity) {
+  const checkedCity = await cityController.getFullCity(
+    uncheckedCity.id,
+    uncheckedCity.name
+  );
+
+  if (checkedCity) {
+    //City found, no changes needed
+    return true;
+  }
+
+  //No match found in database
+  return false;
+}
+
+async function createCity(city) {
+  cityController.create({
+    id: city.id,
+    name: city.name,
+  });
 }
 
 if (require.main === module) {
