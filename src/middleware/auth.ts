@@ -24,8 +24,8 @@ const auth = async (c: Context, next: Next) => {
     c.set('token', token);
 
     await next();
-  } catch (err) {
-    return c.json({ status: 'error', message: 'Could not authenticate' }, 401);
+  } catch (error) {
+    return c.json({ status: 'error', message: error }, 401);
   }
 };
 
