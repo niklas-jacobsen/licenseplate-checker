@@ -25,11 +25,11 @@ function parseSingleCity(line: string): CityData | null {
 
 async function createCitiesJson(filePath: string) {
   try {
-    const data = await fs.promises.readFile(filePath, 'utf8');
-    const lines = data.split('\n');
+    const rawCityData = await fs.promises.readFile(filePath, 'utf8');
+    const cityDataArray = rawCityData.split('\n');
 
     // Parse each line into CityData objects, filtering out invalid lines where either id or name is null
-    const cities: CityData[] = lines
+    const cities: CityData[] = cityDataArray
       .map(parseSingleCity)
       .filter(Boolean) as CityData[];
 
