@@ -12,8 +12,8 @@ import { CityType } from '../controllers/City.controller';
  * which is why it has not been removed.
  * */
 export async function checkEntryExists(
-  controller: ControllerTypes,
-  body: LicensePlateRequestType | LicensePlateQueryType | CityType
+  _controller: ControllerTypes,
+  _body: LicensePlateRequestType | LicensePlateQueryType | CityType
 ): Promise<boolean> {
   // if (
   //   await controller.getById({
@@ -27,5 +27,5 @@ export async function checkEntryExists(
 }
 
 export async function generateQueriesFromRequest(
-  request: z.infer<typeof zRequestScheme>
+  _request: z.infer<typeof zRequestScheme>
 ) {}
