@@ -143,14 +143,6 @@ describe('POST /auth/login', () => {
     expect(json).toEqual({ error: 'Incorrect password' });
   });
 
-  it('should return 400 if validation fails', async () => {
-    const res = await app.request('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ email: 'not-an-email', password: '' }),
-      headers: { 'Content-Type': 'application/json' },
-    });
-  });
-
   afterAll(() => {
     ENV.JWT_SECRET = jwtSecret;
     ENV.ALLOWED_ORIGINS = allowedOrigins;
