@@ -1,6 +1,4 @@
-import { createMiddleware } from 'hono/factory';
 import { cors } from 'hono/cors';
-import { Context, Next } from 'hono';
 import { ENV } from '../env';
 
 const corsMiddleware = cors({
