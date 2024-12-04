@@ -1,8 +1,9 @@
 import CityController from '../../src/controllers/City.controller';
+import { ENV } from '../../src/env';
 import { prisma } from '../data-source';
 import { cityData } from './cityData';
 
-const forceSeed = process.env.FORCE_SEED === 'true';
+const forceSeed = ENV.FORCE_SEED === 'true';
 const cityController = new CityController();
 
 async function seedCityData() {
@@ -18,7 +19,7 @@ async function seedCityData() {
     for (const city of cityData) {
       const cityExists = checkCityExists(city);
       if (cityExists) {
-        return;
+        continue;
       }
 
       await createCity(city);
@@ -47,7 +48,11 @@ async function checkCityExists(uncheckedCity) {
 }
 
 async function createCity(city) {
-  cityController.create({
+  if (!city.id || !city.name) {
+    throw new Error('Invalid city data.');
+  }
+
+  await cityController.create({
     id: city.id,
     name: city.name,
   });
