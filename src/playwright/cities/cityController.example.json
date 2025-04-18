@@ -1,0 +1,45 @@
+{
+  "metaData": {
+    "cityId": "",
+    "cityName": "muenster",
+    "cityDisplayName": "Münster",
+    "cityAbbreviations": ["MS"],
+    "reservationDays": 90,
+    "url": "https://www.stadt-muenster.de/wkz/?LICENSEIDENTIFIER=ms"
+  },
+  "requestFields": [
+    "birthDate",
+    "city",
+    "firstName",
+    "lastName",
+    "postalCode",
+    "streetName",
+    "streetNumber",
+    "title"
+  ],
+  "suggestionMethods": [
+    "fallingLetters",
+    "fallingNumbers",
+    "repDigit",
+    "risingLetters",
+    "risingNumbers",
+    "sameLetters",
+    "symmetric",
+    "ten",
+    "twin"
+  ],
+  "controller": {
+    "version": 0.1,
+    "lastUpdated": "2024-12-27T18:50:12.835Z",
+    "stepCount": 11,
+    "steps": [
+        {
+            "label": "step label",
+            "action": "wait/click/input",
+            "target": "target id",
+            "waitAfterStep": true
+        },
+        {}
+    ]
+  }
+}
