@@ -1,0 +1,95 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model CityAbbreviation {
+  id   String @id @db.VarChar(3)
+  name String
+
+  licenseplateRequests LicenseplateRequest[]
+  // licenseplateQuery    LicenseplateQuery[]
+}
+
+model LicenseplateRequest {
+  city          String      @db.VarChar(3)
+  letterRequest String      @db.VarChar(2)
+  numberRequest String      @db.VarChar(4)
+  userId        String
+  checkstatus   CheckStatus @default(UNCHECKED)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user             User             @relation(fields: [userId], references: [id])
+  cityAbbreviation CityAbbreviation @relation(fields: [city], references: [id])
+
+  @@id([city, letterRequest, numberRequest, userId])
+}
+
+model LicenseplateQuery {
+  id                String            @id @default(cuid())
+  city              String            @db.VarChar(3)
+  letters           String            @db.VarChar(2)
+  numbers           Int
+  userId            String
+  reservationStatus ReservationStatus
+  expiresOn         DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+  // cityAbbreviation CityAbbreviation @relation(fields: [city], references: [id])
+
+  @@unique([id, city, letters, numbers])
+}
+
+model User {
+  id           String      @id @default(cuid())
+  email        String      @unique
+  password     String
+  salutation   Salutation?
+  firstname    String?
+  lastname     String?
+  birthdate    DateTime?
+  street       String?
+  streetNumber String?
+  zipcode      Int?
+  city         String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  licenseplateQuery   LicenseplateQuery[]
+  licenseplateRequest LicenseplateRequest[]
+}
+
+enum CheckStatus {
+  UNCHECKED
+  CHECKED
+}
+
+enum ReservationStatus {
+  NOT_AVAILABLE
+  AVAILABLE
+  RESERVED
+}
+
+enum Salutation {
+  HERR
+  FRAU
+  FIRMA
+  VEREIN
+  JURISTISCHE_PERSON
+}

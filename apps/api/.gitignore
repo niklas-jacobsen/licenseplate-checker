@@ -1,0 +1,14 @@
+# Node
+node_modules/
+
+# Environment variables
+.env
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/apps/api/playwright/.cache/
+
+# OS specific
+.DS_Store
