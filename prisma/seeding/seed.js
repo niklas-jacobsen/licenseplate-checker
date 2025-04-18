@@ -17,7 +17,7 @@ async function seedCityData() {
     }
 
     for (const city of cityData) {
-      const cityExists = checkCityExists(city);
+      const cityExists = await checkCityExists(city);
       if (cityExists) {
         continue;
       }
@@ -38,13 +38,7 @@ async function checkCityExists(uncheckedCity) {
     uncheckedCity.name
   );
 
-  if (checkedCity) {
-    //City found, no changes needed
-    return true;
-  }
-
-  //No match found in database
-  return false;
+  return checkedCity;
 }
 
 async function createCity(city) {

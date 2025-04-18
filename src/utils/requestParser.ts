@@ -26,6 +26,14 @@ export async function checkEntryExists(
   return true;
 }
 
+/**
+ * Function should:
+ * - Create atomic queries from wildcard request patterns. 
+ * - When should this trigger?
+ * - For every generated query, before adding it to the DB, check if another requests already covers this query
+ * - If a request is deleted, this should trigger again so that queries covered by the deleted request are then added to the next request covering them
+ * - 
+ * */
 export async function generateQueriesFromRequest(
   _request: z.infer<typeof zRequestScheme>
 ) {}
