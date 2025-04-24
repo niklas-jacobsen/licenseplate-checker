@@ -1,8 +1,7 @@
 {
-  "name": "licenseplate-checker",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "api",
+  "version": "0.1.0",
+  "private": true,
   "scripts": {
     "start": "bun run src/index.ts",
     "dev": "bun run --watch src/index.ts",
