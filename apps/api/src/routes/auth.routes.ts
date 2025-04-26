@@ -1,8 +1,8 @@
 import { zValidator } from '@hono/zod-validator'
+import { zUserScheme } from '@licenseplate-checker/shared/validators'
 import { Hono } from 'hono'
 import AuthController from '../controllers/Authorization.controller'
 import UserController from '../controllers/User.controller'
-import { zUserScheme } from '../validators/zodSchemes'
 
 export const authRouter = new Hono()
 

@@ -1,8 +1,8 @@
 import { zValidator } from '@hono/zod-validator'
+import { zRequestScheme } from '@licenseplate-checker/shared/validators'
 import { Context, Hono } from 'hono'
 import CityController from '../controllers/City.controller'
 import LicenseplateRequestController from '../controllers/LicensePlateRequest.controller'
-import { zRequestScheme } from '../validators/zodSchemes'
 
 export const licensePlateRequestRouter = new Hono()
 
