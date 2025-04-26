@@ -30,7 +30,7 @@
       "dependsOn": ["db:generate"],
       "outputs": ["prisma/migrations/**"]
     },
-    "scraper": {
+    "clean": {
       "cache": false
     }
   }

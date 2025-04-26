@@ -1,5 +1,5 @@
 {
-  "name": "shared",
+  "name": "@licenseplate-checker/shared",
   "private": true,
   "version": "1.0.0",
   "scripts": {
@@ -10,5 +10,9 @@
   "devDependencies": {
     "typescript": "^5",
     "@biomejs/biome": "^1.9.4"
+  },
+  "exports": {
+    "./validators": "./validators/index.ts",
+    "./types": "./types/index.ts"
   }
 }
