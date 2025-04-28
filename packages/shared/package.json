@@ -13,6 +13,7 @@
   },
   "exports": {
     "./validators": "./validators/index.ts",
-    "./types": "./types/index.ts"
+    "./types": "./types/index.ts",
+    ".": "./*"
   }
 }
