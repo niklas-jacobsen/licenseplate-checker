@@ -1,11 +1,16 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Form } from '@licenseplate-checker/shared/components/ui/form'
+import { Combobox } from '../components/ui/combobox'
 import {
-  Card,
-  CardContent,
-} from '@licenseplate-checker/shared/components/ui/card'
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+} from '../components/ui/form'
+import { Button } from '../components/ui/button'
+import { Card, CardContent } from '../components/ui/card'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { zRequestScheme } from '@licenseplate-checker/shared/validators'
@@ -72,26 +77,45 @@ const formSchema = zRequestScheme.refine(
   }
 )
 
-const form = useForm<z.infer<typeof formSchema>>({
-  resolver: zodResolver(formSchema),
-  defaultValues: {
-    city: '',
-    letters: '',
-    numbers: '',
-  },
-  mode: 'onTouched',
-})
-
-const city = form.watch('city')
-const letters = form.watch('letters')
-const numbers = form.watch('numbers')
-
 export default function LicensePlateForm() {
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      city: '',
+      letters: '',
+      numbers: '',
+    },
+    mode: 'onTouched',
+  })
+
+  //   const city = form.watch('city')
+  //   const letters = form.watch('letters')
+  //   const numbers = form.watch('numbers')
+
   return (
     <Card className="w-full">
       <CardContent className="pt-6">
         <Form {...form}>
-          <form></form>
+          <FormField
+            name="city"
+            control={form.control}
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="flex items-center">City</FormLabel>
+                <FormControl>
+                  <Combobox value={field.value} />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+          <Button
+            className="w-full"
+            onSubmit={(arg) => {
+              return arg
+            }}
+          >
+            Hallo
+          </Button>
         </Form>
       </CardContent>
     </Card>
