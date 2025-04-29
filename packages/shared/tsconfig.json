@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./"]
+    },
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true
+  },
+  "include": ["**/*.ts"]
+}
