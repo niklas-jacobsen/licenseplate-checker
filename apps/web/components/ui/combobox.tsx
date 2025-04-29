@@ -1,6 +1,6 @@
 'use client'
 
-import * as React from 'react'
+import { useState, useRef } from 'react'
 import { Check, ChevronsUpDown } from 'lucide-react'
 
 import { cn } from '@shared/lib/utils'
@@ -15,6 +15,7 @@ import {
 } from './command'
 import { Popover, PopoverContent, PopoverTrigger } from './popover'
 
+// Placeholder cities
 const germanCities = [
   { value: 'B', label: 'Berlin' },
   { value: 'M', label: 'München (Munich)' },
@@ -40,14 +41,37 @@ const germanCities = [
 
 interface ComboboxProps {
   value: string
-  //   onChange: (value: string) => void
-  //   onBlur?: () => void
-  //   error?: boolean
+  onChange: (value: string) => void
+  error?: boolean
 }
 
-export default function Combobox({ value }: ComboboxProps) {
-  const [open, setOpen] = React.useState(false)
-  const [_inputValue, setInputValue] = React.useState(value)
+export default function Combobox({ value, onChange, error }: ComboboxProps) {
+  const [open, setOpen] = useState(false)
+  const [inputValue, setInputValue] = useState(value)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const handleInputChange = (newValue: string) => {
+    const sanitizedValue = newValue.replace(/[^A-Za-z]/g, '')
+    setInputValue(sanitizedValue)
+
+    const matchingCity = germanCities.find(
+      (city) => city.value === sanitizedValue
+    )
+
+    if (matchingCity) {
+      onChange(matchingCity.value)
+    } else {
+      onChange(sanitizedValue)
+    }
+  }
+
+  const handleSelect = (selectedValue: string) => {
+    onChange(selectedValue)
+    setOpen(false)
+    inputRef.current?.focus()
+  }
+
+  const selectedCity = germanCities.find((city) => city.value === value)
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -56,38 +80,57 @@ export default function Combobox({ value }: ComboboxProps) {
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className="w-[200px] justify-between"
+          className={cn(
+            'w-full h-9 rounded-md border px-3 py-1 text-base shadow-xs flex justify-between items-center',
+            error && 'border-red-500'
+          )}
         >
-          {value
-            ? germanCities.find((city) => city.value === value)?.label
-            : 'Select city...'}
-          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          {selectedCity ? (
+            <span>
+              {selectedCity.label} (<strong>{selectedCity.value}</strong>)
+            </span>
+          ) : (
+            'Select city...'
+          )}
+          <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[200px] p-0">
+      <PopoverContent className="w-full">
         <Command>
-          <CommandInput placeholder="Search city..." />
+          <CommandInput
+            placeholder="Search city..."
+            value={inputValue}
+            onValueChange={handleInputChange}
+            ref={inputRef}
+          />
           <CommandList>
             <CommandEmpty>No city found.</CommandEmpty>
             <CommandGroup>
-              {germanCities.map((city) => (
-                <CommandItem
-                  key={city.value}
-                  value={city.value}
-                  onSelect={(currentValue) => {
-                    setInputValue(currentValue === value ? '' : currentValue)
-                    setOpen(false)
-                  }}
-                >
-                  <Check
-                    className={cn(
-                      'mr-2 h-4 w-4',
-                      value === city.value ? 'opacity-100' : 'opacity-0'
-                    )}
-                  />
-                  {city.label}
-                </CommandItem>
-              ))}
+              {germanCities
+                .filter(
+                  (city) =>
+                    city.value
+                      .toLowerCase()
+                      .includes(inputValue.toLowerCase()) ||
+                    city.label.toLowerCase().includes(inputValue.toLowerCase())
+                )
+                .map((city) => (
+                  <CommandItem
+                    key={city.value}
+                    value={city.value}
+                    onSelect={() => handleSelect(city.value)}
+                  >
+                    <Check
+                      className={cn(
+                        'mr-2 h-4 w-4',
+                        value === city.value ? 'opacity-100' : 'opacity-0'
+                      )}
+                    />
+                    <span>
+                      {city.label} (<strong>{city.value}</strong>)
+                    </span>
+                  </CommandItem>
+                ))}
             </CommandGroup>
           </CommandList>
         </Command>
