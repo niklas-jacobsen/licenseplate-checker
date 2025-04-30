@@ -98,7 +98,7 @@ export default function Combobox({ value, onChange, error }: ComboboxProps) {
       <PopoverContent className="w-full">
         <Command>
           <CommandInput
-            placeholder="Search city..."
+            placeholder="Search city code..."
             value={inputValue}
             onValueChange={handleInputChange}
             ref={inputRef}

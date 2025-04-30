@@ -19,6 +19,7 @@ import { useForm } from 'react-hook-form'
 import { Loader2 } from 'lucide-react'
 import { Input } from './ui/input'
 import { Alert, AlertDescription } from './ui/alert'
+import LicensePlatePreview from './plate-preview'
 
 // Custom validator for combined wildcard constraints
 const validateWildcardConstraints = (data: {
@@ -187,25 +188,34 @@ export default function LicensePlateForm() {
 
           <Alert className="bg-blue-50 text-blue-800 border-blue-200 my-2">
             <AlertDescription>
-              <p className="font-medium">Wildcards:</p>
-              <ul className="list-disc list-inside text-sm mt-1">
+              <p className="font-medium">How to use</p>
+              <ul className="list-disc list-inside text-sm mb-3">
+                <li>Choose your city and enter your desired license plate</li>
                 <li>
-                  Use * to match any sequence of characters (including none)
+                  Use "*" to match any sequence of characters (A-ZZ or 1-9999)
                 </li>
-                <li>Use ? to match exactly one character</li>
-                <li>Maximum of 3 "?" wildcards total across both fields</li>
+                <li>Use ? to match exactly one character (A-Z or 1-9)</li>
+              </ul>
+              <p className="font-medium">Guidelines</p>
+              <ul className="list-disc list-inside text-sm">
+                <li>
+                  "*" can only be used alone, as it represents all possibilities
+                </li>
                 <li>Both fields cannot have "*" simultaneously</li>
                 <li>
-                  In the numbers field, "*" can only be used alone (not with
-                  other numbers)
-                </li>
-                <li>
-                  All combinations will respect the maximum field lengths (2
-                  letters, 4 numbers)
+                  Maximum of 3 "?" wildcards total across letters and numbers
                 </li>
               </ul>
             </AlertDescription>
           </Alert>
+
+          <div className="pt-4">
+            <LicensePlatePreview
+              city={city}
+              letters={letters}
+              numbers={numbers}
+            />
+          </div>
 
           <div className="pt-4">
             <Button
