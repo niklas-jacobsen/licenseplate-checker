@@ -1,0 +1,43 @@
+{
+  "name": "@licenseplate-checker/api",
+  "private": true,
+  "scripts": {
+    "start": "bun run dist/src/index.js",
+    "dev": "bun run --watch src/index.ts",
+    "build": "rm -rf ./dist && tsc",
+    "typecheck": "tsc --noEmit",
+    "format": "biome format --write src/**/*.ts",
+    "lint": "biome lint --write src/**/*.ts",
+    "test:unit": "bun test src/**/*.unit.test.ts",
+    "test:int": "bun test src/**/*.int.test.ts",
+    "db:format": "prisma format",
+    "db:generate": "bun run db:format && prisma generate",
+    "db:migrate": "bun run db:generate && prisma migrate dev --name migration && bun run db:seed",
+    "db:reset": "prisma migrate reset --force && bun run db:migrate && bun run db:seed",
+    "db:seed": "bun run prisma/seeding/seed.js",
+    "scraper": "bun run src/scraper/muenster.ts"
+  },
+  "dependencies": {
+    "@licenseplate-checker/shared": "*",
+    "@hono/zod-validator": "^0.4.1",
+    "@playwright/test": "^1.47.2",
+    "@prisma/client": "^5.20.0",
+    "bcrypt": "^5.1.1",
+    "hono": "^4.6.3",
+    "hono-rate-limiter": "^0.4.0",
+    "jsonwebtoken": "^9.0.2",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@types/bcrypt": "^5.0.2",
+    "@types/bun": "^1.1.13",
+    "@types/jsonwebtoken": "^9.0.7",
+    "prismock": "^1.33.3",
+    "prisma": "^5.20.0",
+    "typescript": "^5.6.2"
+  },
+  "prisma": {
+    "schema": "prisma/schema.prisma"
+  }
+}
