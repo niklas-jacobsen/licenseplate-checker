@@ -1,6 +1,17 @@
+# Node
 node_modules/
+
+# Turbo
+.turbo
+
+# Environment variables
+.env
+
+# Playwright
 /test-results/
 /playwright-report/
 /blob-report/
-/playwright/.cache/
-.env
+/apps/api/playwright/.cache/
+
+# OS specific
+.DS_Store
