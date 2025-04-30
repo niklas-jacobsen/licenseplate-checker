@@ -186,7 +186,7 @@ export default function LicensePlateForm() {
             </div>
           </div>
 
-          <Alert className="bg-blue-50 text-blue-800 border-blue-200 my-2">
+          {/* <Alert className="bg-blue-50 text-blue-800 border-blue-200 my-2">
             <AlertDescription>
               <p className="font-medium">Wildcards:</p>
               <ul className="list-disc list-inside text-sm mt-1">
@@ -206,7 +206,15 @@ export default function LicensePlateForm() {
                 </li>
               </ul>
             </AlertDescription>
-          </Alert>
+          </Alert> */}
+
+          <div className="pt-4">
+            <LicensePlatePreview
+              city={city}
+              letters={letters}
+              numbers={numbers}
+            />
+          </div>
 
           <div className="pt-4">
             <Button
@@ -221,14 +229,6 @@ export default function LicensePlateForm() {
             </Button>
           </div>
         </Form>
-        <div className="pt-4">
-          <h3 className="text-lg font-medium mb-4">Preview</h3>
-          <LicensePlatePreview
-            city={city}
-            letters={letters}
-            numbers={numbers}
-          />
-        </div>
       </CardContent>
     </Card>
   )
