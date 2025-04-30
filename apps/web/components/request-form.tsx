@@ -19,6 +19,7 @@ import { useForm } from 'react-hook-form'
 import { Loader2 } from 'lucide-react'
 import { Input } from './ui/input'
 import { Alert, AlertDescription } from './ui/alert'
+import LicensePlatePreview from './plate-preview'
 
 // Custom validator for combined wildcard constraints
 const validateWildcardConstraints = (data: {
@@ -220,6 +221,8 @@ export default function LicensePlateForm() {
             </Button>
           </div>
         </Form>
+
+        <LicensePlatePreview city={city} letters={letters} numbers={numbers} />
       </CardContent>
     </Card>
   )
