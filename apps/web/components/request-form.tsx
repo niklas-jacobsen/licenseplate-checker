@@ -221,8 +221,14 @@ export default function LicensePlateForm() {
             </Button>
           </div>
         </Form>
-
-        <LicensePlatePreview city={city} letters={letters} numbers={numbers} />
+        <div className="pt-4">
+          <h3 className="text-lg font-medium mb-4">Preview</h3>
+          <LicensePlatePreview
+            city={city}
+            letters={letters}
+            numbers={numbers}
+          />
+        </div>
       </CardContent>
     </Card>
   )
