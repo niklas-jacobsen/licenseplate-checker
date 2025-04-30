@@ -1,47 +1,35 @@
-# use the official Bun image
-# see all versions at https://hub.docker.com/r/oven/bun/tags
+# Use Bun official image
 FROM oven/bun:1 AS base
 WORKDIR /usr/src/app
-
 ENV HOST=0.0.0.0
 
-# install dependencies into temp directory
-# this will cache them and speed up future builds
+# Install dependencies once
 FROM base AS install
-RUN mkdir -p /temp/dev
-COPY ../../package.json ../../bun.lock /temp/dev/
-RUN cd /temp/dev && bun install --frozen-lockfile
 
-# install with --production (exclude devDependencies)
-RUN mkdir -p /temp/prod
-COPY ../../package.json ../../bun.lock /temp/prod/
-RUN cd /temp/prod && bun install --frozen-lockfile --production
-
-# copy node_modules from temp directory
-# then copy all (non-ignored) project files into the image
-FROM base AS prerelease
-COPY --from=install /temp/dev/node_modules /usr/src/app/node_modules
+# Copy only the files needed for install
 COPY . .
 
-RUN bunx prisma generate
-# tests, lint & build
-RUN bun lint
-# RUN bun test
-RUN bun run build
+# Install prod dependencies only
+RUN bun install
 
-# copy production dependencies and source code into final image
+WORKDIR /usr/src/app/apps/api
+
+# Build app and generate Prisma client
+RUN bunx prisma generate && \
+    bun run build
+
+# Final production image
 FROM base AS release
 
+# Optional: ENV for DB
 ARG DATABASE_URL
 ENV DATABASE_URL=$DATABASE_URL
 
-COPY --from=install /temp/prod/node_modules /usr/src/app/node_modules
-COPY --from=prerelease /usr/src/app .
+# Copy node_modules and dist from previous stage
+COPY --from=install /usr/src/app/node_modules ./node_modules
+COPY --from=install /usr/src/app .
 
-# run the app
 USER bun
 EXPOSE 8080
 
-# Run the migration before starting the app
 ENTRYPOINT ["sh", "-c", "bunx prisma migrate deploy && bun run db:seed && bun run start"]
-
