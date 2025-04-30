@@ -4,7 +4,7 @@
   "scripts": {
     "start": "bun run dist/src/index.js",
     "dev": "bun run --watch src/index.ts",
-    "build": "rm -rf ./dist && tsc",
+    "build": "bun build src/index.ts --target bun --outdir ./dist",
     "typecheck": "tsc --noEmit",
     "format": "biome format --write src/**/*.ts",
     "lint": "biome lint --write src/**/*.ts",
@@ -18,14 +18,17 @@
     "scraper": "bun run src/scraper/muenster.ts"
   },
   "dependencies": {
-    "@licenseplate-checker/shared": "*",
     "@hono/zod-validator": "^0.4.1",
+    "@licenseplate-checker/shared": "*",
     "@playwright/test": "^1.47.2",
     "@prisma/client": "^5.20.0",
+    "aws-sdk": "^2.1692.0",
     "bcrypt": "^5.1.1",
     "hono": "^4.6.3",
     "hono-rate-limiter": "^0.4.0",
     "jsonwebtoken": "^9.0.2",
+    "mock-aws-s3": "^4.0.2",
+    "nock": "^14.0.4",
     "zod": "^3.23.8"
   },
   "devDependencies": {
