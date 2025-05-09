@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { Car } from 'lucide-react'
+import AuthStatus from './auth-status'
 
 export default function NavBar() {
   return (
@@ -18,10 +19,11 @@ export default function NavBar() {
             <li className="text-sm font-medium text-gray-700 hover:text-blue-600">
               <Link href="/requests">My Requests</Link>
             </li>
-            <li className="text-sm font-medium text-gray-700 hover:text-blue-600">
+            <li className="text-sm font-medium text-gray-700 hover:text-blue-600 hidden md:block">
               <Link href="/profile">Profile</Link>
             </li>
           </ul>
+          <AuthStatus />
         </nav>
       </div>
     </header>
