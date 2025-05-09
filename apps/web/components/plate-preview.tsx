@@ -1,7 +1,7 @@
 import localFont from 'next/font/local'
 
 const euroPlate = localFont({
-  src: '../fonts/EuroPlate.ttf',
+  src: '../fonts/EuroPlate-new.ttf',
 })
 
 interface LicensePlatePreviewProps {
