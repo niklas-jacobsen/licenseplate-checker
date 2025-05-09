@@ -29,7 +29,8 @@
     "jsonwebtoken": "^9.0.2",
     "mock-aws-s3": "^4.0.2",
     "nock": "^14.0.4",
-    "zod": "^3.23.8"
+    "zod": "^3.23.8",
+    "prisma": "^5.20.0"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
@@ -37,7 +38,6 @@
     "@types/bun": "^1.1.13",
     "@types/jsonwebtoken": "^9.0.7",
     "prismock": "^1.33.3",
-    "prisma": "^5.20.0",
     "typescript": "^5.6.2"
   },
   "prisma": {
