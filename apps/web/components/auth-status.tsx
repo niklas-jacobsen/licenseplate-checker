@@ -16,13 +16,8 @@ import { useEffect, useState } from 'react'
 
 export default function AuthStatus() {
   const { user, logOut, isLoading } = useAuth()
-  const [isClient, setIsClient] = useState(false)
 
-  useEffect(() => {
-    setIsClient(true)
-  }, [])
-
-  if (!isClient || isLoading) {
+  if (isLoading) {
     return <div className="h-8 w-8 rounded-full bg-gray-200 animate-pulse" />
   }
 
@@ -94,7 +89,7 @@ export default function AuthStatus() {
           }}
         >
           <LogOut className="mr-2 h-4 w-4" />
-          <span>Sign out</span>
+          <span>Log out</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

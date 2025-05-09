@@ -58,13 +58,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const signUp = async (email: string, password: string) => {
-    const response = await apiClient.post<User>('/auth/register', {
+    const response = await apiClient.post<{ token: string }>('/auth/register', {
       email,
       password,
     })
 
-    if (response.data) {
-      setUser(response.data)
+    if (response.data?.token) {
+      localStorage.setItem('token', response.data.token)
+      const userResponse = await apiClient.get<User>('/user/me')
+      if (userResponse.data) {
+        setUser(userResponse.data)
+      }
     } else {
       throw new Error(response.error || 'Failed to sign up')
     }
@@ -72,23 +76,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logIn = async (email: string, password: string) => {
     const response = await apiClient.post<{
-      user: User
       token: string
     }>('/auth/login', {
       email,
       password,
     })
 
-    if (response.data) {
-      const { user, token } = response.data
-
-      // Save token to localStorage
-      localStorage.setItem('token', token)
-
-      // Set user state
-      setUser(user)
+    if (response.data?.token) {
+      localStorage.setItem('token', response.data.token)
+      const userResponse = await apiClient.get<User>('/user/me')
+      if (userResponse.data) {
+        setUser(userResponse.data)
+      }
     } else {
-      throw new Error(response.error || 'Failed to sign in')
+      throw new Error(response.error || 'Failed to log in')
     }
   }
 

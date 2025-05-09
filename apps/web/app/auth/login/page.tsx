@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
@@ -29,20 +29,15 @@ import { Alert, AlertDescription } from 'apps/web/components/ui/alert'
 import { useAuth } from 'apps/web/lib/auth-context'
 import { zUserScheme } from '@licenseplate-checker/shared/validators'
 import SimpleNavBar from 'apps/web/components/nav-bar-simple'
+import LoginRedirectHandler from 'apps/web/components/login-redirect-handler'
 
 export default function LogInPage() {
-  const [error, setError] = useState<string | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const redirect = searchParams.get('redirect') || '/'
   const { logIn, user } = useAuth()
 
-  useEffect(() => {
-    if (user) {
-      router.push(redirect)
-    }
-  }, [user, router, redirect])
+  const [redirect, setRedirect] = useState('/')
+  const [error, setError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
 
   const form = useForm<z.infer<typeof zUserScheme>>({
     resolver: zodResolver(zUserScheme),
@@ -66,10 +61,18 @@ export default function LogInPage() {
     }
   }
 
+  useEffect(() => {
+    if (user) {
+      router.replace(redirect)
+    }
+  }, [user, router, redirect])
+
   return (
     <main className="min-h-screen bg-gray-50 flex flex-col">
       <SimpleNavBar />
-
+      <Suspense>
+        <LoginRedirectHandler onResolve={setRedirect} />
+      </Suspense>
       <div className="flex-1 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader>
@@ -147,7 +150,7 @@ export default function LogInPage() {
             <div className="text-sm text-gray-500">
               Don't have an account?{' '}
               <Link
-                href="/auth/signup"
+                href="/auth/register"
                 className="text-blue-600 hover:underline"
               >
                 Sign up
