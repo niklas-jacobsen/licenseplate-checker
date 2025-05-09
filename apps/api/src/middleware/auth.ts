@@ -17,10 +17,15 @@ const auth = async (c: Context, next: Next) => {
 
     const decoded = await authController.verifyJWT(token)
     if (!decoded) {
-      throw new Error()
+      return c.json(
+        { status: 'error', message: 'Authorization token is missing' },
+        401
+      )
     }
 
-    c.set('user', decoded)
+    c.set('user', {
+      id: decoded.id,
+    })
     c.set('token', token)
 
     await next()

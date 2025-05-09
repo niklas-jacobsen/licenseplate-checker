@@ -1,5 +1,5 @@
 import * as bcrypt from 'bcrypt'
-import { sign, verify } from 'jsonwebtoken'
+import { JwtPayload, sign, verify } from 'jsonwebtoken'
 import { ENV } from '../env'
 
 class AuthController {
@@ -12,15 +12,23 @@ class AuthController {
   }
 
   async generateJWT(userId: string, secret: string = ENV.JWT_SECRET) {
-    const token = sign({ sub: userId }, secret, {
+    const token = sign({ id: userId }, secret, {
       expiresIn: '30 minutes',
     })
     return token
   }
 
-  async verifyJWT(token: string, secret: string = ENV.JWT_SECRET) {
-    const payload = verify(token, secret)
-    return payload.sub
+  async verifyJWT(
+    token: string,
+    secret: string = ENV.JWT_SECRET
+  ): Promise<{ id: string }> {
+    const payload = verify(token, secret) as JwtPayload
+
+    if (typeof payload === 'object' && typeof payload.id === 'string') {
+      return { id: payload.id }
+    }
+
+    throw new Error('Invalid token payload')
   }
 }
 
