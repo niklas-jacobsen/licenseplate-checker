@@ -1,8 +1,7 @@
-import { Button } from '../components/ui/button'
+'use client'
+
 import NavBar from '../components/nav-bar'
 import LicensePlateForm from '../components/request-form'
-import { Input } from '../components/ui/input'
-import { Test } from '../components/ui/test'
 
 export default function Home() {
   return (

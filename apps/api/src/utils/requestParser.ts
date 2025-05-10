@@ -3,7 +3,7 @@ import { CityType } from '../controllers/City.controller'
 import { LicensePlateQueryType } from '../controllers/LicensePlateQuery.controller'
 import { LicensePlateRequestType } from '../controllers/LicensePlateRequest.controller'
 import { ControllerTypes } from '../types/controller.types'
-import { zRequestScheme } from '../validators/zodSchemes'
+import { zRequestScheme } from '@shared/validators/zodSchemes'
 
 /**
  * This function is supposed to be able to handle existing data checks for every database table by

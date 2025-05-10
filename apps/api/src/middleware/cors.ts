@@ -3,7 +3,7 @@ import { ENV } from '../env'
 
 const corsMiddleware = cors({
   origin: ENV.ALLOWED_ORIGINS,
-  allowMethods: ['GET', 'POST', 'OPTIONS'],
+  allowMethods: ['GET', 'POST', 'PUT', 'OPTIONS'],
   credentials: true,
   allowHeaders: ['Content-Type', 'Authorization', 'X-CSRF-Token'],
 })

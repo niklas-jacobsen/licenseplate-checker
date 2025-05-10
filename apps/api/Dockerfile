@@ -1,35 +1,25 @@
-# Use Bun official image
-FROM oven/bun:1 AS base
+
+# Use Bun image as base
+FROM oven/bun:1.2 AS base
 WORKDIR /usr/src/app
-ENV HOST=0.0.0.0
 
-# Install dependencies once
-FROM base AS install
+RUN apt-get update && apt-get install -y openssl
 
-# Copy only the files needed for install
 COPY . .
-
-# Install prod dependencies only
 RUN bun install
 
-WORKDIR /usr/src/app/apps/api
-
-# Build app and generate Prisma client
-RUN bunx prisma generate && \
-    bun run build
-
-# Final production image
-FROM base AS release
-
-# Optional: ENV for DB
 ARG DATABASE_URL
 ENV DATABASE_URL=$DATABASE_URL
+RUN bunx prisma generate --schema apps/api/prisma/schema.prisma
 
-# Copy node_modules and dist from previous stage
-COPY --from=install /usr/src/app/node_modules ./node_modules
-COPY --from=install /usr/src/app .
+# Final release stage
+FROM base AS release
+COPY --from=base /usr/src/app/apps/api /usr/src/app/apps/api
+COPY --from=base /usr/src/app/packages/shared /usr/src/app/packages/shared
+
+WORKDIR /usr/src/app/apps/api/
 
 USER bun
 EXPOSE 8080
 
-ENTRYPOINT ["sh", "-c", "bunx prisma migrate deploy && bun run db:seed && bun run start"]
+CMD ["bun", "run", "start"]

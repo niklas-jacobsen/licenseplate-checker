@@ -1,5 +1,5 @@
 import { zValidator } from '@hono/zod-validator'
-import { zUserScheme } from '@licenseplate-checker/shared/validators'
+import { zUserScheme } from '@shared/validators'
 import { Hono } from 'hono'
 import AuthController from '../controllers/Authorization.controller'
 import UserController from '../controllers/User.controller'
@@ -49,7 +49,15 @@ authRouter.post('/register', zValidator('json', zUserScheme), async (c) => {
       password: await authController.hashPassword(password),
     })
 
-    return c.json(user)
+    const token = await authController.generateJWT(user.id)
+
+    return c.json(
+      {
+        message: 'User created and logged in',
+        token: token,
+      },
+      200
+    )
   } catch (error) {
     return c.json({ message: 'Error during Sign Up', error }, 500)
   }

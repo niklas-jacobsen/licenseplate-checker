@@ -46,3 +46,36 @@ export const zUserScheme = z
     password: zPasswordSchema,
   })
   .strict({ message: 'Request contains too many arguments' })
+
+export const zUserUpdateScheme = z
+  .object({
+    firstname: z
+      .string()
+      .min(2, { message: 'First name must be at least two characters' })
+      .or(z.undefined()),
+    lastname: z
+      .string()
+      .min(2, { message: 'Last name must be at least two characters' })
+      .or(z.undefined()),
+    email: z
+      .string()
+      .email({ message: 'Please enter a valid email address' })
+      .or(z.undefined()),
+    street: z
+      .string()
+      .min(2, { message: 'Street must be at least two characters' })
+      .or(z.undefined()),
+    streetNumber: z
+      .string()
+      .min(1, { message: 'House number is required' })
+      .or(z.undefined()),
+    zipCode: z
+      .string()
+      .length(5, { message: 'Zip Code must be five characters' })
+      .or(z.undefined()),
+    city: z
+      .string()
+      .min(2, { message: 'City must be at least two characters' })
+      .or(z.undefined()),
+  })
+  .strict({ message: 'Request contains too many arguments' })

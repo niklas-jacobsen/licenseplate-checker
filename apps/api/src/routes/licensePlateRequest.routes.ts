@@ -1,5 +1,5 @@
 import { zValidator } from '@hono/zod-validator'
-import { zRequestScheme } from '@licenseplate-checker/shared/validators'
+import { zRequestScheme } from '@shared/validators'
 import { Context, Hono } from 'hono'
 import CityController from '../controllers/City.controller'
 import LicenseplateRequestController from '../controllers/LicensePlateRequest.controller'
