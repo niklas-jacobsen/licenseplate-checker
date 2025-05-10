@@ -27,7 +27,7 @@ import {
 import { Input } from 'apps/web/components/ui/input'
 import { Alert, AlertDescription } from 'apps/web/components/ui/alert'
 import { useAuth } from 'apps/web/lib/auth-context'
-import { zUserScheme } from '@licenseplate-checker/shared/validators'
+import { zUserScheme } from '@shared/validators'
 import SimpleNavBar from 'apps/web/components/nav-bar-simple'
 import LoginRedirectHandler from 'apps/web/components/login-redirect-handler'
 
@@ -43,11 +43,12 @@ const formSchema = zUserScheme
   })
 
 export default function SignUpPage() {
+  const router = useRouter()
+  const { signUp, user } = useAuth()
+
+  const [redirect, setRedirect] = useState('/')
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
-  const router = useRouter()
-  const [redirect, setRedirect] = useState('/')
-  const { signUp, user } = useAuth()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),

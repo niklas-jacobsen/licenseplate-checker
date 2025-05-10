@@ -1,5 +1,5 @@
 import { zValidator } from '@hono/zod-validator'
-import { zUserScheme } from '@licenseplate-checker/shared/validators'
+import { zUserScheme } from '@shared/validators'
 import { Hono } from 'hono'
 import AuthController from '../controllers/Authorization.controller'
 import UserController from '../controllers/User.controller'

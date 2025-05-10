@@ -27,7 +27,7 @@ import {
 import { Input } from 'apps/web/components/ui/input'
 import { Alert, AlertDescription } from 'apps/web/components/ui/alert'
 import { useAuth } from 'apps/web/lib/auth-context'
-import { zUserScheme } from '@licenseplate-checker/shared/validators'
+import { zUserScheme } from '@shared/validators'
 import SimpleNavBar from 'apps/web/components/nav-bar-simple'
 import LoginRedirectHandler from 'apps/web/components/login-redirect-handler'
 

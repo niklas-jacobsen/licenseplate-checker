@@ -12,6 +12,14 @@ import apiClient from './api-client'
 interface User {
   id: string
   email: string
+  salutation?: string
+  firstname?: string
+  lastname?: string
+  birthdate?: string
+  street?: string
+  streetNumber?: string
+  zipcode?: string
+  city?: string
 }
 
 interface AuthContextType {
@@ -19,6 +27,7 @@ interface AuthContextType {
   isLoading: boolean
   signUp: (email: string, password: string) => Promise<void>
   logIn: (email: string, password: string) => Promise<void>
+  updateUser: (data: Partial<User>) => Promise<void>
   logOut: () => void
 }
 
@@ -42,7 +51,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const response = await apiClient.get<User>('/user/me', token)
 
         if (response.data) {
-          console.log(response.data)
           setUser(response.data)
         } else {
           setUser(null)
@@ -98,8 +106,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
   }
 
+  const updateUser = async (updatedFields: Partial<User>) => {
+    const response = await apiClient.put<User>('/user/me', updatedFields)
+
+    if (response.data) {
+      setUser(response.data)
+    } else {
+      throw new Error(response.error || 'Failed to update profile')
+    }
+  }
+
   return (
-    <AuthContext.Provider value={{ user, isLoading, signUp, logIn, logOut }}>
+    <AuthContext.Provider
+      value={{ user, isLoading, signUp, logIn, logOut, updateUser }}
+    >
       {children}
     </AuthContext.Provider>
   )

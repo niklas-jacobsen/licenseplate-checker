@@ -1,5 +1,5 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios'
-import { ApiResponse } from '@licenseplate-checker/shared/types'
+import { ApiResponse } from '@shared/types'
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
@@ -24,8 +24,6 @@ class ApiClient {
     config: AxiosRequestConfig = {}
   ): Promise<ApiResponse<T>> {
     try {
-      console.log('[API Request]', method, endpoint)
-      console.log('[Headers]', config.headers)
       const response = await this.axiosInstance.request<T>({
         method,
         url: endpoint,
