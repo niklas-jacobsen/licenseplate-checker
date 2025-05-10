@@ -38,6 +38,7 @@ licensePlateRequestRouter.post(
   async (c: Context) => {
     try {
       const user = c.get('user')
+      const userId = user.id
       const body = await c.req.json()
 
       // Check if the city exists
@@ -46,12 +47,14 @@ licensePlateRequestRouter.post(
         return c.json({ message: 'City initials not a valid German city' }, 400)
       }
 
+      const uppercaseLetters = String(body.letters).toUpperCase()
+
       // Check if request already exists for the same user
       const existingRequest = await requestController.getById({
         city: body.city,
-        letters: body.letters,
+        letters: uppercaseLetters,
         numbers: body.numbers,
-        user,
+        user: userId,
       })
       if (existingRequest) {
         return c.json(
@@ -63,9 +66,9 @@ licensePlateRequestRouter.post(
       // Create a new license plate request
       const request = await requestController.createRequest(
         body.city,
-        body.letters,
+        uppercaseLetters,
         body.numbers,
-        user
+        userId
       )
 
       if (!request) {
@@ -75,7 +78,7 @@ licensePlateRequestRouter.post(
       // Return confirmation message
       return c.json(
         {
-          message: `Request ${body.city}-${body.letters}-${body.numbers} was created successfully`,
+          message: `Request ${body.city}-${uppercaseLetters}-${body.numbers} was created successfully`,
         },
         200
       )
