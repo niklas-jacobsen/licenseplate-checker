@@ -13,7 +13,7 @@ class AuthController {
 
   async generateJWT(userId: string, secret: string = ENV.JWT_SECRET) {
     const token = sign({ id: userId }, secret, {
-      expiresIn: '30 minutes',
+      expiresIn: '30 days',
     })
     return token
   }

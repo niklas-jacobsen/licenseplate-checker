@@ -1,0 +1,6 @@
+[test]
+preload = ["./apps/web/tests/happydom.ts", "./apps/web/tests/testing-library.ts"]
+
+[install.alias]
+react = "./node_modules/react"
+react-dom = "./node_modules/react-dom"

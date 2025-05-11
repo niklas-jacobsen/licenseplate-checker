@@ -38,6 +38,7 @@ licensePlateRequestRouter.post(
   async (c: Context) => {
     try {
       const user = c.get('user')
+      const userId = user.id
       const body = await c.req.json()
 
       // Check if the city exists
@@ -46,12 +47,14 @@ licensePlateRequestRouter.post(
         return c.json({ message: 'City initials not a valid German city' }, 400)
       }
 
+      const uppercaseLetters = String(body.letters).toUpperCase()
+
       // Check if request already exists for the same user
       const existingRequest = await requestController.getById({
         city: body.city,
-        letters: body.letters,
+        letters: uppercaseLetters,
         numbers: body.numbers,
-        user,
+        user: userId,
       })
       if (existingRequest) {
         return c.json(
@@ -63,9 +66,9 @@ licensePlateRequestRouter.post(
       // Create a new license plate request
       const request = await requestController.createRequest(
         body.city,
-        body.letters,
+        uppercaseLetters,
         body.numbers,
-        user
+        userId
       )
 
       if (!request) {
@@ -75,7 +78,7 @@ licensePlateRequestRouter.post(
       // Return confirmation message
       return c.json(
         {
-          message: `Request ${body.city}-${body.letters}-${body.numbers} was created successfully`,
+          message: `Request ${body.city}-${uppercaseLetters}-${body.numbers} was created successfully`,
         },
         200
       )
@@ -87,3 +90,85 @@ licensePlateRequestRouter.post(
     }
   }
 )
+
+licensePlateRequestRouter.get('/me', async (c: Context) => {
+  const user = c.get('user')
+  const userId = user.id
+
+  if (!userId) {
+    return c.json({ error: 'Invalid user ID in token' }, 401)
+  }
+
+  try {
+    // Get all requests for the authenticated user
+    const requests = await requestController.getByUserId(userId)
+
+    // If no requests are found, return a 404 response
+    if (requests.length === 0) {
+      return c.json({ message: 'No requests found for this user' }, 404)
+    }
+
+    // Return the found requests
+    return c.json({ requests }, 200)
+  } catch (error) {
+    console.error('Error fetching license plate requests:', error)
+    return c.json(
+      { message: 'An error occurred while fetching requests', error: error },
+      500
+    )
+  }
+})
+
+licensePlateRequestRouter.delete('/delete', async (c: Context) => {
+  const user = c.get('user')
+  const userId = user.id
+  const body = await c.req.json()
+
+  if (!userId) {
+    return c.json({ error: 'Invalid user ID in token' }, 401)
+  }
+
+  if (!body.city || !body.letters || !body.numbers) {
+    return c.json(
+      {
+        error: 'Missing required fields: city, letterRequest, or numberRequest',
+      },
+      400
+    )
+  }
+
+  const uppercaseLetters = String(body.letters).toUpperCase()
+
+  try {
+    // Check if the request exists
+    const existingRequest = await requestController.getById({
+      city: body.city,
+      letters: uppercaseLetters,
+      numbers: body.numbers,
+      user: userId,
+    })
+
+    if (!existingRequest) {
+      return c.json({ message: 'Request not found' }, 404)
+    }
+
+    // Delete the request
+    await requestController.deleteRequest({
+      city: body.city,
+      letters: uppercaseLetters,
+      numbers: body.numbers,
+      user: userId,
+    })
+
+    return c.json({ message: 'Request successfully deleted' }, 200)
+  } catch (error) {
+    console.error('Error deleting license plate request:', error)
+    return c.json(
+      {
+        message: 'An error occurred while deleting the request',
+        error: error,
+      },
+      500
+    )
+  }
+})

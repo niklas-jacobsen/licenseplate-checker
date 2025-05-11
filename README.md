@@ -26,12 +26,26 @@ More information on the topics listed below can be found on their respective pag
 ## Techstack
 
 - [TypeScript](https://www.typescriptlang.org/): Type-safe superset of JavaScript
-- [Docker](https://www.docker.com/): Provides containerization to run the service in an isolated environment
-- [Hono](https://hono.dev/): Web Development Framework
 - [Bun](https://bun.sh/): JavaScript Runtime, Package Manager, Test Runner
+- [Turborepo](https://turbo.build/repo): Monorepo tool for managing multiple packages  
+- [Zod](https://zod.dev/): Type-safe schema validation shared between front- and backend
+
+### Backend-specific
+- [Docker](https://www.docker.com/): Provides containerization to run the backend in an isolated environment
+- [Hono](https://hono.dev/): Web Development Framework
 - [Prisma](https://www.prisma.io/): Object-Relations Mapper for Postgres Database
 - [PostgreSQL](https://www.postgresql.org/): Relational Database
 - [Playwright](https://playwright.dev/): Web automation and scraping
+
+### Frontend-specific
+- [Next.js](https://nextjs.org/): React framework with built-in routing and server features  
+- [React](https://react.dev/): Library for building UI components  
+- [React Hook Form](https://react-hook-form.com/): Simplifies form state and validation   
+- [Tailwind CSS](https://tailwindcss.com/): Utility-based CSS framework  
+- [shadcn/ui](https://ui.shadcn.com/): Prebuilt components using Tailwind  
+- [Lucide React](https://lucide.dev/): Icon library for React apps  
+- [happy-dom](https://github.com/capricorn86/happy-dom): Lightweight DOM implementation for frontend testting with Bun
+- [Axios](https://axios-http.com/): Library for making HTTP requests to backend
 
 ## Running this project locally
 
@@ -42,4 +56,4 @@ To run this project locally follow these steps:
 3. Create an .env file following the structure of the .env.example
 4. run `bun install` to install dependencies
 5. run `bun db:migrate`
-6. run `bun run dev` to start the service
+6. run `bun turbo run dev` to start the service

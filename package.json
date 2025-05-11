@@ -10,6 +10,7 @@
     "start": "turbo run start",
     "format": "turbo run format",
     "lint": "turbo run lint",
+    "test:web": "bun test apps/web",
     "test": "turbo run test:unit && turbo run test:int",
     "clean": "turbo run clean && rm -rf node_modules",
     "typecheck": "turbo run typecheck",

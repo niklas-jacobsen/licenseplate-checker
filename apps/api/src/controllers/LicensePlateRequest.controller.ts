@@ -62,6 +62,14 @@ class LicenseplateRequestController {
     })
   }
 
+  async getByUserId(userId: string) {
+    return prisma.licenseplateRequest.findMany({
+      where: {
+        userId: userId,
+      },
+    })
+  }
+
   async updateRequestStatus(
     id: {
       city: string
@@ -86,9 +94,18 @@ class LicenseplateRequestController {
     })
   }
 
-  //   async delete(id: string) {
-  //     return prisma.licenseplateRequest.delete({ where: { id } });
-  //   }
+  async deleteRequest(id: LicensePlateRequestType) {
+    return prisma.licenseplateRequest.delete({
+      where: {
+        city_letterRequest_numberRequest_userId: {
+          city: id.city,
+          letterRequest: id.letters,
+          numberRequest: id.numbers,
+          userId: id.user,
+        },
+      },
+    })
+  }
 }
 
 export default LicenseplateRequestController
