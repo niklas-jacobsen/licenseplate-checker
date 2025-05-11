@@ -23,6 +23,7 @@ import LicensePlatePreview from './plate-preview'
 import { useAuth } from '../lib/auth-context'
 import { useRouter } from 'next/navigation'
 import apiClient from '../lib/api-client'
+import Link from 'next/link'
 
 // Custom validator for combined wildcard constraints
 const validateWildcardConstraints = (data: {
@@ -233,9 +234,19 @@ export default function LicensePlateForm() {
                 Our system will now attempt to automatically reserve these
                 plates. You can check the status in your dashboard.
               </p>
-              <Button className="w-full" onClick={() => setIsSubmitted(false)}>
-                Submit Another Request
-              </Button>
+              <div className="flex justify-center gap-4">
+                <Button
+                  className=" w-full"
+                  onClick={() => setIsSubmitted(false)}
+                >
+                  Submit Another Request
+                </Button>
+                <Link href="/requests" className="w-full">
+                  <Button variant="outline" className="w-full">
+                    View My Requests
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
         </CardContent>
