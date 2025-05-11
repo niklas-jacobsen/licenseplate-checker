@@ -5,12 +5,15 @@ It is recommended to first read the general README file located in the project's
 
 ## Table of Contents
 
-- [Hono](#hono)
+- [Backend Measures](#backend-measures)
+- [Frontend Measures](#frontend-measures)
 - [Threat Model](#threat-model)
 - [Potential security concerns](#potential-security-concerns)
 - [Mitigations implemented](#mitigations-implemented)
 
-## Hono
+## Backend Measures
+
+### Hono
 
 Hono was chosen as a framework as it comes with many features out of the box, resulting in less dependency on external packages.
 The following built-in middlewares were used:
@@ -34,6 +37,26 @@ Validates all inputs against custom zod schemas to ensure inputs are in the corr
 
 **`hono-rate-limiter`** \
 IP-based rate limiting with refresh window and limit per window set in the environment variables. Provides response headers with rate limit information by default which have been disabled.
+
+## Frontend Measures
+
+### Client-side Safeguards
+
+**Client-side Data Preservation (LocalStorage)**  
+User authentication tokens are stored in `localStorage` to keep users logged in across browser sessions. This avoids forcing users to log in repeatedly while still enabling manual logout and expiration handling.
+
+**Form Handling with Zod Validators**  
+All forms use shared Zod schemas from the backend to validate user input on the client side before sending it to the server. This prevents invalid or malformed data from being submitted in the first place.
+
+**Submit Button Rate-Limiting**  
+To avoid users spamming forms or double-submitting, the submit button is disabled after it is clicked and only re-enabled after the request finishes. This works in conjunction with the backend's rate limiter, reducing accidental repeat requests and helping protect the backend.
+
+**Protected Routes with Redirects**  
+Pages that require authentication check if a user is logged in before rendering. If not, the user is redirected to the login page. After logging in, they are sent back to the page they originally tried to access. This, together with the data preservation optimizes the user flow to reduce confusion.
+
+**Error Display in UI**  
+When API calls fail or validation does not pass, clear error messages are shown next to the relevant input or as alerts. This helps users understand what went wrong and reduces confusion.
+
 
 ## Threat Model
 
