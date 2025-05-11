@@ -5,17 +5,31 @@ import { Button } from './ui/button'
 import LicensePlatePreview from './plate-preview'
 import router from 'next/router'
 
+interface LicensePlateRequest {
+  city: string
+  letterRequest: string
+  numberRequest: string
+  userId: string
+  checkstatus: string
+  createdAt: string
+  updatedAt: string
+}
+
+interface RequestList {
+  requests: LicensePlateRequest[]
+}
+
 const LicensePlateRequests = () => {
-  const [requests, setRequests] = useState<any[]>([])
+  const [requests, setRequests] = useState<LicensePlateRequest[]>([])
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string>('')
 
   useEffect(() => {
     const fetchRequests = async () => {
       try {
-        const response = await apiClient.get('/request/me')
+        const response = await apiClient.get<RequestList>('/request/me')
 
-        if (response.status === 200) {
+        if (response.status === 200 && response.data?.requests) {
           setRequests(response.data.requests || [])
         } else {
           setError('No requests found for this user')
@@ -52,8 +66,8 @@ const LicensePlateRequests = () => {
                 <div className="p-4 md:w-1/3 flex items-center justify-center bg-gray-50">
                   <LicensePlatePreview
                     city={request.city}
-                    letters={request.letters}
-                    numbers={request.numbers}
+                    letters={request.letterRequest}
+                    numbers={request.numberRequest}
                   />
                 </div>
                 <div className="p-4 md:w-2/3">

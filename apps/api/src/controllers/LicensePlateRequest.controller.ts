@@ -67,10 +67,6 @@ class LicenseplateRequestController {
       where: {
         userId: userId,
       },
-      include: {
-        user: true,
-        cityAbbreviation: true,
-      },
     })
   }
 
