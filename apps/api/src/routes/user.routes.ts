@@ -45,7 +45,6 @@ userRouter.put(
   auth,
   zValidator('json', zUserUpdateScheme),
   async (c: Context) => {
-    console.log('[PUT /user/me] incoming body:', await c.req.text())
     const {
       email,
       firstname,

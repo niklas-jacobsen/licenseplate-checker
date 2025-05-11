@@ -2,7 +2,6 @@
 
 import { useState, useRef } from 'react'
 import { Check, ChevronsUpDown } from 'lucide-react'
-
 import { cn } from '@shared/lib/utils'
 import { Button } from './button'
 import {
@@ -18,8 +17,8 @@ import { Popover, PopoverContent, PopoverTrigger } from './popover'
 // Placeholder cities
 const germanCities = [
   { value: 'B', label: 'Berlin' },
-  { value: 'M', label: 'München (Munich)' },
-  { value: 'K', label: 'Köln (Cologne)' },
+  { value: 'M', label: 'München' },
+  { value: 'K', label: 'Köln' },
   { value: 'F', label: 'Frankfurt' },
   { value: 'S', label: 'Stuttgart' },
   { value: 'D', label: 'Düsseldorf' },
@@ -28,7 +27,7 @@ const germanCities = [
   { value: 'HB', label: 'Bremen' },
   { value: 'H', label: 'Hannover' },
   { value: 'DD', label: 'Dresden' },
-  { value: 'N', label: 'Nürnberg (Nuremberg)' },
+  { value: 'N', label: 'Nürnberg' },
   { value: 'DO', label: 'Dortmund' },
   { value: 'E', label: 'Essen' },
   { value: 'BI', label: 'Bielefeld' },
