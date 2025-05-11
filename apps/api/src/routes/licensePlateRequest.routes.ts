@@ -44,7 +44,10 @@ licensePlateRequestRouter.post(
       // Check if the city exists
       const cityIntialsExist = await cityController.getById(body.city)
       if (!cityIntialsExist) {
-        return c.json({ message: 'City initials not a valid German city' }, 400)
+        return c.json(
+          { message: `City initials ${body.city} not a valid German city` },
+          400
+        )
       }
 
       const uppercaseLetters = String(body.letters).toUpperCase()
