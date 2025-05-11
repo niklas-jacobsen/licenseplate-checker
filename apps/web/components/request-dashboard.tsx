@@ -61,7 +61,10 @@ const LicensePlateRequests = () => {
           </div>
         ) : (
           requests.map((request) => (
-            <Card key={request.id} className="overflow-hidden">
+            <Card
+              key={`${request.city}-${request.letterRequest}-${request.numberRequest}-${request.userId}`}
+              className="overflow-hidden"
+            >
               <div className="flex flex-col md:flex-row">
                 <div className="p-4 md:w-1/3 flex items-center justify-center bg-gray-50">
                   <LicensePlatePreview
