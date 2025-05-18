@@ -29,4 +29,4 @@ memory = "512mb"
 processes = ["fly_app_release_command"]
 
 [deploy]
-release_command = "bunx prisma migrate deploy --schema prisma/schema.prisma && bun run prisma/seeding/seed.js"
+release_command = "/bin/bash release.sh"
