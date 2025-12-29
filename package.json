@@ -17,12 +17,12 @@
     "db:seed": "bun apps/api/prisma/seeding/seed.js"
   },
   "devDependencies": {
-    "turbo": "^2.5.1",
+    "turbo": "^2.7.2",
     "@biomejs/biome": "^1.9.4",
-    "typescript": "^5.6.2"
+    "typescript": "^5.9.3"
   },
   "dependencies": {
-    "@emnapi/wasi-threads": "^1.0.2",
+    "@emnapi/wasi-threads": "^1.1.0",
     "@licenseplate-checker/shared": "*",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
