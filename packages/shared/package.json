@@ -11,6 +11,7 @@
     "./components/*": "./components/*",
     "./lib/*": "./lib/*",
     "./types": "./types/index.ts",
+    "./workflow-dsl": "./workflow-dsl/index.ts",
     ".": "./*"
   },
   "private": true,
