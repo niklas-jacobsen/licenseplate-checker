@@ -5,7 +5,7 @@ import type {
   WorkflowNode,
   WorkflowEdge,
 } from '@shared/workflow-dsl'
-import { nodeRegistry } from '../registry'
+import { nodeRegistry } from '@shared/node-registry'
 
 export type ValidationIssueType =
   | 'graph.parse'
@@ -92,6 +92,7 @@ export function validateGraph(
 ):
   | { ok: true; graph: WorkflowGraph; issues: ValidationIssue[] }
   | { ok: false; issues: ValidationIssue[] } {
+  //Parse Schema
   const parsed = WorkflowGraphSchema.safeParse(input)
   if (!parsed.success) {
     return {
@@ -109,7 +110,7 @@ export function validateGraph(
   const graph = parsed.data
   const issues: ValidationIssue[] = []
 
-  // Validate start and end counts
+  //Validate start and end nodes
   const starts = findStartNodes(graph.nodes)
   const ends = findEndNodes(graph.nodes)
 
@@ -127,7 +128,7 @@ export function validateGraph(
     })
   }
 
-  // Validate nodes against registry and validate props
+  //Validate node registry and  props
   for (const node of graph.nodes) {
     const spec = nodeRegistry[node.type]
     if (!spec) {
@@ -139,7 +140,9 @@ export function validateGraph(
       continue
     }
 
-    const result = spec.propsSchema.safeParse(node.data ?? {})
+    //Validate node data
+    const result = spec.propsSchema.safeParse(node.data.config ?? {})
+
     if (!result.success) {
       issues.push({
         type: 'node.props.invalid',
@@ -150,11 +153,11 @@ export function validateGraph(
     }
   }
 
-  // Build node lookup
+  // Build Node lookup
   const nodeById = new Map<string, WorkflowNode>()
   for (const n of graph.nodes) nodeById.set(n.id, n)
 
-  // Validate edges
+  //Validate edges
   for (const edge of graph.edges) {
     const sourceNode = nodeById.get(edge.source)
     const targetNode = nodeById.get(edge.target)
@@ -195,7 +198,7 @@ export function validateGraph(
     }
   }
 
-  // Reachability check
+  //Reachability check
   const reachable = findReachableNodeIds(graph)
   if (reachable.size > 0) {
     for (const node of graph.nodes) {
