@@ -1,5 +1,5 @@
-import { z } from 'zod'
 import type { NodeSpec } from '../registry'
+import { TypeTextNodeConfig } from '../../workflow-dsl/config'
 
 export const typeTextNode: NodeSpec = {
   type: 'core.typeText',
@@ -9,8 +9,5 @@ export const typeTextNode: NodeSpec = {
   inputs: [{ id: 'in' }],
   outputs: [{ id: 'next' }],
 
-  propsSchema: z.object({
-    selector: z.string().min(1),
-    text: z.string(),
-  }),
+  propsSchema: TypeTextNodeConfig,
 }

@@ -1,5 +1,5 @@
-import { z } from 'zod'
 import type { NodeSpec } from '../registry'
+import { EndNodeConfig } from '../../workflow-dsl/config'
 
 export const endNode: NodeSpec = {
   type: 'core.end',
@@ -9,5 +9,5 @@ export const endNode: NodeSpec = {
   inputs: [{ id: 'in' }],
   outputs: [],
 
-  propsSchema: z.object({}),
+  propsSchema: EndNodeConfig,
 }

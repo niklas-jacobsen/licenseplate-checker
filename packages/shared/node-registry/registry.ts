@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import type { CoreNodeType } from '@shared/workflow-dsl'
+import type { CoreNodeType } from '../workflow-dsl'
 
 export const PortSchema = z.object({
   id: z.string(),
