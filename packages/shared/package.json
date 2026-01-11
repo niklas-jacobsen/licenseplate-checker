@@ -12,6 +12,7 @@
     "./lib/*": "./lib/*",
     "./types": "./types/index.ts",
     "./workflow-dsl": "./workflow-dsl/index.ts",
+    "./builder-ir": "./builder-ir/index.ts",
     ".": "./*"
   },
   "private": true,
