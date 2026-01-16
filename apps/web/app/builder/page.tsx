@@ -18,6 +18,7 @@ import {
 } from '@xyflow/react'
 
 import type { WorkflowNode, CoreNodeType } from '@shared/workflow-dsl/types'
+import { nodeRegistry } from '@shared/node-registry'
 import { PALETTE_NODES } from './config'
 
 import '@xyflow/react/dist/style.css'
@@ -61,32 +62,12 @@ const initialEdges: Edge[] = [
   },
 ]
 
-//Helper function for UI label
-function nodeLabel(type: CoreNodeType): string {
-  switch (type) {
-    case 'core.start':
-      return 'Start'
-    case 'core.end':
-      return 'End'
-    case 'core.click':
-      return 'Click Element'
-    case 'core.typeText':
-      return 'Type Text'
-    case 'core.openPage':
-      return 'Navigate'
-    case 'core.conditional':
-      return 'Conditional'
-    default:
-      return 'Node'
-  }
-}
-
 function createNode(
   type: CoreNodeType,
   position: { x: number; y: number }
 ): WorkflowNode {
   const id = `${type}-${crypto.randomUUID()}`
-  const label = nodeLabel(type)
+  const label = nodeRegistry[type]?.label ?? 'Node'
 
   switch (type) {
     case 'core.click':
