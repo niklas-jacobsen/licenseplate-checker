@@ -3,7 +3,7 @@ import { OpenPageNodeConfig } from '../../workflow-dsl/config'
 
 export const openPageNode: NodeSpec = {
   type: 'core.openPage',
-  label: 'Navigate',
+  label: 'Open Page',
   category: 'Browser',
 
   inputs: [{ id: 'in' }],
