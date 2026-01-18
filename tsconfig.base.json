@@ -8,8 +8,9 @@
     "baseUrl": ".",
     "paths": {
       "@shared/*": ["packages/shared/*"],
-      "@api/*": ["api/src/*"],
-      "@routes": ["api/src/routes/*"]
+      "@web/*": ["apps/web/*"],
+      "@api/*": ["apps/api/*"],
+      "@routes": ["apps/api/src/routes/*"]
     },
     "allowJs": true,
     "noEmit": true,
