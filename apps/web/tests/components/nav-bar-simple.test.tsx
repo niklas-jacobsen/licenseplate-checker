@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test'
 import { screen, render } from '@testing-library/react'
-import SimpleNavBar from 'apps/web/components/nav-bar-simple'
+import SimpleNavBar from '@/components/nav-bar-simple'
 
 test('renders simple nav bar component', () => {
   render(<SimpleNavBar />)

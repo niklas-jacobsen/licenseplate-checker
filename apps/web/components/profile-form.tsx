@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form'
 import * as z from 'zod'
 import { useState, useEffect } from 'react'
 import { Loader2 } from 'lucide-react'
-import { Button } from 'apps/web/components/ui/button'
+import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
@@ -13,7 +13,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from 'apps/web/components/ui/card'
+} from '@/components/ui/card'
 import {
   Form,
   FormControl,
@@ -21,12 +21,12 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from 'apps/web/components/ui/form'
-import { Input } from 'apps/web/components/ui/input'
-import { Alert, AlertDescription } from 'apps/web/components/ui/alert'
-import { useAuth } from 'apps/web/lib/auth-context'
+} from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { useAuth } from '@/lib/auth-context'
 import { zUserUpdateScheme } from '@shared/validators'
-import ProfileUpdateModal from 'apps/web/components/profile-update-modal'
+import ProfileUpdateModal from '@/components/profile-update-modal'
 
 export default function ProfileForm() {
   const [isSaving, setIsSaving] = useState(false)

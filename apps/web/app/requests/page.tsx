@@ -1,7 +1,7 @@
 'use client'
 
-import NavBar from 'apps/web/components/nav-bar'
-import LicensePlateRequests from 'apps/web/components/request-dashboard'
+import NavBar from '@/components/nav-bar'
+import LicensePlateRequests from '@/components/request-dashboard'
 
 export default function RequestsPage() {
   return (

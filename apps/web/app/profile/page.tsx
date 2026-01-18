@@ -1,10 +1,10 @@
 'use client'
 
 import { useEffect } from 'react'
-import NavBar from 'apps/web/components/nav-bar'
-import { useAuth } from 'apps/web/lib/auth-context'
+import NavBar from '@/components/nav-bar'
+import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
-import ProfileForm from 'apps/web/components/profile-form'
+import ProfileForm from '@/components/profile-form'
 
 export default function ProfilePage() {
   const { user, isLoading } = useAuth()

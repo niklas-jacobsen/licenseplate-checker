@@ -1,6 +1,6 @@
 'use client'
 
-import NavBar from 'apps/web/components/nav-bar'
+import NavBar from '@/components/nav-bar'
 import { useCallback, useState } from 'react'
 import {
   ReactFlow,
@@ -31,8 +31,8 @@ import {
   CardContent,
   CardFooter,
   CardAction,
-} from 'apps/web/components/ui/card'
-import { Button } from 'apps/web/components/ui/button'
+} from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 
 const Background = BackgroundComponent as any
 

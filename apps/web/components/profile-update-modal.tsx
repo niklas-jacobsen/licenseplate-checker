@@ -7,8 +7,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from 'apps/web/components/ui/dialog'
-import { Button } from 'apps/web/components/ui/button'
+} from '@/components/ui/dialog'
+import { Button } from '@/components/ui/button'
 import { InfoIcon } from 'lucide-react'
 
 interface ProfileUpdateModalProps {
