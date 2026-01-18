@@ -18,72 +18,13 @@ import { zRequestScheme } from '@shared/validators'
 import { useForm } from 'react-hook-form'
 import { Loader2 } from 'lucide-react'
 import { Input } from './ui/input'
-import { Alert, AlertDescription } from './ui/alert'
 import LicensePlatePreview from './plate-preview'
 import { useAuth } from '../lib/auth-context'
 import { useRouter } from 'next/navigation'
 import apiClient from '../lib/api-client'
 import Link from 'next/link'
 
-// Custom validator for combined wildcard constraints
-const validateWildcardConstraints = (data: {
-  letters: string
-  numbers: string
-}) => {
-  // Count total ? wildcards in both fields
-  const letterWildcards = (data.letters.match(/\?/g) || []).length
-  const numberWildcards = (data.numbers.match(/\?/g) || []).length
-  const totalWildcards = letterWildcards + numberWildcards
-
-  // Check if both fields have * wildcard
-  const bothHaveAsterisk =
-    data.letters.includes('*') && data.numbers.includes('*')
-
-  // Check if letters field has ??
-  const hasDoubleQuestionMark = data.letters === '??'
-
-  // Check if numbers field has * with other numbers
-  const hasAsteriskWithNumbers =
-    data.numbers.includes('*') && data.numbers.replace('*', '').length > 0
-
-  if (totalWildcards > 3) {
-    return {
-      valid: false,
-      message: "Maximum 3 '?' wildcards total across both fields.",
-    }
-  }
-
-  if (bothHaveAsterisk) {
-    return {
-      valid: false,
-      message: "Both fields cannot have '*' simultaneously.",
-    }
-  }
-
-  if (hasDoubleQuestionMark) {
-    return { valid: false, message: "Letters field cannot be '??'." }
-  }
-
-  if (hasAsteriskWithNumbers) {
-    return {
-      valid: false,
-      message: "The '*' wildcard in the numbers field can only be used alone.",
-    }
-  }
-
-  return { valid: true }
-}
-
-// German license plate format validation
-const formSchema = zRequestScheme.refine(
-  (data) => {
-    const result = validateWildcardConstraints(data)
-    return result.valid
-  },
-  {
-    message: 'Invalid wildcard combination. Check the wildcard rules below.',
-  }
-)
+const formSchema = zRequestScheme
 
 // Local storage key for saved form data
 const SAVED_FORM_KEY = 'plateReserve:savedFormData'
@@ -93,10 +34,8 @@ export default function LicensePlateForm() {
   const router = useRouter()
 
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [validationMessage, setValidationMessage] = useState('')
   const [authError, setAuthError] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
-  const [allFieldsValid, setAllFieldsValid] = useState(false)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -126,44 +65,6 @@ export default function LicensePlateForm() {
   const city = form.watch('city')
   const letters = form.watch('letters')
   const numbers = form.watch('numbers')
-
-  // Check wildcard constraints and update validation message
-  useEffect(() => {
-    const result = validateWildcardConstraints({ letters, numbers })
-    if (!result.valid && result.message) {
-      setValidationMessage(result.message)
-    } else {
-      setValidationMessage('')
-    }
-  }, [letters, numbers])
-
-  // Very messy validation checks but it works for now.
-  // Needs to be refactored asap
-  useEffect(() => {
-    const { isValid } = form.formState
-
-    // Check if all fields are valid and have values
-    const allFieldsValid =
-      !!city &&
-      !form.getFieldState('city').invalid &&
-      !!letters &&
-      !form.getFieldState('letters').invalid &&
-      !!numbers &&
-      !form.getFieldState('numbers').invalid &&
-      isValid
-
-    setAllFieldsValid(allFieldsValid)
-  }, [city, letters, numbers, form.formState.isValid])
-
-  // Check if the plate contains wildcards anywhere
-  const hasWildcards = () => {
-    return (
-      letters?.includes('*') ||
-      letters?.includes('?') ||
-      numbers?.includes('*') ||
-      numbers?.includes('?')
-    )
-  }
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user) {
@@ -285,15 +186,14 @@ export default function LicensePlateForm() {
                     <FormLabel className="flex items-center">Letters</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="AB, X, *..."
+                        placeholder="AB, X..."
                         {...field}
                         className="uppercase"
                         maxLength={2}
                         onChange={(e) => {
-                          // Convert to uppercase and filter out invalid characters
                           const value = e.target.value
                             .toUpperCase()
-                            .replace(/[^A-Z*?]/g, '')
+                            .replace(/[^A-Z]/g, '')
                           field.onChange(value)
                         }}
                       />
@@ -312,18 +212,14 @@ export default function LicensePlateForm() {
                     <FormLabel className="flex items-center">Numbers</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="123, 9?92..."
+                        placeholder="123..."
                         {...field}
                         maxLength={4}
                         onChange={(e) => {
-                          // Filter out invalid characters, ensure no leading zeros
-                          let value = e.target.value.replace(/[^0-9*?]/g, '')
+                          // Strict number validation only, no leading zeros
+                          let value = e.target.value.replace(/[^0-9]/g, '')
 
-                          if (
-                            value.length > 0 &&
-                            value[0] === '0' &&
-                            !['*', '?'].includes(value[0])
-                          ) {
+                          if (value.length > 0 && value[0] === '0') {
                             value = value.substring(1)
                           }
 
@@ -338,39 +234,6 @@ export default function LicensePlateForm() {
                 )}
               />
             </div>
-
-            {validationMessage && (
-              <Alert className="bg-red-50 text-red-800 border-red-200">
-                <AlertDescription>
-                  <p className="font-medium">Validation Error:</p>
-                  <p>{validationMessage}</p>
-                </AlertDescription>
-              </Alert>
-            )}
-
-            <Alert className="bg-blue-50 text-blue-800 border-blue-200 my-2">
-              <AlertDescription>
-                <p className="font-medium">How to use</p>
-                <ul className="list-disc list-inside text-sm mb-3">
-                  <li>Choose your city and enter your desired license plate</li>
-                  <li>
-                    Use "*" to match any sequence of characters (A-ZZ or 1-9999)
-                  </li>
-                  <li>Use ? to match exactly one character (A-Z or 1-9)</li>
-                </ul>
-                <p className="font-medium">Guidelines</p>
-                <ul className="list-disc list-inside text-sm">
-                  <li>
-                    "*" can only be used alone, as it represents all
-                    possibilities
-                  </li>
-                  <li>Both fields cannot have "*" simultaneously</li>
-                  <li>
-                    Maximum of 3 "?" wildcards total across letters and numbers
-                  </li>
-                </ul>
-              </AlertDescription>
-            </Alert>
 
             <div className="pt-4">
               <LicensePlatePreview
