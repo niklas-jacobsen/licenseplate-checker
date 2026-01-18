@@ -2,9 +2,9 @@
   "name": "@licenseplate-checker/shared",
   "version": "1.0.0",
   "devDependencies": {
-    "typescript": "^5",
+    "typescript": "^5.9.3",
     "@biomejs/biome": "^1.9.4",
-    "tailwindcss": "^4.1.4"
+    "tailwindcss": "^4.1.18"
   },
   "exports": {
     "./validators": "./validators/index.ts",
@@ -22,7 +22,7 @@
     "format": "biome format --write ."
   },
   "dependencies": {
-    "@tailwindcss/postcss": "^4.1.4",
-    "postcss": "^8.5.3"
+    "@tailwindcss/postcss": "^4.1.18",
+    "postcss": "^8.5.6"
   }
 }
