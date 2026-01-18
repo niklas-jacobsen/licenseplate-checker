@@ -4,31 +4,13 @@ import zLicensePlateLettersSchema from './licensePlateValidators/lettersRequest.
 import zLicensePlateNumbersSchema from './licensePlateValidators/numbersRequest.validator'
 import zPasswordSchema from './userValidators/password.validator'
 
-export const zRequestScheme = z
-  .object({
-    city: zLicensePlateCitySchema,
-    letters: zLicensePlateLettersSchema,
-    numbers: zLicensePlateNumbersSchema,
-  })
-  .superRefine((data, ctx) => {
-    // Check for double wildcard
-    if (data.letters == '*' && data.numbers == '*') {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message:
-          "Request too broad. Wildcard character '*' not allowed for both letters and numbers",
-      })
-    }
+export const zRequestScheme = z.object({
+  city: zLicensePlateCitySchema,
+  letters: zLicensePlateLettersSchema,
+  numbers: zLicensePlateNumbersSchema,
+})
 
-    // Check if letters is '*' and numbers contains more than three '?'
-    if (data.letters === '*' && (data.numbers.match(/\?/g) || []).length > 3) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message:
-          "Request too broad. 'numbers' cannot contain more than three '?' when 'letters' is '*'",
-      })
-    }
-  })
+export default zRequestScheme
 
 export const zPlateIdScheme = z.object({
   id: zRequestScheme,
