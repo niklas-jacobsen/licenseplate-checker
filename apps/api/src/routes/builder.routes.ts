@@ -87,6 +87,6 @@ builderRouter.post('/execute', async (c) => {
     if (err instanceof AppError) {
       throw err
     }
-    throw new InternalServerError(err instanceof Error ? err.message : String(err))
+    throw new InternalServerError(err instanceof Error ? err.message : String(err), 'EXECUTION_ERROR')
   }
 })

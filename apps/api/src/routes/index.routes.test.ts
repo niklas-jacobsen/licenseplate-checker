@@ -14,6 +14,6 @@ describe('When GET /', async () => {
 
   it('should return the correct JSON response', async () => {
     const json = await res.json()
-    expect(json).toEqual({ message: 'Licenseplate-Checker running' })
+    expect(json).toEqual({ message: 'Licenseplate-Checker Backend running' })
   })
 })

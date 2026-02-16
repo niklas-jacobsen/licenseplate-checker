@@ -3,7 +3,10 @@ import { Hono } from 'hono'
 import { ENV } from '../env'
 import { authRouter } from './auth.routes'
 
+import { errorHandler } from '../app'
+
 const app = new Hono()
+app.onError(errorHandler)
 app.route('/auth', authRouter)
 
 const jwtSecret = ENV.JWT_SECRET
@@ -21,10 +24,11 @@ describe('POST /auth/register', () => {
   })
 
   it('should register a new user successfully', async () => {
+    const email = `test-${Date.now()}@example.com`
     const res = await app.request('/auth/register', {
       method: 'POST',
       body: JSON.stringify({
-        email: 'test@example.com',
+        email,
         password: 'Password123$',
       }),
       headers: { 'Content-Type': 'application/json' },
@@ -32,7 +36,7 @@ describe('POST /auth/register', () => {
 
     expect(res.status).toBe(200)
     const json = await res.json()
-    expect(json).toHaveProperty('email', 'test@example.com')
+    expect(json).toHaveProperty('message', 'User created and logged in')
   })
 
   it('should return 400 if user already exists', async () => {
@@ -56,9 +60,16 @@ describe('POST /auth/register', () => {
       headers: { 'Content-Type': 'application/json' },
     })
 
-    expect(res.status).toBe(400)
+    expect(res.status).toBe(409)
     const json = await res.json()
-    expect(json).toEqual({ error: 'User already exists' })
+    expect(json).toEqual({
+      ok: false,
+      error: {
+        code: 'USER_ALREADY_EXISTS',
+        message: 'User already exists',
+      },
+    })
+
   })
 
   it('should return 400 if validation fails', async () => {
@@ -114,7 +125,13 @@ describe('POST /auth/login', () => {
 
     expect(res.status).toBe(400)
     const json = await res.json()
-    expect(json).toEqual({ error: 'User does not exists' })
+    expect(json).toEqual({
+      ok: false,
+      error: {
+        code: 'USER_NOT_FOUND',
+        message: 'User does not exist',
+      },
+    })
   })
 
   it('should return 400 if password is incorrect', async () => {
@@ -140,7 +157,13 @@ describe('POST /auth/login', () => {
 
     expect(res.status).toBe(400)
     const json = await res.json()
-    expect(json).toEqual({ error: 'Incorrect password' })
+    expect(json).toEqual({
+      ok: false,
+      error: {
+        code: 'INCORRECT_PASSWORD',
+        message: 'Incorrect password',
+      },
+    })
   })
 
   afterAll(() => {
