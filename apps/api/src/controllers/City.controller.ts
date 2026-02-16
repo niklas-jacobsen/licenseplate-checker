@@ -4,6 +4,8 @@ import { prisma } from '../../prisma/data-source'
 export interface CityType {
   id: string
   name: string
+  websiteUrl?: string
+  allowedDomains?: string[]
 }
 
 class CityController {
@@ -12,23 +14,40 @@ class CityController {
   }
 
   async getAll() {
-    return prisma.cityAbbreviation.findMany()
-  }
-
-  async getById(cityId: string) {
-    return prisma.cityAbbreviation.findFirst({
-      where: {
-        id: cityId,
+    return prisma.cityAbbreviation.findMany({
+      include: {
+        workflows: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     })
   }
 
-  async getFullCity(cityId: string, name: string) {
-    return prisma.cityAbbreviation.findFirst({
+  async getById(cityId: string) {
+    return prisma.cityAbbreviation.findUnique({
       where: {
         id: cityId,
-        name: name,
       },
+      include: {
+        workflows: true,
+      },
+    })
+  }
+
+  async updateWebsiteUrl(cityId: string, websiteUrl: string) {
+    return prisma.cityAbbreviation.update({
+      where: { id: cityId },
+      data: { websiteUrl },
+    })
+  }
+
+  async updateAllowedDomains(cityId: string, allowedDomains: string[]) {
+    return prisma.cityAbbreviation.update({
+      where: { id: cityId },
+      data: { allowedDomains },
     })
   }
 }

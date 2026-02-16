@@ -1,5 +1,5 @@
 import CityController from '../controllers/City.controller'
-import LicenseplateRequestController from '../controllers/LicensePlateRequest.controller'
+import LicenseplateRequestController from '../controllers/LicensePlateCheck.controller'
 
 export const controllerTypes = [
   LicenseplateRequestController,
