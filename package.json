@@ -17,8 +17,8 @@
     "db:seed": "bun apps/api/prisma/seeding/seed.js"
   },
   "devDependencies": {
-    "turbo": "^2.7.5",
     "@biomejs/biome": "^1.9.4",
+    "turbo": "^2.8.9",
     "typescript": "^5.9.3"
   },
   "dependencies": {
