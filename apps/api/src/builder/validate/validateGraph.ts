@@ -7,25 +7,7 @@ import type {
 } from '@shared/workflow-dsl'
 import { nodeRegistry } from '@shared/node-registry'
 
-export type ValidationIssueType =
-  | 'graph.parse'
-  | 'graph.start.count'
-  | 'graph.end.count'
-  | 'graph.unreachable'
-  | 'node.unknownType'
-  | 'node.props.invalid'
-  | 'edge.missingNode'
-  | 'edge.invalidHandle'
-
-export type ValidationIssue = {
-  type: ValidationIssueType
-  message: string
-
-  nodeId?: string
-  edgeId?: string
-
-  details?: unknown
-}
+import type { ValidationIssue } from '../../types/validate.types'
 
 function isValidHandle(
   node: WorkflowNode,

@@ -14,7 +14,7 @@ import { nodeRegistry, BUILDER_REGISTRY_VERSION } from '@shared/node-registry'
 
 import type {
   CompileIssue,
-  CompileError as ICompileError,
+  CompileError as CompileErrorType,
 } from '../../types/compiler.types'
 import { CompileError } from '../../types/compiler.types'
 type OutgoingByHandle = Map<string, Map<string, WorkflowEdge[]>>
