@@ -3,6 +3,7 @@ import { zUserScheme } from '@shared/validators'
 import { Hono } from 'hono'
 import AuthController from '../controllers/Authorization.controller'
 import UserController from '../controllers/User.controller'
+import { AppError, BadRequestError, ConflictError, InternalServerError } from '../types/error.types'
 
 export const authRouter = new Hono()
 
@@ -40,7 +41,7 @@ authRouter.post('/register', zValidator('json', zUserScheme), async (c) => {
     // Check if the user already exists
     const userExists = await userController.getByEmail(email)
     if (userExists) {
-      return c.json({ error: 'User already exists' }, 400)
+      throw new ConflictError('User already exists', 'USER_ALREADY_EXISTS')
     }
 
     // Create a new user with a hashed password
@@ -59,7 +60,8 @@ authRouter.post('/register', zValidator('json', zUserScheme), async (c) => {
       200
     )
   } catch (error) {
-    return c.json({ message: 'Error during Sign Up', error }, 500)
+    if (error instanceof AppError) throw error
+    throw new InternalServerError('Error during Sign Up', 'SIGNUP_ERROR', { originalError: error })
   }
 })
 
@@ -94,7 +96,7 @@ authRouter.post('/login', zValidator('json', zUserScheme), async (c) => {
     // Check whether user exists
     const user = await userController.getByEmail(email)
     if (!user) {
-      return c.json({ error: 'User does not exists' }, 400)
+      throw new BadRequestError('User does not exist', 'USER_NOT_FOUND')
     }
 
     // Verify the provided password
@@ -103,7 +105,7 @@ authRouter.post('/login', zValidator('json', zUserScheme), async (c) => {
       user.password
     )
     if (!passwordResult) {
-      return c.json({ error: 'Incorrect password' }, 400)
+      throw new BadRequestError('Incorrect password', 'INCORRECT_PASSWORD')
     }
 
     // Generate a JWT token for the user
@@ -115,6 +117,7 @@ authRouter.post('/login', zValidator('json', zUserScheme), async (c) => {
       200
     )
   } catch (error) {
-    return c.json({ message: 'Error logging in user', error }, 500)
+    if (error instanceof AppError) throw error
+    throw new InternalServerError('Error logging in user', 'LOGIN_ERROR', { originalError: error })
   }
 })

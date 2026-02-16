@@ -9,6 +9,7 @@ import {
 } from '../builder/compiler/GraphToIrCompiler'
 import { CompileError } from '../types/compiler.types'
 import { IrExecutor } from '../builder/execution/IrExecutor'
+import { AppError, BadRequestError, InternalServerError } from '../types/error.types'
 
 export const builderRouter = new Hono()
 
@@ -31,30 +32,13 @@ builderRouter.post('/validate', async (c) => {
   try {
     body = await c.req.json()
   } catch {
-    return c.json(
-      {
-        ok: false,
-        issues: [
-          {
-            type: 'graph.parse',
-            message: 'Request body must be valid JSON.',
-          },
-        ],
-      },
-      400
-    )
+    throw new BadRequestError('Request body must be valid JSON', 'INVALID_JSON')
   }
 
   const result = validateGraph(body)
 
   if (!result.ok) {
-    return c.json(
-      {
-        ok: false,
-        issues: result.issues,
-      },
-      400
-    )
+    throw new BadRequestError('Graph validation failed', 'VALIDATION_ERROR', { issues: result.issues })
   }
 
   return c.json({
@@ -69,15 +53,7 @@ builderRouter.post('/compile', async (c) => {
   try {
     body = await c.req.json()
   } catch {
-    return c.json(
-      {
-        ok: false,
-        issues: [
-          { type: 'graph.parse', message: 'Request body must be valid JSON.' },
-        ],
-      },
-      400
-    )
+    throw new BadRequestError('Request body must be valid JSON', 'INVALID_JSON')
   }
 
   try {
@@ -85,10 +61,9 @@ builderRouter.post('/compile', async (c) => {
     return c.json({ ok: true, ir })
   } catch (err) {
     if (err instanceof CompileError) {
-      return c.json({ ok: false, issues: err.issues }, 400)
+      throw err
     }
-
-    return c.json({ ok: false, message: 'Unexpected compile error.' }, 500)
+    throw new InternalServerError('Unexpected compile error', 'COMPILE_ERROR')
   }
 })
 
@@ -98,13 +73,7 @@ builderRouter.post('/execute', async (c) => {
   try {
     body = await c.req.json()
   } catch {
-    return c.json(
-      {
-        ok: false,
-        message: 'Request body must be valid JSON.',
-      },
-      400
-    )
+    throw new BadRequestError('Request body must be valid JSON', 'INVALID_JSON')
   }
 
   //need to replace BuilderIR assumption with actual validation
@@ -115,12 +84,9 @@ builderRouter.post('/execute', async (c) => {
     const result = await executor.execute(ir)
     return c.json(result)
   } catch (err) {
-    return c.json(
-      {
-        success: false,
-        error: err instanceof Error ? err.message : String(err),
-      },
-      500
-    )
+    if (err instanceof AppError) {
+      throw err
+    }
+    throw new InternalServerError(err instanceof Error ? err.message : String(err))
   }
 })

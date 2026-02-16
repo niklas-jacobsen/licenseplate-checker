@@ -1,4 +1,4 @@
-import { Hono } from 'hono'
+import { Hono, ErrorHandler } from 'hono'
 import { secureHeaders } from 'hono/secure-headers'
 import auth from './middleware/auth'
 import corsMiddleware from './middleware/cors'
@@ -27,5 +27,38 @@ app.use('*', corsMiddleware)
 app.use('*', csrfMiddleware)
 app.use('/user/*', auth)
 app.use('/request/*', auth)
+import { AppError } from './types/error.types'
+
+export const errorHandler: ErrorHandler = (err, c) => {
+  // AppError by instanceof or using duck typing (statusCode + code)
+  if (err instanceof AppError || ((err as any).statusCode && (err as any).code)) {
+    const appError = err as any
+    return c.json(
+      {
+        ok: false,
+        error: {
+          code: appError.code,
+          message: appError.message,
+          details: appError.details,
+        },
+      },
+      appError.statusCode
+    )
+  }
+
+  console.error('Unhandled error:', err)
+  return c.json(
+    {
+      ok: false,
+      error: {
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Internal Server Error',
+      },
+    },
+    500
+  )
+}
+
+app.onError(errorHandler)
 app.route('', router)
 export default app

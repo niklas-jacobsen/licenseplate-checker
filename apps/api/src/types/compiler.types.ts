@@ -1,3 +1,5 @@
+import { BadRequestError } from './error.types'
+
 export type CompileIssueType =
   | 'graph.parse'
   | 'graph.start.count'
@@ -18,12 +20,11 @@ export type CompileIssue = {
   details?: unknown
 }
 
-export class CompileError extends Error {
+export class CompileError extends BadRequestError {
   public issues: CompileIssue[]
 
   constructor(message: string, issues: CompileIssue[]) {
-    super(message)
+    super(message, 'COMPILE_ERROR', { issues })
     this.issues = issues
-    this.name = 'CompileError'
   }
 }
