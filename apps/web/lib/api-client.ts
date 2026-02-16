@@ -37,8 +37,20 @@ class ApiClient {
     } catch (error: any) {
       console.error('API request failed:', error)
 
+      const responseData = error.response?.data
+      const backendError = responseData?.error
+
+      let errorMessage = 'Unknown error'
+      if (typeof backendError === 'string') {
+        errorMessage = backendError
+      } else if (backendError?.message) {
+        errorMessage = backendError.message
+      } else if (error.message) {
+        errorMessage = error.message
+      }
+
       return {
-        error: error.response?.data?.error || error.message || 'Unknown error',
+        error: errorMessage,
         status: error.response?.status || 500,
       }
     }
