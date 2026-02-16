@@ -8,6 +8,7 @@ import {
   compileGraphToIr,
   CompileError,
 } from '../builder/compiler/GraphToIrCompiler'
+import { IrExecutor } from '../builder/execution/IrExecutor'
 
 export const builderRouter = new Hono()
 
@@ -88,5 +89,38 @@ builderRouter.post('/compile', async (c) => {
     }
 
     return c.json({ ok: false, message: 'Unexpected compile error.' }, 500)
+  }
+})
+
+builderRouter.post('/execute', async (c) => {
+  let body: unknown
+
+  try {
+    body = await c.req.json()
+  } catch {
+    return c.json(
+      {
+        ok: false,
+        message: 'Request body must be valid JSON.',
+      },
+      400
+    )
+  }
+
+  //need to replace BuilderIR assumption with actual validation
+  const ir = body as any 
+
+  try {
+    const executor = new IrExecutor()
+    const result = await executor.execute(ir)
+    return c.json(result)
+  } catch (err) {
+    return c.json(
+      {
+        success: false,
+        error: err instanceof Error ? err.message : String(err),
+      },
+      500
+    )
   }
 })
