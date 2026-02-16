@@ -12,35 +12,11 @@ import type {
 } from '@shared/builder-ir'
 import { nodeRegistry, BUILDER_REGISTRY_VERSION } from '@shared/node-registry'
 
-export type CompileIssueType =
-  | 'graph.parse'
-  | 'graph.start.count'
-  | 'graph.end.count'
-  | 'node.unknownType'
-  | 'node.props.invalid'
-  | 'edge.invalidHandle'
-  | 'edge.missingConnection'
-  | 'node.missingNext'
-  | 'node.missingBranch'
-  | 'node.duplicateBranchEdge'
-
-export type CompileIssue = {
-  type: CompileIssueType
-  message: string
-  nodeId?: string
-  edgeId?: string
-  details?: unknown
-}
-
-export class CompileError extends Error {
-  public readonly issues: CompileIssue[]
-
-  constructor(message: string, issues: CompileIssue[]) {
-    super(message)
-    this.issues = issues
-  }
-}
-
+import type {
+  CompileIssue,
+  CompileError as ICompileError,
+} from '../../types/compiler.types'
+import { CompileError } from '../../types/compiler.types'
 type OutgoingByHandle = Map<string, Map<string, WorkflowEdge[]>>
 
 // prefix ids to avoid collisions in ir

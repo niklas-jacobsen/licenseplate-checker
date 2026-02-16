@@ -1,18 +1,14 @@
 import { chromium, Browser, Page } from '@playwright/test'
 import type { BuilderIr, IrBlock, ActionOp, BranchCondition } from '@shared/builder-ir'
-
-export type ExecutionLog = {
-  timestamp: string
-  level: 'info' | 'error' | 'debug'
-  message: string
-  details?: unknown
-}
-
-export type ExecutionResult = {
-  success: boolean
-  logs: ExecutionLog[]
-  error?: string
-}
+import {
+  ExecutionLog,
+  ExecutionResult,
+  BlockNotFoundError,
+  UnknownBlockKindError,
+  BrowserInitializationError,
+  UnknownActionTypeError,
+  UnknownConditionOpError,
+} from '../../types/executor.types'
 
 export class IrExecutor {
   private logs: ExecutionLog[] = []
@@ -43,7 +39,7 @@ export class IrExecutor {
         const block = ir.blocks[currentBlockId]
         
         if (!block) {
-          throw new Error(`Block ${currentBlockId} not found`)
+          throw new BlockNotFoundError(currentBlockId)
         }
         
         this.log('debug', `Executing block ${block.id}`, { kind: block.kind })
@@ -83,12 +79,12 @@ export class IrExecutor {
         return conditionMet ? block.whenTrue : block.whenFalse
         
       default:
-        throw new Error(`Unknown block kind: ${(block as any).kind}`)
+        throw new UnknownBlockKindError((block as any).kind)
     }
   }
 
   private async executeAction(op: ActionOp): Promise<void> {
-    if (!this.page) throw new Error('Browser page not initialized')
+    if (!this.page) throw new BrowserInitializationError()
     
     switch (op.type) {
       case 'openPage':
@@ -108,12 +104,12 @@ export class IrExecutor {
         break
         
       default:
-        throw new Error(`Unknown action type: ${(op as any).type}`)
+        throw new UnknownActionTypeError((op as any).type)
     }
   }
 
   private async evaluateCondition(condition: BranchCondition): Promise<boolean> {
-    if (!this.page) throw new Error('Browser page not initialized')
+    if (!this.page) throw new BrowserInitializationError()
     
     switch (condition.op) {
       case 'exists':
@@ -127,7 +123,8 @@ export class IrExecutor {
         return text ? text.includes(condition.value) : false
         
       default:
-        throw new Error(`Unknown condition op: ${(condition as any).op}`)
+        throw new UnknownConditionOpError((condition as any).op)
     }
   }
 }
+

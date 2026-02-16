@@ -1,6 +1,7 @@
 import { Context, Next } from 'hono'
 import { JwtPayload } from 'jsonwebtoken'
 import AuthController from '../controllers/Authorization.controller'
+import { MissingTokenError } from '../types/auth.types'
 
 export interface CustomRequest extends Request {
   token: string | JwtPayload
@@ -12,7 +13,7 @@ const auth = async (c: Context, next: Next) => {
     const token = c.req.header('Authorization')?.replace('Bearer ', '')
 
     if (!token) {
-      throw new Error()
+      throw new MissingTokenError()
     }
 
     const decoded = await authController.verifyJWT(token)

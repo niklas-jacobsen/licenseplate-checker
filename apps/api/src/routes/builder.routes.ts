@@ -6,8 +6,8 @@ import {
 import { validateGraph } from '../builder/validate/validateGraph'
 import {
   compileGraphToIr,
-  CompileError,
 } from '../builder/compiler/GraphToIrCompiler'
+import { CompileError } from '../types/compiler.types'
 import { IrExecutor } from '../builder/execution/IrExecutor'
 
 export const builderRouter = new Hono()

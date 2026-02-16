@@ -1,6 +1,7 @@
 import * as bcrypt from 'bcrypt'
 import { JwtPayload, sign, verify } from 'jsonwebtoken'
 import { ENV } from '../env'
+import { InvalidTokenError } from '../types/auth.types'
 
 class AuthController {
   async hashPassword(plainPassword: string, saltRounds: number = 10) {
@@ -28,7 +29,7 @@ class AuthController {
       return { id: payload.id }
     }
 
-    throw new Error('Invalid token payload')
+    throw new InvalidTokenError()
   }
 }
 
