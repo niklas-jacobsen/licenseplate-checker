@@ -17,8 +17,8 @@ import {
   type EdgeChange,
 } from '@xyflow/react'
 
-import type { WorkflowNode, CoreNodeType } from '@shared/workflow-dsl/types'
-import { nodeRegistry } from '@shared/node-registry'
+import type { WorkflowNode, CoreNodeType } from '@licenseplate-checker/shared/workflow-dsl/types'
+import { nodeRegistry } from '@licenseplate-checker/shared/node-registry'
 import { PALETTE_NODES } from './config'
 
 import '@xyflow/react/dist/style.css'

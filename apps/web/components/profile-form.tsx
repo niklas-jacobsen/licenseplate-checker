@@ -25,7 +25,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useAuth } from '@/lib/auth-context'
-import { zUserUpdateScheme } from '@shared/validators'
+import { zUserUpdateScheme } from '@licenseplate-checker/shared/validators'
 import ProfileUpdateModal from '@/components/profile-update-modal'
 
 export default function ProfileForm() {

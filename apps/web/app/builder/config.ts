@@ -1,4 +1,4 @@
-import * as nodes from '@shared/node-registry/nodes'
+import * as nodes from '@licenseplate-checker/shared/node-registry/nodes'
 
 //Defines the nodes that can be added to the canvas by the user
 export const PALETTE_NODES = [

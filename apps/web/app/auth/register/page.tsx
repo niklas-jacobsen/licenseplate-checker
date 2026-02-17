@@ -27,7 +27,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useAuth } from '@/lib/auth-context'
-import { zUserScheme } from '@shared/validators'
+import { zUserScheme } from '@licenseplate-checker/shared/validators'
 import SimpleNavBar from '@/components/nav-bar-simple'
 import LoginRedirectHandler from '@/components/login-redirect-handler'
 

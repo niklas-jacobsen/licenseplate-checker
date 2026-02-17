@@ -1,5 +1,5 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios'
-import { ApiResponse } from '@shared/types'
+import { ApiResponse } from '@licenseplate-checker/shared/types'
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
