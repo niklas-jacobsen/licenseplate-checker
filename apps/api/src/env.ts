@@ -1,4 +1,10 @@
+import path from 'path'
+import dotenv from 'dotenv'
 import { z } from 'zod'
+
+if (process.env.NODE_ENV !== 'production') {
+  dotenv.config({ path: path.resolve(__dirname, '../.env') })
+}
 
 export const zEnvScheme = z.object({
   PORT: z.coerce.number().positive().int().default(8080),
