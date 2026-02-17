@@ -1,5 +1,5 @@
 import { zValidator } from '@hono/zod-validator'
-import { zRequestScheme } from '@licenseplate-checker/shared/validators'
+import { zCheckRequestScheme } from '@licenseplate-checker/shared/validators'
 import { Context, Hono } from 'hono'
 import CityController from '../controllers/City.controller'
 import LicenseplateCheckController from '../controllers/LicensePlateCheck.controller'
@@ -14,7 +14,7 @@ const checkController = new LicenseplateCheckController()
  *
  * Creates a new license plate check.
  *
- * - Validates the request body against `zRequestScheme`.
+ * - Validates the request body against `zCheckRequestScheme`.
  * - Checks if the city exists.
  * - Creates a new license plate check if all validations pass.
  *
@@ -33,7 +33,7 @@ const checkController = new LicenseplateCheckController()
  */
 licensePlateCheckRouter.post(
   '/new',
-  zValidator('json', zRequestScheme),
+  zValidator('json', zCheckRequestScheme),
   async (c: Context) => {
     try {
       const user = c.get('user')
@@ -57,6 +57,7 @@ licensePlateCheckRouter.post(
         letters: uppercaseLetters,
         numbers: Number(body.numbers),
         userId: userId,
+        workflowId: body.workflowId,
       })
 
       if (!request) {

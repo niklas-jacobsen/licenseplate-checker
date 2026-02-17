@@ -14,7 +14,7 @@ import { Button } from './ui/button'
 import { Card, CardContent } from './ui/card'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { zRequestScheme } from '@licenseplate-checker/shared/validators'
+import { zLicensePlateScheme } from '@licenseplate-checker/shared/validators'
 import { useForm } from 'react-hook-form'
 import { Loader2 } from 'lucide-react'
 import { Input } from './ui/input'
@@ -27,7 +27,7 @@ import { cityService } from '../services/city.service'
 import { usePersistedForm } from '../hooks/use-persisted-form'
 import { usePlateInput } from '../hooks/use-plate-input'
 
-const formSchema = zRequestScheme
+const formSchema = zLicensePlateScheme
 
 // Local storage key for saved form data
 const SAVED_FORM_KEY = 'plateCheck:savedFormData'

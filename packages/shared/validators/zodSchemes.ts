@@ -4,16 +4,20 @@ import zLicensePlateLettersSchema from './licensePlateValidators/lettersRequest.
 import zLicensePlateNumbersSchema from './licensePlateValidators/numbersRequest.validator'
 import zPasswordSchema from './userValidators/password.validator'
 
-export const zRequestScheme = z.object({
+export const zLicensePlateScheme = z.object({
   city: zLicensePlateCitySchema,
   letters: zLicensePlateLettersSchema,
   numbers: zLicensePlateNumbersSchema,
 })
 
-export default zRequestScheme
+export const zCheckRequestScheme = zLicensePlateScheme.extend({
+  workflowId: z.string().optional(),
+})
+
+export default zLicensePlateScheme
 
 export const zPlateIdScheme = z.object({
-  id: zRequestScheme,
+  id: zLicensePlateScheme,
 })
 
 export const zResponseScheme = z.object({

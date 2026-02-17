@@ -6,6 +6,7 @@ export interface LicensePlateCheckInput {
   letters: string
   numbers: number
   userId: string
+  workflowId?: string
 }
 
 class LicenseplateCheckController {
@@ -26,10 +27,14 @@ class LicenseplateCheckController {
           user: {
             connect: { id: data.userId },
           },
+          ...(data.workflowId && {
+            workflow: { connect: { id: data.workflowId } },
+          }),
         },
         include: {
           user: true,
           city: true,
+          workflow: true,
         },
       })
     } catch (error) {
@@ -43,7 +48,8 @@ class LicenseplateCheckController {
       where: { id },
       include: {
         city: true,
-        executions: true, // Send recent automation runs with query
+        workflow: true,
+        executions: true,  // Send recent automation runs with query
       },
     })
   }
@@ -53,6 +59,7 @@ class LicenseplateCheckController {
       where: { userId },
       include: {
         city: true,
+        workflow: true,
       },
       orderBy: { createdAt: 'desc' },
     })
