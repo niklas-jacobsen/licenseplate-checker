@@ -15,6 +15,9 @@ class CityController {
 
   async getAll() {
     return prisma.cityAbbreviation.findMany({
+      where: {
+        isPublic: true,
+      },
       include: {
         workflows: {
           select: {
@@ -30,6 +33,7 @@ class CityController {
     return prisma.cityAbbreviation.findUnique({
       where: {
         id: cityId,
+        isPublic: true,
       },
       include: {
         workflows: true,
