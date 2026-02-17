@@ -21,6 +21,7 @@ export default defineConfig({
   },
   dirs: ["./src/trigger"],
   build: {
+    external: ["playwright", "playwright-core", "chromium-bidi"],
     extensions: [
       playwright({ browsers: ["chromium"] }),
     ],
