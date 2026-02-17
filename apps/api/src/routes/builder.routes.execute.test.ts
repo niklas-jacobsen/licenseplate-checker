@@ -1,37 +1,50 @@
-import { describe, expect, it, mock, beforeEach, spyOn } from 'bun:test'
+import { describe, expect, it, mock, beforeEach } from 'bun:test'
 import { Hono } from 'hono'
 
-import { IrExecutor } from '@licenseplate-checker/worker'
-
-// Mock dependencies
 mock.module('../builder/compiler/GraphToIrCompiler', () => ({
-  compileGraphToIr: mock(() => ({})),
+  compileGraphToIr: mock(() => ({ entryBlockId: 'start', blocks: {} })),
 }))
 
 mock.module('../types/compiler.types', () => ({
   CompileError: class extends Error {},
 }))
 
-mock.module('../builder/registry', () => ({
-    BUILDER_REGISTRY_VERSION: 'v1',
-    nodeRegistry: {},
+mock.module('@trigger.dev/sdk/v3', () => ({
+  tasks: {
+    trigger: mock(),
+  },
+}))
+
+mock.module('../env', () => ({
+  ENV: {
+    API_BASE_URL: 'http://localhost:8080',
+    TRIGGER_WEBHOOK_SECRET: 'test-secret',
+  },
 }))
 
 import { errorHandler } from '../app'
-import { builderRouter } from './builder.routes'
+import { createBuilderRouter } from './builder.routes'
+import { tasks } from '@trigger.dev/sdk/v3'
+
+const mockWorkflowController = {
+  getById: mock(),
+  createExecution: mock(),
+  updateExecution: mock(),
+} as any
 
 function makeApp() {
   const app = new Hono()
   app.onError(errorHandler)
-  app.route('/builder', builderRouter)
+  app.route('/builder', createBuilderRouter(mockWorkflowController))
   return app
 }
 
 describe('POST /builder/execute', () => {
-  let executorSpy: any
-
   beforeEach(() => {
-    executorSpy = spyOn(IrExecutor.prototype, 'execute')
+    mockWorkflowController.getById.mockReset()
+    mockWorkflowController.createExecution.mockReset()
+    mockWorkflowController.updateExecution.mockReset()
+    ;(tasks.trigger as any).mockReset()
   })
 
   it('returns 400 when request body is not JSON', async () => {
@@ -45,40 +58,59 @@ describe('POST /builder/execute', () => {
     expect(body.ok).toBe(false)
   })
 
-  it('executes IR and returns result', async () => {
+  it('returns 400 when workflowId is missing', async () => {
     const app = makeApp()
-    const ir = { entryBlockId: 'start', blocks: {} }
-    
-    executorSpy.mockResolvedValueOnce({ 
-        success: true, 
-        logs: [{ level: 'info', message: 'test', timestamp: 'now' }] 
-    })
-
     const res = await app.request('/builder/execute', {
       method: 'POST',
-      body: JSON.stringify(ir),
-    })
-
-    expect(res.status).toBe(200)
-    const body = await res.json()
-    expect(body.success).toBe(true)
-    expect(body.logs).toHaveLength(1)
-    expect(executorSpy).toHaveBeenCalledTimes(1)
-    expect(executorSpy).toHaveBeenCalledWith(ir)
-  })
-
-  it('handles execution errors', async () => {
-    const app = makeApp()
-    executorSpy.mockRejectedValueOnce(new Error('Execution failed'))
-
-    const res = await app.request('/builder/execute', {
-      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({}),
     })
-
-    expect(res.status).toBe(500)
+    expect(res.status).toBe(400)
     const body = await res.json()
-    expect(body.ok).toBe(false)
-    expect(body.error.code).toBe('EXECUTION_ERROR')
+    expect(body.error.code).toBe('MISSING_WORKFLOW_ID')
+  })
+
+  it('returns 400 when workflow not found', async () => {
+    const app = makeApp()
+    mockWorkflowController.getById.mockResolvedValueOnce(null)
+
+    const res = await app.request('/builder/execute', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ workflowId: 'nonexistent' }),
+    })
+    expect(res.status).toBe(400)
+    const body = await res.json()
+    expect(body.error.code).toBe('WORKFLOW_NOT_FOUND')
+  })
+
+  it('triggers execution and returns 202', async () => {
+    const app = makeApp()
+
+    mockWorkflowController.getById.mockResolvedValueOnce({
+      id: 'wf-1',
+      definition: { nodes: [], edges: [] },
+    })
+    mockWorkflowController.createExecution.mockResolvedValueOnce({ id: 'exec-1' })
+    ;(tasks.trigger as any).mockResolvedValueOnce({ id: 'run-abc123' })
+    mockWorkflowController.updateExecution.mockResolvedValueOnce({})
+
+    const res = await app.request('/builder/execute', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ workflowId: 'wf-1', checkId: 'check-1' }),
+    })
+
+    expect(res.status).toBe(202)
+    const body = await res.json()
+    expect(body.executionId).toBe('exec-1')
+    expect(body.triggerRunId).toBe('run-abc123')
+
+    expect(tasks.trigger).toHaveBeenCalledWith('execute-workflow', {
+      ir: { entryBlockId: 'start', blocks: {} },
+      executionId: 'exec-1',
+      callbackUrl: 'http://localhost:8080/webhooks/trigger',
+      callbackSecret: 'test-secret',
+    })
   })
 })
