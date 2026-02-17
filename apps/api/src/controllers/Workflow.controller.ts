@@ -1,5 +1,6 @@
 import { Prisma } from '@prisma/client'
 import { prisma } from '../../prisma/data-source'
+import type { ExecutionStatus } from '@prisma/client'
 
 class WorkflowController {
   async create(
@@ -66,21 +67,43 @@ class WorkflowController {
     })
   }
 
-  async logExecution(
+  async createExecution(
     workflowId: string,
-    checkId: string,
-    status: 'SUCCESS' | 'FAILED',
-    logs: Prisma.InputJsonValue,
-    resultSummary?: string
+    checkId?: string,
   ) {
     return prisma.workflowExecution.create({
       data: {
         workflowId,
         checkId,
-        status,
-        logs,
-        resultSummary,
-        finishedAt: new Date(),
+        status: 'PENDING',
+      },
+    })
+  }
+
+  async updateExecution(
+    executionId: string,
+    data: {
+      status: ExecutionStatus
+      logs?: Prisma.InputJsonValue
+      result?: Prisma.InputJsonValue
+      errorNodeId?: string
+      triggerRunId?: string
+      duration?: number
+      finishedAt?: Date
+    }
+  ) {
+    return prisma.workflowExecution.update({
+      where: { id: executionId },
+      data,
+    })
+  }
+
+  async getExecution(executionId: string) {
+    return prisma.workflowExecution.findUnique({
+      where: { id: executionId },
+      include: {
+        workflow: true,
+        check: true,
       },
     })
   }
