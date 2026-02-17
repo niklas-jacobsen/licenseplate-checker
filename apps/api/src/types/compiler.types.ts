@@ -1,4 +1,4 @@
-import { BadRequestError } from './error.types'
+import { BadRequestError } from '@licenseplate-checker/shared/types'
 
 export type CompileIssueType =
   | 'graph.parse'

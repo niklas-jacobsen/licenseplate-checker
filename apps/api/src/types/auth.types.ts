@@ -1,4 +1,4 @@
-import { UnauthorizedError } from './error.types'
+import { UnauthorizedError } from '@licenseplate-checker/shared/types'
 
 export class InvalidTokenError extends UnauthorizedError {
   constructor() {
