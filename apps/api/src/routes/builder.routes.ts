@@ -127,6 +127,16 @@ export const createBuilderRouter = (workflowController: WorkflowController) => {
     }
   })
 
+  router.get('/workflows', async (c) => {
+    const cityId = c.req.query('cityId')
+    if (!cityId) {
+      throw new BadRequestError('cityId query parameter is required', 'MISSING_CITY_ID')
+    }
+
+    const workflows = await workflowController.getPublishedByCity(cityId)
+    return c.json({ workflows })
+  })
+
   return router
 }
 

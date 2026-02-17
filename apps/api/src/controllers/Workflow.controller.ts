@@ -44,6 +44,19 @@ class WorkflowController {
     })
   }
 
+  async getPublishedByCity(cityId: string) {
+    return prisma.workflow.findMany({
+      where: { cityId, isPublished: true },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        cityId: true,
+      },
+      orderBy: { updatedAt: 'desc' },
+    })
+  }
+
   async updateDefinition(id: string, definition: Prisma.InputJsonValue) {
     return prisma.workflow.update({
       where: { id },
