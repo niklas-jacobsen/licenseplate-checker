@@ -19,7 +19,7 @@ const browserMock = {
   close: mock(() => Promise.resolve()),
 }
 
-mock.module('@playwright/test', () => ({
+mock.module('playwright', () => ({
   chromium: {
     launch: mock(() => Promise.resolve(browserMock)),
   },

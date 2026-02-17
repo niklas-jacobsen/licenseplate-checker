@@ -1,4 +1,4 @@
-import { chromium, Browser, Page } from '@playwright/test'
+import { chromium, Browser, Page } from 'playwright'
 import type { BuilderIr, IrBlock, ActionOp, BranchCondition } from '@shared/builder-ir'
 import {
   ExecutionLog,
@@ -8,7 +8,7 @@ import {
   BrowserInitializationError,
   UnknownActionTypeError,
   UnknownConditionOpError,
-} from '../../types/executor.types'
+} from '@licenseplate-checker/shared/types'
 
 export class IrExecutor {
   private logs: ExecutionLog[] = []
