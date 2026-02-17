@@ -46,9 +46,21 @@ async function createCity(city) {
     throw new Error('Invalid city data.')
   }
 
-  await cityController.create({
-    id: city.id,
-    name: city.name,
+  const isPublic = !city.name.toLowerCase().includes('official') &&
+                   !city.name.toLowerCase().includes('government') &&
+                   !city.name.toLowerCase().includes('authority') &&
+                   !city.name.toLowerCase().includes('vehicles')
+
+  await prisma.cityAbbreviation.upsert({
+    where: { id: city.id },
+    update: {
+      isPublic: isPublic
+    },
+    create: {
+      id: city.id,
+      name: city.name,
+      isPublic: isPublic
+    }
   })
 }
 
