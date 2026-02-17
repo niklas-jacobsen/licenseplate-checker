@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.0.0",
   "packageManager": "bun@1.2.10",
-  "workspaces": ["apps/api", "apps/web", "apps/worker", "packages/shared"],
+  "workspaces": ["apps/api", "apps/web", "packages/shared"],
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",
