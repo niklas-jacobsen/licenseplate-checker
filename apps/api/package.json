@@ -19,6 +19,7 @@
   "dependencies": {
     "@hono/zod-validator": "^0.4.3",
     "@licenseplate-checker/shared": "*",
+    "@licenseplate-checker/worker": "*",
     "@prisma/client": "^5.22.0",
     "aws-sdk": "^2.1693.0",
     "bcrypt": "^5.1.1",

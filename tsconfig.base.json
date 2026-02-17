@@ -8,6 +8,8 @@
     "baseUrl": ".",
     "paths": {
       "@licenseplate-checker/shared/*": ["packages/shared/*"],
+      "@licenseplate-checker/worker": ["apps/worker/src/index.ts"],
+      "@licenseplate-checker/worker/*": ["apps/worker/*"],
       "@shared/*": ["packages/shared/*"],
       "@web/*": ["apps/web/*"],
       "@api/*": ["apps/api/*"],

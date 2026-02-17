@@ -1,5 +1,6 @@
 {
   "name": "@licenseplate-checker/worker",
+  "main": "src/index.ts",
   "private": true,
   "scripts": {
     "start": "bun run src/index.ts",

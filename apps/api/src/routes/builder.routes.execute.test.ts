@@ -1,7 +1,7 @@
 import { describe, expect, it, mock, beforeEach, spyOn } from 'bun:test'
 import { Hono } from 'hono'
 
-import { IrExecutor } from '../builder/execution/IrExecutor'
+import { IrExecutor } from '@licenseplate-checker/worker'
 
 // Mock dependencies
 mock.module('../builder/compiler/GraphToIrCompiler', () => ({

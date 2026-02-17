@@ -1,4 +1,4 @@
-import { IrExecutor } from './IrExecutor'
+export { IrExecutor } from './IrExecutor'
 
 console.log('Worker started')
 
