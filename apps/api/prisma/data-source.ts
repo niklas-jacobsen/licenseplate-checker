@@ -11,19 +11,17 @@ let prisma: PrismaClient
 if (ENV.NODE_ENV === 'test') {
   console.log('Using mock client')
   prisma = new PrismockClient()
-} else {
+} else if (ENV.NODE_ENV === 'production') {
   prisma = new PrismaClient({
     datasourceUrl: ENV.DATABASE_URL,
+    log: ['error'],
   })
-}
-
-if (ENV.NODE_ENV === 'production') {
-  prisma = new PrismaClient({ log: ['error'] })
-  prisma.$connect()
 } else {
   if (!global.__db) {
-    global.__db = new PrismaClient({ log: ['error', 'warn'] })
-    global.__db.$connect()
+    global.__db = new PrismaClient({
+      datasourceUrl: ENV.DATABASE_URL,
+      log: ['error', 'warn'],
+    })
   }
   prisma = global.__db
 }
