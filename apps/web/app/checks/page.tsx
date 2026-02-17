@@ -1,9 +1,9 @@
 'use client'
 
 import NavBar from '@/components/nav-bar'
-import LicensePlateRequests from '@/components/request-dashboard'
+import LicensePlateCheckDashboard from '@/components/check-dashboard'
 
-export default function RequestsPage() {
+export default function ChecksPage() {
   return (
     <main className="min-h-screen bg-gray-50">
       <NavBar />
@@ -13,7 +13,7 @@ export default function RequestsPage() {
           <p className="text-gray-600 text-center mb-8">
             View and manage the requests you created
           </p>
-          <LicensePlateRequests />
+          <LicensePlateCheckDashboard />
         </div>
       </div>
     </main>

@@ -1,7 +1,7 @@
 'use client'
 
 import NavBar from '../components/nav-bar'
-import LicensePlateForm from '../components/request-form'
+import LicensePlateCheckForm from '../components/check-form'
 
 export default function Home() {
   return (
@@ -16,7 +16,7 @@ export default function Home() {
             Enter license plate patterns and we'll automatically reserve them
             for you
           </p>
-          <LicensePlateForm />
+          <LicensePlateCheckForm />
         </div>
       </div>
     </main>

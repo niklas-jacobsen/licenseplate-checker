@@ -21,21 +21,27 @@ import { Input } from './ui/input'
 import LicensePlatePreview from './plate-preview'
 import { useAuth } from '../lib/auth-context'
 import { useRouter } from 'next/navigation'
-import apiClient from '../lib/api-client'
 import Link from 'next/link'
+import { checkService } from '../services/check.service'
+import { cityService } from '../services/city.service'
+import { usePersistedForm } from '../hooks/use-persisted-form'
+import { usePlateInput } from '../hooks/use-plate-input'
 
 const formSchema = zRequestScheme
 
 // Local storage key for saved form data
-const SAVED_FORM_KEY = 'plateReserve:savedFormData'
+const SAVED_FORM_KEY = 'plateCheck:savedFormData'
 
-export default function LicensePlateForm() {
+export default function LicensePlateCheckForm() {
   const { user } = useAuth()
   const router = useRouter()
+  const { formatLetters, formatNumbers } = usePlateInput()
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [authError, setAuthError] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [cities, setCities] = useState<{ value: string; label: string }[]>([])
+  const [isLoadingCities, setIsLoadingCities] = useState(true)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -47,20 +53,30 @@ export default function LicensePlateForm() {
     mode: 'onTouched',
   })
 
-  // Load saved form data if returning from login
+  // Use custom hook for persistence
+  const { saveForm } = usePersistedForm(form, SAVED_FORM_KEY)
+
+  // Fetch Cities
   useEffect(() => {
-    const savedFormData = localStorage.getItem(SAVED_FORM_KEY)
-    if (savedFormData) {
+    const fetchCities = async () => {
       try {
-        const parsedData = JSON.parse(savedFormData)
-        form.reset(parsedData)
-        // Clear saved data after loading
-        localStorage.removeItem(SAVED_FORM_KEY)
+        const response = await cityService.getCities()
+        if (response.data && response.data.cities) {
+          const formattedCities = response.data.cities.map((city) => ({
+            value: city.id,
+            label: city.name,
+          }))
+          setCities(formattedCities)
+        }
       } catch (error) {
-        console.error('Error parsing saved form data:', error)
+        console.error('Failed to fetch cities:', error)
+      } finally {
+        setIsLoadingCities(false)
       }
     }
-  }, [form])
+
+    fetchCities()
+  }, [])
 
   const city = form.watch('city')
   const letters = form.watch('letters')
@@ -68,32 +84,28 @@ export default function LicensePlateForm() {
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user) {
-      // Save form data to localStorage before redirecting
-      localStorage.setItem(SAVED_FORM_KEY, JSON.stringify(values))
-
-      // Redirect to login with return URL
-      router.push('/auth/login?redirect=/?fromLogin=true')
+      // Save data and redirect
+      saveForm(values)
+      router.push('/auth/login?redirect=/checks?fromLogin=true')
       return
     }
 
     setAuthError(false)
     setIsSubmitting(true)
 
-    const createLicensePlateRequest = async () => {
+    const createLicensePlateCheck = async () => {
       try {
-        const response = await apiClient.post('request/new', values)
-        console.log(response)
+        await checkService.createCheck(values)
+        setIsSubmitted(true)
       } catch (error) {
-        console.error('Error creating license plate request:', error)
+        console.error('Error creating license plate check:', error)
         setAuthError(true)
       } finally {
         setIsSubmitting(false)
-        setIsSubmitted(true)
-        console.log(values)
       }
     }
 
-    createLicensePlateRequest()
+    createLicensePlateCheck()
   }
 
   if (isSubmitted) {
@@ -120,8 +132,8 @@ export default function LicensePlateForm() {
             </div>
             <h3 className="text-xl font-bold mb-2">Request Submitted!</h3>
             <p className="text-gray-600 mb-6">
-              Your license plate pattern {city}-{letters}-{numbers} has been
-              submitted for automatic reservation.
+              Your license plate {city}-{letters}-{numbers} has been submitted
+              for automatic reservation.
             </p>
 
             <LicensePlatePreview
@@ -142,7 +154,7 @@ export default function LicensePlateForm() {
                 >
                   Submit Another Request
                 </Button>
-                <Link href="/requests" className="w-full">
+                <Link href="/checks" className="w-full">
                   <Button variant="outline" className="w-full">
                     View My Requests
                   </Button>
@@ -172,12 +184,19 @@ export default function LicensePlateForm() {
                         value={field.value}
                         onChange={field.onChange}
                         error={!!form.formState.errors.city}
+                        items={cities}
+                        placeholder={
+                          isLoadingCities
+                            ? 'Loading cities...'
+                            : 'Select city...'
+                        }
                       />
                     </FormControl>
                     <div className="min-h-[1.25rem]"></div>
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name="letters"
@@ -204,6 +223,7 @@ export default function LicensePlateForm() {
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={form.control}
                 name="numbers"
@@ -243,10 +263,10 @@ export default function LicensePlateForm() {
               />
             </div>
 
-            <div className="pt-4">
+            <div className="pt-4 flex justify-center">
               <Button
                 type="submit"
-                className="w-full"
+                className="w-full md:w-1/2"
                 disabled={isSubmitting || !form.formState.isValid}
               >
                 {isSubmitting ? (
