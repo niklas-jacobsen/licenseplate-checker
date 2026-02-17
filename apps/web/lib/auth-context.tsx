@@ -54,6 +54,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(response.data)
         } else {
           setUser(null)
+          
+          // clear invalid token
+          if (response.status === 401) {
+            localStorage.removeItem('token')
+          }
         }
 
         setIsLoading(false)

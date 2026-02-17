@@ -35,7 +35,10 @@ class ApiClient {
         status: response.status,
       }
     } catch (error: any) {
-      console.error('API request failed:', error)
+      // ignore expired token errors as they are handled by auth context
+      if (error.response?.status !== 401) {
+        console.error('API request failed:', error)
+      }
 
       const responseData = error.response?.data
       const backendError = responseData?.error
