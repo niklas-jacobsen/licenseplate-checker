@@ -2,14 +2,13 @@ import { Hono } from 'hono'
 import {
   BUILDER_REGISTRY_VERSION,
   nodeRegistry,
-} from '../../../../packages/shared/node-registry'
+} from '@licenseplate-checker/shared/node-registry'
 import { validateGraph } from '../builder/validate/validateGraph'
 import {
   compileGraphToIr,
 } from '../builder/compiler/GraphToIrCompiler'
 import { CompileError } from '../types/compiler.types'
-import { IrExecutor } from '../builder/execution/IrExecutor'
-import { AppError, BadRequestError, InternalServerError } from '../types/error.types'
+import { AppError, BadRequestError, InternalServerError } from '@licenseplate-checker/shared/types'
 
 export const builderRouter = new Hono()
 
@@ -68,25 +67,26 @@ builderRouter.post('/compile', async (c) => {
 })
 
 builderRouter.post('/execute', async (c) => {
-  let body: unknown
+  return c.json({ message: 'implementation moved' }, 501)
+  // let body: unknown
 
-  try {
-    body = await c.req.json()
-  } catch {
-    throw new BadRequestError('Request body must be valid JSON', 'INVALID_JSON')
-  }
+  // try {
+  //   body = await c.req.json()
+  // } catch {
+  //   throw new BadRequestError('Request body must be valid JSON', 'INVALID_JSON')
+  // }
 
-  //need to replace BuilderIR assumption with actual validation
-  const ir = body as any 
+  // //need to replace BuilderIR assumption with actual validation
+  // const ir = body as any 
 
-  try {
-    const executor = new IrExecutor()
-    const result = await executor.execute(ir)
-    return c.json(result)
-  } catch (err) {
-    if (err instanceof AppError) {
-      throw err
-    }
-    throw new InternalServerError(err instanceof Error ? err.message : String(err), 'EXECUTION_ERROR')
-  }
+  // try {
+  //   const executor = new IrExecutor()
+  //   const result = await executor.execute(ir)
+  //   return c.json(result)
+  // } catch (err) {
+  //   if (err instanceof AppError) {
+  //     throw err
+  //   }
+  //   throw new InternalServerError(err instanceof Error ? err.message : String(err), 'EXECUTION_ERROR')
+  // }
 })

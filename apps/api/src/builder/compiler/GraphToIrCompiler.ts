@@ -3,14 +3,14 @@ import type {
   WorkflowGraph,
   WorkflowNode,
   WorkflowEdge,
-} from '@shared/workflow-dsl'
+} from '@licenseplate-checker/shared/workflow-dsl'
 import type {
   BuilderIr,
   ActionOp,
   BranchCondition,
   IrBlock,
-} from '@shared/builder-ir'
-import { nodeRegistry, BUILDER_REGISTRY_VERSION } from '@shared/node-registry'
+} from '@licenseplate-checker/shared/builder-ir'
+import { nodeRegistry, BUILDER_REGISTRY_VERSION } from '@licenseplate-checker/shared/node-registry'
 
 import type {
   CompileIssue,

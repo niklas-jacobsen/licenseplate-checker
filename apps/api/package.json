@@ -15,22 +15,21 @@
     "db:migrate": "bun run db:generate && prisma migrate dev --name migration && bun run db:seed",
     "db:reset": "prisma migrate reset --force && bun run db:migrate && bun run db:seed",
     "db:seed": "bun run prisma/seeding/seed.js"
-
   },
   "dependencies": {
     "@hono/zod-validator": "^0.4.3",
     "@licenseplate-checker/shared": "*",
-    "@playwright/test": "^1.57.0",
     "@prisma/client": "^5.22.0",
     "aws-sdk": "^2.1693.0",
     "bcrypt": "^5.1.1",
+    "dotenv": "^17.3.1",
     "hono": "^4.11.4",
     "hono-rate-limiter": "^0.4.2",
     "jsonwebtoken": "^9.0.3",
     "mock-aws-s3": "^4.0.2",
     "nock": "^14.0.10",
-    "zod": "^3.25.76",
-    "prisma": "^5.22.0"
+    "prisma": "^5.22.0",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",

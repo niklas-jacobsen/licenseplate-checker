@@ -1,9 +1,9 @@
 import { zValidator } from '@hono/zod-validator'
-import { zUserScheme } from '@shared/validators'
+import { zUserScheme } from '@licenseplate-checker/shared/validators'
 import { Hono } from 'hono'
 import AuthController from '../controllers/Authorization.controller'
 import UserController from '../controllers/User.controller'
-import { AppError, BadRequestError, ConflictError, InternalServerError } from '../types/error.types'
+import { AppError, BadRequestError, ConflictError, InternalServerError } from '@licenseplate-checker/shared/types'
 
 export const authRouter = new Hono()
 

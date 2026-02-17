@@ -2,7 +2,7 @@ import { Hono, Context } from 'hono'
 import UserController from '../controllers/User.controller'
 import auth from '../middleware/auth'
 import { zValidator } from '@hono/zod-validator'
-import { zUserUpdateScheme } from '@shared/validators'
+import { zUserUpdateScheme } from '@licenseplate-checker/shared/validators'
 import { string } from 'zod'
 
 export const userRouter = new Hono()

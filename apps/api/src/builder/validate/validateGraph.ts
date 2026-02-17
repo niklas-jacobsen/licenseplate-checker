@@ -1,11 +1,11 @@
 import type { ZodError } from 'zod'
-import { WorkflowGraphSchema } from '@shared/workflow-dsl'
+import { WorkflowGraphSchema } from '@licenseplate-checker/shared/workflow-dsl'
 import type {
   WorkflowGraph,
   WorkflowNode,
   WorkflowEdge,
-} from '@shared/workflow-dsl'
-import { nodeRegistry } from '@shared/node-registry'
+} from '@licenseplate-checker/shared/workflow-dsl'
+import { nodeRegistry } from '@licenseplate-checker/shared/node-registry'
 
 import type { ValidationIssue } from '../../types/validate.types'
 

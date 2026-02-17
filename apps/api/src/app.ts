@@ -27,7 +27,7 @@ app.use('*', corsMiddleware)
 app.use('*', csrfMiddleware)
 app.use('/user/*', auth)
 app.use('/request/*', auth)
-import { AppError } from './types/error.types'
+import { AppError } from '@licenseplate-checker/shared/types'
 
 export const errorHandler: ErrorHandler = (err, c) => {
   // AppError by instanceof or using duck typing (statusCode + code)
