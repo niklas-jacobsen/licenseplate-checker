@@ -1,4 +1,4 @@
-import { Hono } from 'hono'
+import { Hono, Context } from 'hono'
 import {
   BUILDER_REGISTRY_VERSION,
   nodeRegistry,
@@ -13,6 +13,7 @@ import { tasks } from '@trigger.dev/sdk/v3'
 import type { executeWorkflow } from '../trigger/executeWorkflow'
 import WorkflowController from '../controllers/Workflow.controller'
 import { ENV } from '../env'
+import auth from '../middleware/auth'
 
 export const createBuilderRouter = (workflowController: WorkflowController) => {
   const router = new Hono()
@@ -135,6 +136,111 @@ export const createBuilderRouter = (workflowController: WorkflowController) => {
 
     const workflows = await workflowController.getPublishedByCity(cityId)
     return c.json({ workflows })
+  })
+
+  router.post('/workflow', auth, async (c) => {
+    const user = c.get('user' as any) as { id: string }
+    let body: { name: string; cityId: string; definition: unknown; description?: string }
+
+    try {
+      body = await c.req.json()
+    } catch {
+      throw new BadRequestError('Request body must be valid JSON', 'INVALID_JSON')
+    }
+
+    if (!body.name || !body.cityId || !body.definition) {
+      throw new BadRequestError('name, cityId, and definition are required', 'MISSING_FIELDS')
+    }
+
+    const workflow = await workflowController.create(
+      body.name,
+      body.cityId,
+      user.id,
+      body.definition,
+      body.description,
+    )
+
+    return c.json({ workflow }, 201)
+  })
+
+  router.get('/workflow/:id', async (c) => {
+    const id = c.req.param('id')
+    const workflow = await workflowController.getById(id)
+
+    if (!workflow) {
+      throw new BadRequestError('Workflow not found', 'WORKFLOW_NOT_FOUND')
+    }
+
+    return c.json({ workflow })
+  })
+
+  router.put('/workflow/:id', auth, async (c) => {
+    const id = c.req.param('id')
+    let body: { definition: unknown }
+
+    try {
+      body = await c.req.json()
+    } catch {
+      throw new BadRequestError('Request body must be valid JSON', 'INVALID_JSON')
+    }
+
+    if (!body.definition) {
+      throw new BadRequestError('definition is required', 'MISSING_DEFINITION')
+    }
+
+    const existing = await workflowController.getById(id)
+    if (!existing) {
+      throw new BadRequestError('Workflow not found', 'WORKFLOW_NOT_FOUND')
+    }
+
+    const workflow = await workflowController.updateDefinition(id, body.definition)
+    return c.json({ workflow })
+  })
+
+  router.put('/workflow/:id/publish', auth, async (c) => {
+    const id = c.req.param('id')
+    let body: { isPublished: boolean }
+
+    try {
+      body = await c.req.json()
+    } catch {
+      throw new BadRequestError('Request body must be valid JSON', 'INVALID_JSON')
+    }
+
+    if (typeof body.isPublished !== 'boolean') {
+      throw new BadRequestError('isPublished (boolean) is required', 'MISSING_IS_PUBLISHED')
+    }
+
+    const existing = await workflowController.getById(id)
+    if (!existing) {
+      throw new BadRequestError('Workflow not found', 'WORKFLOW_NOT_FOUND')
+    }
+
+    const workflow = await workflowController.publish(id, body.isPublished)
+    return c.json({ workflow })
+  })
+
+  router.delete('/workflow/:id', auth, async (c) => {
+    const id = c.req.param('id')
+
+    const existing = await workflowController.getById(id)
+    if (!existing) {
+      throw new BadRequestError('Workflow not found', 'WORKFLOW_NOT_FOUND')
+    }
+
+    await workflowController.delete(id)
+    return c.json({ message: 'Workflow deleted' })
+  })
+
+  router.get('/execution/:id', async (c) => {
+    const id = c.req.param('id')
+    const execution = await workflowController.getExecution(id)
+
+    if (!execution) {
+      throw new BadRequestError('Execution not found', 'EXECUTION_NOT_FOUND')
+    }
+
+    return c.json({ execution })
   })
 
   return router
