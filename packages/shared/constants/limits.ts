@@ -1,7 +1,7 @@
 // This file exports constants that define limits for the application.
 
 // Builder
-export const BUILDER_MAX_NODES_PER_GRAPH = 50
+export const BUILDER_MAX_NODES_PER_GRAPH = 20
 export const BUILDER_MAX_WORKFLOWS_PER_USER = 10
 
 // Executor
