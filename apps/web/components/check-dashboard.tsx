@@ -6,12 +6,25 @@ import { useRouter } from 'next/navigation'
 import { checkService } from '../services/check.service'
 import { format } from 'date-fns'
 import type { LicensePlateCheck } from '@licenseplate-checker/shared/types'
+import { Trash2 } from 'lucide-react'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from './ui/alert-dialog'
 
 const LicensePlateCheckDashboard = () => {
   const router = useRouter()
   const [checks, setChecks] = useState<LicensePlateCheck[]>([])
   const [loading, setLoading] = useState<boolean>(true)
   const [error, setError] = useState<string>('')
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
     const fetchRequests = async () => {
@@ -34,86 +47,129 @@ const LicensePlateCheckDashboard = () => {
     fetchRequests()
   }, [])
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this check?')) return
+  const handleDelete = async () => {
+    if (!deleteTargetId) return
+    setIsDeleting(true)
     try {
-      await checkService.deleteCheck(id)
-      setChecks(checks.filter((c) => c.id !== id))
+      await checkService.deleteCheck(deleteTargetId)
+      setChecks(checks.filter((c) => c.id !== deleteTargetId))
     } catch (error) {
       console.error('Failed to delete check', error)
-      alert('Failed to delete check')
+    } finally {
+      setIsDeleting(false)
+      setDeleteTargetId(null)
     }
   }
+
+  const deleteTarget = checks.find((c) => c.id === deleteTargetId)
 
   if (loading) return <div className="p-4 text-center">Loading checks...</div>
 
   if (error) return <div className="p-4 text-center text-red-500">{error}</div>
 
   return (
-    <Card className="w-full">
-      <CardContent className="space-y-4 pt-6">
-        {checks.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-gray-500">You don't have any requests yet.</p>
-            <Button className="mt-4" onClick={() => router.push('/')}>
-              Make Your First Request
-            </Button>
-          </div>
-        ) : (
-          checks.map((check) => (
-            <Card key={check.id} className="overflow-hidden mb-4">
-              <div className="flex flex-col md:flex-row">
-                <div className="p-4 md:w-1/3 flex items-center justify-center bg-gray-50">
-                  <LicensePlatePreview
-                    city={check.cityId}
-                    letters={check.letters}
-                    numbers={String(check.numbers)}
-                  />
-                </div>
-                <div className="p-4 md:w-2/3 flex flex-col justify-between">
-                  <div>
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className="text-lg font-medium">
-                        {check.cityId}-{check.letters}-{check.numbers}
-                      </h3>
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-semibold \${
-                         check.status === 'AVAILABLE' ? 'bg-green-100 text-green-800' : 
-                         check.status === 'RESERVED' ? 'bg-blue-100 text-blue-800' :
-                         'bg-gray-100 text-gray-800'
-                       }`}
-                      >
-                        {check.status}
-                      </span>
-                    </div>
+    <>
+      <Card className="w-full">
+        <CardContent className="space-y-4 pt-6">
+          {checks.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-gray-500">You don't have any requests yet.</p>
+              <Button className="mt-4" onClick={() => router.push('/')}>
+                Make Your First Request
+              </Button>
+            </div>
+          ) : (
+            checks.map((check) => (
+              <Card key={check.id} className="overflow-hidden mb-4">
+                <div className="flex flex-col md:flex-row">
+                  <div className="p-4 md:w-1/3 flex items-center justify-center bg-gray-50">
+                    <LicensePlatePreview
+                      city={check.cityId}
+                      letters={check.letters}
+                      numbers={String(check.numbers)}
+                    />
+                  </div>
+                  <div className="p-4 md:w-2/3 flex flex-col justify-between">
+                    <div>
+                      <div className="flex justify-between items-start mb-2">
+                        <h3 className="text-lg font-medium">
+                          {check.cityId}-{check.letters}-{check.numbers}
+                        </h3>
+                        <span
+                          className={`px-2 py-1 rounded-full text-xs font-semibold \${
+                          check.status === 'AVAILABLE' ? 'bg-green-100 text-green-800' : 
+                          check.status === 'RESERVED' ? 'bg-blue-100 text-blue-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}
+                        >
+                          {check.status}
+                        </span>
+                      </div>
 
-                    <div className="text-sm text-gray-500 space-y-1">
-                      <p>Created: {format(new Date(check.createdAt), 'PPp')}</p>
-                      {check.lastCheckedAt && (
+                      <div className="text-sm text-gray-500 space-y-1">
                         <p>
-                          Last Checked:{' '}
-                          {format(new Date(check.lastCheckedAt), 'PPp')}
+                          Created: {format(new Date(check.createdAt), 'PPp')}
                         </p>
-                      )}
+                        {check.lastCheckedAt && (
+                          <p>
+                            Last Checked:{' '}
+                            {format(new Date(check.lastCheckedAt), 'PPp')}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="mt-4 flex justify-end">
+                      <button
+                        type="button"
+                        className="text-muted-foreground hover:text-destructive transition-colors p-1"
+                        onClick={() => setDeleteTargetId(check.id)}
+                        aria-label="Delete request"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
                     </div>
                   </div>
-
-                  <div className="mt-4 flex justify-end">
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleDelete(check.id)}
-                    >
-                      Delete
-                    </Button>
-                  </div>
                 </div>
-              </div>
-            </Card>
-          ))
-        )}
-      </CardContent>
-    </Card>
+              </Card>
+            ))
+          )}
+        </CardContent>
+      </Card>
+
+      <AlertDialog
+        open={!!deleteTargetId}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTargetId(null)
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Request</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete the request for{' '}
+              <strong>
+                {deleteTarget
+                  ? `${deleteTarget.cityId}-${deleteTarget.letters}-${deleteTarget.numbers}`
+                  : ''}
+              </strong>
+              ? <br />
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={isDeleting}
+            >
+              {isDeleting ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   )
 }
 
