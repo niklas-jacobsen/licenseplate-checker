@@ -14,6 +14,7 @@
     "./workflow-dsl": "./workflow-dsl/index.ts",
     "./builder-ir": "./builder-ir/index.ts",
     "./constants/schemes": "./constants/schemes.ts",
+    "./constants/limits": "./constants/limits.ts",
     ".": "./*"
   },
   "private": true,
