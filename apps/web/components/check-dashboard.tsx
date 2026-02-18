@@ -5,18 +5,7 @@ import LicensePlatePreview from './plate-preview'
 import { useRouter } from 'next/navigation'
 import { checkService } from '../services/check.service'
 import { format } from 'date-fns'
-
-interface LicensePlateCheck {
-  id: string
-  cityId: string
-  letters: string
-  numbers: number
-  userId: string
-  status: string
-  createdAt: string
-  updatedAt: string
-  lastCheckedAt?: string
-}
+import type { LicensePlateCheck } from '@licenseplate-checker/shared/types'
 
 const LicensePlateCheckDashboard = () => {
   const router = useRouter()
@@ -72,10 +61,7 @@ const LicensePlateCheckDashboard = () => {
           </div>
         ) : (
           checks.map((check) => (
-            <Card
-              key={check.id}
-              className="overflow-hidden mb-4"
-            >
+            <Card key={check.id} className="overflow-hidden mb-4">
               <div className="flex flex-col md:flex-row">
                 <div className="p-4 md:w-1/3 flex items-center justify-center bg-gray-50">
                   <LicensePlatePreview
@@ -87,33 +73,38 @@ const LicensePlateCheckDashboard = () => {
                 <div className="p-4 md:w-2/3 flex flex-col justify-between">
                   <div>
                     <div className="flex justify-between items-start mb-2">
-                       <h3 className="text-lg font-medium">
+                      <h3 className="text-lg font-medium">
                         {check.cityId}-{check.letters}-{check.numbers}
-                       </h3>
-                       <span className={`px-2 py-1 rounded-full text-xs font-semibold \${
+                      </h3>
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-semibold \${
                          check.status === 'AVAILABLE' ? 'bg-green-100 text-green-800' : 
                          check.status === 'RESERVED' ? 'bg-blue-100 text-blue-800' :
                          'bg-gray-100 text-gray-800'
-                       }`}>
-                         {check.status}
-                       </span>
+                       }`}
+                      >
+                        {check.status}
+                      </span>
                     </div>
-                    
+
                     <div className="text-sm text-gray-500 space-y-1">
                       <p>Created: {format(new Date(check.createdAt), 'PPp')}</p>
                       {check.lastCheckedAt && (
-                        <p>Last Checked: {format(new Date(check.lastCheckedAt), 'PPp')}</p>
+                        <p>
+                          Last Checked:{' '}
+                          {format(new Date(check.lastCheckedAt), 'PPp')}
+                        </p>
                       )}
                     </div>
                   </div>
 
                   <div className="mt-4 flex justify-end">
-                    <Button 
-                        variant="destructive" 
-                        size="sm"
-                        onClick={() => handleDelete(check.id)}
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleDelete(check.id)}
                     >
-                        Delete
+                      Delete
                     </Button>
                   </div>
                 </div>
