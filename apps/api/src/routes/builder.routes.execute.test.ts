@@ -22,6 +22,13 @@ mock.module('../env', () => ({
   },
 }))
 
+mock.module('../middleware/auth', () => ({
+  default: mock(async (c: any, next: any) => {
+    c.set('user', { id: 'test-user-id' })
+    await next()
+  }),
+}))
+
 import { errorHandler } from '../app'
 import { createBuilderRouter } from './builder.routes'
 import { tasks } from '@trigger.dev/sdk/v3'
@@ -90,6 +97,7 @@ describe('POST /builder/execute', () => {
     mockWorkflowController.getById.mockResolvedValueOnce({
       id: 'wf-1',
       definition: { nodes: [], edges: [] },
+      city: { allowedDomains: ['example.com'] },
     })
     mockWorkflowController.createExecution.mockResolvedValueOnce({ id: 'exec-1' })
     ;(tasks.trigger as any).mockResolvedValueOnce({ id: 'run-abc123' })
@@ -111,6 +119,9 @@ describe('POST /builder/execute', () => {
       executionId: 'exec-1',
       callbackUrl: 'http://localhost:8080/webhooks/trigger',
       callbackSecret: 'test-secret',
+      allowedDomains: ['example.com'],
+    }, {
+      idempotencyKey: 'exec-1',
     })
   })
 })

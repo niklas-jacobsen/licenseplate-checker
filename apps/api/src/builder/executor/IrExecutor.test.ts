@@ -11,6 +11,7 @@ const pageMock = {
     count: mock(() => Promise.resolve(1)),
   })),
   textContent: mock(() => Promise.resolve('some text content')),
+  route: mock(() => Promise.resolve()),
   _isMock: true,
 }
 
