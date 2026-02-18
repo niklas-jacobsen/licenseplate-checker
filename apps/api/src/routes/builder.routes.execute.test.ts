@@ -91,12 +91,32 @@ describe('POST /builder/execute', () => {
     expect(body.error.code).toBe('WORKFLOW_NOT_FOUND')
   })
 
+  it('returns 400 when workflow is not published', async () => {
+    const app = makeApp()
+    mockWorkflowController.getById.mockResolvedValueOnce({
+      id: 'wf-1',
+      definition: { nodes: [], edges: [] },
+      isPublished: false,
+      city: { allowedDomains: ['example.com'] },
+    })
+
+    const res = await app.request('/builder/execute', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ workflowId: 'wf-1' }),
+    })
+    expect(res.status).toBe(400)
+    const body = await res.json()
+    expect(body.error.code).toBe('WORKFLOW_NOT_PUBLISHED')
+  })
+
   it('triggers execution and returns 202', async () => {
     const app = makeApp()
 
     mockWorkflowController.getById.mockResolvedValueOnce({
       id: 'wf-1',
       definition: { nodes: [], edges: [] },
+      isPublished: true,
       city: { allowedDomains: ['example.com'] },
     })
     mockWorkflowController.createExecution.mockResolvedValueOnce({
