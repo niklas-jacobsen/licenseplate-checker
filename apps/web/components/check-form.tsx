@@ -192,7 +192,7 @@ export default function LicensePlateCheckForm() {
                         }
                       />
                     </FormControl>
-                    <div className="min-h-[1.25rem]"></div>
+                    <div className="min-h-5"></div>
                   </FormItem>
                 )}
               />
@@ -217,7 +217,7 @@ export default function LicensePlateCheckForm() {
                         }}
                       />
                     </FormControl>
-                    <div className="min-h-[1.25rem]">
+                    <div className="min-h-5">
                       <FormMessage />
                     </div>
                   </FormItem>
@@ -247,7 +247,7 @@ export default function LicensePlateCheckForm() {
                         }}
                       />
                     </FormControl>
-                    <div className="min-h-[1.25rem]">
+                    <div className="min-h-5">
                       <FormMessage />
                     </div>
                   </FormItem>

@@ -99,7 +99,9 @@ describe('POST /builder/execute', () => {
       definition: { nodes: [], edges: [] },
       city: { allowedDomains: ['example.com'] },
     })
-    mockWorkflowController.createExecution.mockResolvedValueOnce({ id: 'exec-1' })
+    mockWorkflowController.createExecution.mockResolvedValueOnce({
+      id: 'exec-1',
+    })
     ;(tasks.trigger as any).mockResolvedValueOnce({ id: 'run-abc123' })
     mockWorkflowController.updateExecution.mockResolvedValueOnce({})
 
@@ -114,14 +116,18 @@ describe('POST /builder/execute', () => {
     expect(body.executionId).toBe('exec-1')
     expect(body.triggerRunId).toBe('run-abc123')
 
-    expect(tasks.trigger).toHaveBeenCalledWith('execute-workflow', {
-      ir: { entryBlockId: 'start', blocks: {} },
-      executionId: 'exec-1',
-      callbackUrl: 'http://localhost:8080/webhooks/trigger',
-      callbackSecret: 'test-secret',
-      allowedDomains: ['example.com'],
-    }, {
-      idempotencyKey: 'exec-1',
-    })
+    expect(tasks.trigger).toHaveBeenCalledWith(
+      'execute-workflow',
+      {
+        ir: { entryBlockId: 'start', blocks: {} },
+        executionId: 'exec-1',
+        callbackUrl: 'http://localhost:8080/webhooks/trigger',
+        callbackSecret: 'test-secret',
+        allowedDomains: ['example.com'],
+      },
+      {
+        idempotencyKey: 'exec-1',
+      }
+    )
   })
 })
