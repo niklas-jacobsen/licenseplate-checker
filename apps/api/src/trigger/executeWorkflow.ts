@@ -1,4 +1,11 @@
-import { task, logger } from "@trigger.dev/sdk/v3"
+import { task, logger, queue } from "@trigger.dev/sdk/v3"
+import {
+  TRIGGER_WORKER_CONCURRENCY_LIMIT,
+  TRIGGER_WORKER_RETRY_MAX_ATTEMPTS,
+  TRIGGER_WORKER_RETRY_MIN_TIMEOUT_MS,
+  TRIGGER_WORKER_RETRY_MAX_TIMEOUT_MS,
+  TRIGGER_WORKER_RETRY_FACTOR
+} from '@licenseplate-checker/shared/constants/limits'
 import { IrExecutor } from '../builder/executor/IrExecutor'
 import type { BuilderIr } from '@shared/builder-ir'
 
@@ -7,23 +14,30 @@ interface ExecuteWorkflowPayload {
   executionId: string
   callbackUrl: string
   callbackSecret: string
+  allowedDomains: string[]
 }
 
 export const executeWorkflow = task({
   id: "execute-workflow",
+  queue: {
+    concurrencyLimit: TRIGGER_WORKER_CONCURRENCY_LIMIT,
+  },
+  machine: {
+    preset: "small-2x",
+  },
   retry: {
-    maxAttempts: 2,
-    factor: 1.8,
-    minTimeoutInMs: 1000,
-    maxTimeoutInMs: 30_000,
+    maxAttempts: TRIGGER_WORKER_RETRY_MAX_ATTEMPTS,
+    factor: TRIGGER_WORKER_RETRY_FACTOR,
+    minTimeoutInMs: TRIGGER_WORKER_RETRY_MIN_TIMEOUT_MS,
+    maxTimeoutInMs: TRIGGER_WORKER_RETRY_MAX_TIMEOUT_MS,
   },
   run: async (payload: ExecuteWorkflowPayload) => {
-    const { ir, executionId, callbackUrl, callbackSecret } = payload
+    const { ir, executionId, callbackUrl, callbackSecret, allowedDomains } = payload
     const startTime = Date.now()
 
     logger.info("Starting workflow execution", { executionId, entryBlockId: ir.entryBlockId })
 
-    const executor = new IrExecutor()
+    const executor = new IrExecutor({ allowedDomains })
     const result = await executor.execute(ir)
     const duration = Date.now() - startTime
 

@@ -2,7 +2,7 @@ import { BadRequestError, InternalServerError, NotFoundError } from './error.typ
 
 export type ExecutionLog = {
   timestamp: string
-  level: 'info' | 'error' | 'debug'
+  level: 'info' | 'warn' | 'error' | 'debug'
   message: string
   details?: unknown
 }

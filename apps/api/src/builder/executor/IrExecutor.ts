@@ -9,11 +9,28 @@ import {
   UnknownActionTypeError,
   UnknownConditionOpError,
 } from '@licenseplate-checker/shared/types'
+import { EXECUTOR_ACTION_DELAY_MS } from '@licenseplate-checker/shared/constants/limits'
+import {
+  BLOCKED_URL_SCHEMES,
+  PRIVATE_IP_RANGES,
+  PRIVATE_HOSTNAMES,
+} from '@licenseplate-checker/shared/constants/schemes'
+
+
+
+export interface ExecutorOptions {
+  allowedDomains?: string[]
+}
 
 export class IrExecutor {
   private logs: ExecutionLog[] = []
   private browser: Browser | null = null
   private page: Page | null = null
+  private allowedDomains: string[]
+
+  constructor(options: ExecutorOptions = {}) {
+    this.allowedDomains = options.allowedDomains ?? []
+  }
 
   private log(level: ExecutionLog['level'], message: string, details?: unknown) {
     this.logs.push({
@@ -24,6 +41,50 @@ export class IrExecutor {
     })
   }
 
+  private validateUrl(url: string): void {
+    const lower = url.toLowerCase()
+
+    for (const scheme of BLOCKED_URL_SCHEMES) {
+      if (lower.startsWith(scheme)) {
+        throw new Error(`Blocked URL scheme: ${scheme}`)
+      }
+    }
+
+    let parsed: URL
+    try {
+      parsed = new URL(url)
+    } catch {
+      throw new Error(`Invalid URL: ${url}`)
+    }
+
+    const hostname = parsed.hostname
+
+    for (const pattern of PRIVATE_IP_RANGES) {
+      if (pattern.test(hostname)) {
+        throw new Error(`Access to private network address is blocked: ${hostname}`)
+      }
+    }
+
+    if (PRIVATE_HOSTNAMES.includes(hostname.toLowerCase())) {
+      throw new Error(`Access to private host is blocked: ${hostname}`)
+    }
+
+    if (this.allowedDomains.length > 0) {
+      const isAllowed = this.allowedDomains.some(
+        (domain) => hostname === domain || hostname.endsWith(`.${domain}`)
+      )
+      if (!isAllowed) {
+        throw new Error(
+          `Domain '${hostname}' is not in the allowed list: [${this.allowedDomains.join(', ')}]`
+        )
+      }
+    }
+  }
+
+  private async delay(): Promise<void> {
+    await new Promise((resolve) => setTimeout(resolve, EXECUTOR_ACTION_DELAY_MS))
+  }
+
   async execute(ir: BuilderIr): Promise<ExecutionResult> {
     this.logs = []
     
@@ -32,6 +93,17 @@ export class IrExecutor {
       
       this.browser = await chromium.launch({ headless: true })
       this.page = await this.browser.newPage()
+
+      await this.page.route('**/*', (route) => {
+        const url = route.request().url()
+        try {
+          this.validateUrl(url)
+          route.continue()
+        } catch {
+          this.log('warn', `Blocked outbound request: ${url}`)
+          route.abort('blockedbyclient')
+        }
+      })
       
       let currentBlockId: string | null = ir.entryBlockId
       
@@ -71,6 +143,7 @@ export class IrExecutor {
         
       case 'action':
         await this.executeAction(block.op)
+        await this.delay()
         return block.next
         
       case 'branch':
@@ -88,6 +161,7 @@ export class IrExecutor {
     
     switch (op.type) {
       case 'openPage':
+        this.validateUrl(op.url)
         this.log('info', `Opening page: ${op.url}`)
         await this.page.goto(op.url)
         await this.page.waitForLoadState('domcontentloaded')
@@ -127,4 +201,3 @@ export class IrExecutor {
     }
   }
 }
-
