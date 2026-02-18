@@ -1,4 +1,11 @@
-export const cityData = [
+export interface CityDataEntry {
+  id: string
+  name: string
+  websiteUrl?: string
+  allowedDomains?: string[]
+}
+
+export const cityData: CityDataEntry[] = [
   {
     id: 'A',
     name: 'Augsburg',
@@ -142,6 +149,8 @@ export const cityData = [
   {
     id: 'B',
     name: 'Berlin',
+    websiteUrl: 'https://service.berlin.de/dienstleistung/121484/',
+    allowedDomains: ['berlin.de', 'behoerden-serviceportal.de'],
   },
   {
     id: 'BA',
@@ -466,6 +475,8 @@ export const cityData = [
   {
     id: 'D',
     name: 'Düsseldorf',
+    websiteUrl: 'https://service.duesseldorf.de/wunschkennzeichen#/',
+    allowedDomains: ['duesseldorf.de'],
   },
   {
     id: 'DA',
@@ -1130,6 +1141,8 @@ export const cityData = [
   {
     id: 'HH',
     name: 'Hansestadt Hamburg',
+    websiteUrl: 'https://www.hamburg.de/service/info/111146022/',
+    allowedDomains: ['hamburg.de', 'behoerden-serviceportal.de'],
   },
   {
     id: 'HHM',
@@ -1318,6 +1331,9 @@ export const cityData = [
   {
     id: 'K',
     name: 'Köln',
+    websiteUrl:
+      'https://i-kfz.regioit.de/i4/ikfz4/?LICENSEIDENTIFIER=koeln_stadt',
+    allowedDomains: ['stadt-koeln.de', 'i-kfz.regioit.de'],
   },
   {
     id: 'KA',
@@ -1786,6 +1802,8 @@ export const cityData = [
   {
     id: 'MS',
     name: 'Münster',
+    websiteUrl: 'https://www.stadt-muenster.de/wkz/?LICENSEIDENTIFIER=ms/',
+    allowedDomains: ['stadt-muenster.de'],
   },
   {
     id: 'MSP',

@@ -1,6 +1,7 @@
 import { Context, Next } from 'hono'
 import { JwtPayload } from 'jsonwebtoken'
 import AuthController from '../controllers/Authorization.controller'
+import { InvalidTokenError, MalformedTokenError, MissingTokenError } from '../types/auth.types'
 
 export interface CustomRequest extends Request {
   token: string | JwtPayload
@@ -11,16 +12,15 @@ const auth = async (c: Context, next: Next) => {
   try {
     const token = c.req.header('Authorization')?.replace('Bearer ', '')
 
+    // token missing
     if (!token) {
-      throw new Error()
+      throw new MissingTokenError()
     }
 
+    // token malformed
     const decoded = await authController.verifyJWT(token)
     if (!decoded) {
-      return c.json(
-        { status: 'error', message: 'Authorization token is missing' },
-        401
-      )
+      throw new MalformedTokenError()
     }
 
     c.set('user', {
@@ -30,7 +30,12 @@ const auth = async (c: Context, next: Next) => {
 
     await next()
   } catch (error) {
-    return c.json({ status: 'error', message: error }, 401)
+    if (error instanceof MissingTokenError || error instanceof InvalidTokenError) {
+      throw error
+    }
+    
+    // token invalid fallback
+    throw new InvalidTokenError()
   }
 }
 

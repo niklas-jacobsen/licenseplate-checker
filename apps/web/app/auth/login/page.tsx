@@ -7,7 +7,7 @@ import * as z from 'zod'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Loader2 } from 'lucide-react'
-import { Button } from 'apps/web/components/ui/button'
+import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
@@ -15,7 +15,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from 'apps/web/components/ui/card'
+} from '@/components/ui/card'
 import {
   Form,
   FormControl,
@@ -23,13 +23,13 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from 'apps/web/components/ui/form'
-import { Input } from 'apps/web/components/ui/input'
-import { Alert, AlertDescription } from 'apps/web/components/ui/alert'
-import { useAuth } from 'apps/web/lib/auth-context'
-import { zUserScheme } from '@shared/validators'
-import SimpleNavBar from 'apps/web/components/nav-bar-simple'
-import LoginRedirectHandler from 'apps/web/components/login-redirect-handler'
+} from '@/components/ui/form'
+import { Input } from '@/components/ui/input'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { useAuth } from '@/lib/auth-context'
+import { zUserScheme } from '@licenseplate-checker/shared/validators'
+import SimpleNavBar from '@/components/nav-bar-simple'
+import LoginRedirectHandler from '@/components/login-redirect-handler'
 
 export default function LogInPage() {
   const router = useRouter()

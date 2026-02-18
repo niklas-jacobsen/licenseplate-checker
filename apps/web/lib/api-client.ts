@@ -1,5 +1,5 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios'
-import { ApiResponse } from '@shared/types'
+import { ApiResponse } from '@licenseplate-checker/shared/types'
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
@@ -35,10 +35,25 @@ class ApiClient {
         status: response.status,
       }
     } catch (error: any) {
-      console.error('API request failed:', error)
+      // ignore expired token errors as they are handled by auth context
+      if (error.response?.status !== 401) {
+        console.error('API request failed:', error)
+      }
+
+      const responseData = error.response?.data
+      const backendError = responseData?.error
+
+      let errorMessage = 'Unknown error'
+      if (typeof backendError === 'string') {
+        errorMessage = backendError
+      } else if (backendError?.message) {
+        errorMessage = backendError.message
+      } else if (error.message) {
+        errorMessage = error.message
+      }
 
       return {
-        error: error.response?.data?.error || error.message || 'Unknown error',
+        error: errorMessage,
         status: error.response?.status || 500,
       }
     }

@@ -38,23 +38,3 @@ export default function LicensePlatePreview({
     </div>
   )
 }
-// ;<div className="flex justify-center mb-6">
-//   <div className="relative w-72 h-16 md:w-80 md:h-20 bg-white border-2 border-black rounded-md flex items-center justify-center shadow-md overflow-hidden">
-//     <div className="w-10 h-full bg-blue-600 flex flex-col items-center justify-center text-white text-xs font-bold">
-//       <div className="text-[10px] mb-1">EU</div>
-//       <div className="text-sm">D</div>
-//     </div>
-
-//     <div className={`${euroPlate.className} flex items-center ml-12`}>
-//       <div className="text-5xl uppercase">{city}</div>
-
-//       <div className="mx-2" />
-
-//       <div className="text-5xl uppercase">{letters}</div>
-
-//       <div className="mx-2" />
-
-//       <div className="text-5xl">{numbers}</div>
-//     </div>
-//   </div>
-// </div>

@@ -7,9 +7,11 @@
     "jsx": "preserve",
     "baseUrl": ".",
     "paths": {
+      "@licenseplate-checker/shared/*": ["packages/shared/*"],
       "@shared/*": ["packages/shared/*"],
-      "@api/*": ["api/src/*"],
-      "@routes": ["api/src/routes/*"]
+      "@web/*": ["apps/web/*"],
+      "@api/*": ["apps/api/*"],
+      "@routes": ["apps/api/src/routes/*"]
     },
     "allowJs": true,
     "noEmit": true,

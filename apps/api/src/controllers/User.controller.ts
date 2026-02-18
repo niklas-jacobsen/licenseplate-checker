@@ -7,7 +7,15 @@ class UserController {
   }
 
   async getById(id: string) {
-    return prisma.user.findUnique({ where: { id } })
+    return prisma.user.findUnique({
+      where: { id },
+      include: {
+        licenseplateChecks: {
+          include: { city: true },
+        },
+        createdWorkflows: true,
+      },
+    })
   }
 
   async getByEmail(email: string) {
@@ -20,6 +28,27 @@ class UserController {
 
   async delete(id: string) {
     return prisma.user.delete({ where: { id } })
+  }
+
+  async getDashboardData(id: string) {
+    return prisma.user.findUnique({
+      where: { id },
+      select: {
+        email: true,
+        firstname: true,
+        lastname: true,
+        licenseplateChecks: {
+          orderBy: { updatedAt: 'desc' },
+          take: 10,
+        },
+        _count: {
+          select: {
+            licenseplateChecks: true,
+            createdWorkflows: true,
+          },
+        },
+      },
+    })
   }
 }
 

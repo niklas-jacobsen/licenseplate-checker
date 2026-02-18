@@ -1,15 +1,15 @@
 'use client'
 
-import { useAuth } from 'apps/web/lib/auth-context'
-import { Button } from 'apps/web/components/ui/button'
-import { Avatar, AvatarFallback } from 'apps/web/components/ui/avatar'
+import { useAuth } from '@/lib/auth-context'
+import { Button } from '@/components/ui/button'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from 'apps/web/components/ui/dropdown-menu'
+} from '@/components/ui/dropdown-menu'
 import { LogOut, User, ClipboardList } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'

@@ -1,6 +1,60 @@
 [test]
 preload = ["./apps/web/tests/happydom.ts", "./apps/web/tests/testing-library.ts"]
 
+coveragePathIgnorePatterns = [
+  # Test files
+  "**/*.test.ts",
+  "**/*.spec.ts",
+  "**/*.e2e.ts",
+  "**/tests/**",
+
+  # Configuration files
+  "*.config.js",
+  "*.config.ts",
+  "webpack.config.*",
+  "vite.config.*",
+
+  # Build output
+  "dist/**",
+  "build/**",
+  ".next/**",
+
+  # Generated code
+  "generated/**",
+  "**/*.generated.ts",
+
+  # Vendor/third-party
+  "vendor/**",
+  "third-party/**",
+  
+  # apps/api
+  "apps/api/src/env.ts",
+  "apps/api/src/middleware/cors.ts",
+  "apps/api/src/middleware/csrf.ts",
+  "apps/api/src/middleware/rateLimiter.ts",
+
+  "apps/api/prisma/**",
+  "apps/api/src/controllers/**",
+  "apps/api/src/utils/**",
+  "apps/api/src/lib/**",
+  "apps/api/src/types/**",
+
+  # apps/worker
+  "apps/worker/src/env.ts",
+  "apps/worker/src/utils/**",
+  "apps/worker/src/lib/**",
+ 
+  # apps/web
+  "apps/web/src/env.ts",
+  "apps/web/src/utils/**",
+  "apps/web/src/lib/**",
+
+  # packages/shared
+  "packages/shared/lib/**",
+  "packages/shared/types/**",
+  "packages/shared/validators/**",
+]
+
 [install.alias]
 react = "./node_modules/react"
 react-dom = "./node_modules/react-dom"

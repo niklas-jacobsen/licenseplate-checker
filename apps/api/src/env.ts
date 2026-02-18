@@ -1,4 +1,10 @@
+import path from 'path'
+import dotenv from 'dotenv'
 import { z } from 'zod'
+
+if (process.env.NODE_ENV !== 'production') {
+  dotenv.config({ path: path.resolve(__dirname, '../.env') })
+}
 
 export const zEnvScheme = z.object({
   PORT: z.coerce.number().positive().int().default(8080),
@@ -14,6 +20,9 @@ export const zEnvScheme = z.object({
   FORCE_SEED: z.coerce.boolean().default(false),
   RATE_LIMIT_WINDOW: z.coerce.number().int().positive().default(900000),
   RATE_LIMIT_MAX_REQUESTS: z.coerce.number().int().positive().default(100),
+  TRIGGER_SECRET_KEY: z.string().optional(),
+  TRIGGER_WEBHOOK_SECRET: z.string().default('dev-webhook-secret'),
+  API_BASE_URL: z.string().default('http://localhost:8080'),
 })
 
 type IENV = z.infer<typeof zEnvScheme>
