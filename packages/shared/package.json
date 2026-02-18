@@ -13,6 +13,7 @@
     "./types": "./types/index.ts",
     "./workflow-dsl": "./workflow-dsl/index.ts",
     "./builder-ir": "./builder-ir/index.ts",
+    "./constants/schemes": "./constants/schemes.ts",
     ".": "./*"
   },
   "private": true,
