@@ -11,11 +11,11 @@
     "prefix": ""
   },
   "aliases": {
-    "components": "@licenseplate-checker/shared/components",
-    "utils": "@licenseplate-checker/shared/lib/utils",
-    "ui": "@licenseplate-checker/shared/components/ui",
-    "lib": "@licenseplate-checker/shared/lib",
-    "hooks": "@licenseplate-checker/shared/hooks"
+    "components": "@/components",
+    "utils": "@shared/lib/utils",
+    "ui": "@/components/ui",
+    "lib": "@/lib",
+    "hooks": "@/hooks"
   },
   "iconLibrary": "lucide"
 }
