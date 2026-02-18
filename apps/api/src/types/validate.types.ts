@@ -2,6 +2,7 @@ export type ValidationIssueType =
   | 'graph.parse'
   | 'graph.start.count'
   | 'graph.end.count'
+  | 'graph.nodeLimit'
   | 'graph.unreachable'
   | 'node.unknownType'
   | 'node.props.invalid'

@@ -6,6 +6,7 @@ import type {
   WorkflowEdge,
 } from '@licenseplate-checker/shared/workflow-dsl'
 import { nodeRegistry } from '@licenseplate-checker/shared/node-registry'
+import { BUILDER_MAX_NODES_PER_GRAPH } from '@licenseplate-checker/shared/constants/limits'
 
 import type { ValidationIssue } from '../../types/validate.types'
 
@@ -91,6 +92,20 @@ export function validateGraph(
 
   const graph = parsed.data
   const issues: ValidationIssue[] = []
+
+  if (graph.nodes.length > BUILDER_MAX_NODES_PER_GRAPH) {
+    issues.push({
+      type: 'graph.nodeLimit',
+      message: `Graph exceeds maximum of ${BUILDER_MAX_NODES_PER_GRAPH} nodes (found ${graph.nodes.length}).`,
+    })
+  }
+
+  if (graph.nodes.length < 2) {
+    issues.push({
+      type: 'graph.nodeLimit',
+      message: `Graph must contain at least 2 nodes (found ${graph.nodes.length}).`,
+    })
+  }
 
   //Validate start and end nodes
   const starts = findStartNodes(graph.nodes)
