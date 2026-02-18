@@ -6,6 +6,7 @@ import { userRouter } from './routes/user.routes'
 import { builderRouter } from './routes/builder.routes'
 import { cityRouter } from './routes/city.routes'
 import { webhookRouter } from './routes/webhook.routes'
+import { internalRouter } from './routes/internal.routes'
 
 const router = new Hono()
 
@@ -16,5 +17,6 @@ router.route('/user', userRouter)
 router.route('/builder', builderRouter)
 router.route('/cities', cityRouter)
 router.route('/webhooks', webhookRouter)
+router.route('/internal', internalRouter)
 
 export default router
