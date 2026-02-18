@@ -1,19 +1,18 @@
-import { Hono, Context } from 'hono'
+import { Hono } from 'hono'
 import {
   BUILDER_REGISTRY_VERSION,
   nodeRegistry,
 } from '@licenseplate-checker/shared/node-registry'
 import { BUILDER_MAX_WORKFLOWS_PER_USER } from '@licenseplate-checker/shared/constants/limits'
 import { validateGraph } from '../builder/validate/validateGraph'
-import {
-  compileGraphToIr,
-} from '../builder/compiler/GraphToIrCompiler'
+import { compileGraphToIr } from '../builder/compiler/GraphToIrCompiler'
 import { CompileError } from '../types/compiler.types'
-import { AppError, BadRequestError, InternalServerError } from '@licenseplate-checker/shared/types'
-import { tasks } from '@trigger.dev/sdk/v3'
-import type { executeWorkflow } from '../trigger/executeWorkflow'
+import {
+  BadRequestError,
+  InternalServerError,
+} from '@licenseplate-checker/shared/types'
 import WorkflowController from '../controllers/Workflow.controller'
-import { ENV } from '../env'
+import { executeWorkflowForCheck } from '../services/executeWorkflowForCheck'
 import auth from '../middleware/auth'
 
 export const createBuilderRouter = (workflowController: WorkflowController) => {
@@ -38,13 +37,18 @@ export const createBuilderRouter = (workflowController: WorkflowController) => {
     try {
       body = await c.req.json()
     } catch {
-      throw new BadRequestError('Request body must be valid JSON', 'INVALID_JSON')
+      throw new BadRequestError(
+        'Request body must be valid JSON',
+        'INVALID_JSON'
+      )
     }
 
     const result = validateGraph(body)
 
     if (!result.ok) {
-      throw new BadRequestError('Graph validation failed', 'VALIDATION_ERROR', { issues: result.issues })
+      throw new BadRequestError('Graph validation failed', 'VALIDATION_ERROR', {
+        issues: result.issues,
+      })
     }
 
     return c.json({
@@ -59,7 +63,10 @@ export const createBuilderRouter = (workflowController: WorkflowController) => {
     try {
       body = await c.req.json()
     } catch {
-      throw new BadRequestError('Request body must be valid JSON', 'INVALID_JSON')
+      throw new BadRequestError(
+        'Request body must be valid JSON',
+        'INVALID_JSON'
+      )
     }
 
     try {
@@ -79,63 +86,37 @@ export const createBuilderRouter = (workflowController: WorkflowController) => {
     try {
       body = await c.req.json()
     } catch {
-      throw new BadRequestError('Request body must be valid JSON', 'INVALID_JSON')
+      throw new BadRequestError(
+        'Request body must be valid JSON',
+        'INVALID_JSON'
+      )
     }
 
-    const { workflowId, checkId } = body as { workflowId: string; checkId?: string }
+    const { workflowId, checkId } = body as {
+      workflowId: string
+      checkId?: string
+    }
 
     if (!workflowId) {
       throw new BadRequestError('workflowId is required', 'MISSING_WORKFLOW_ID')
     }
 
-    const workflow = await workflowController.getById(workflowId)
+    const result = await executeWorkflowForCheck(
+      workflowController,
+      workflowId,
+      checkId
+    )
 
-    if (!workflow) {
-      throw new BadRequestError('Workflow not found', 'WORKFLOW_NOT_FOUND')
-    }
-
-    try {
-      const ir = compileGraphToIr(workflow.definition)
-
-      const execution = await workflowController.createExecution(workflowId, checkId)
-
-      const handle = await tasks.trigger<typeof executeWorkflow>("execute-workflow", {
-        ir,
-        executionId: execution.id,
-        callbackUrl: `${ENV.API_BASE_URL}/webhooks/trigger`,
-        callbackSecret: ENV.TRIGGER_WEBHOOK_SECRET,
-        allowedDomains: workflow.city.allowedDomains,
-      }, {
-        idempotencyKey: execution.id,
-      })
-
-      await workflowController.updateExecution(execution.id, {
-        triggerRunId: handle.id,
-        status: 'RUNNING',
-      })
-
-      return c.json({
-        executionId: execution.id,
-        triggerRunId: handle.id,
-      }, 202)
-    } catch (err) {
-      if (err instanceof CompileError) {
-        throw err
-      }
-      if (err instanceof AppError) {
-        throw err
-      }
-      throw new InternalServerError(
-        err instanceof Error ? err.message : String(err),
-        'EXECUTION_TRIGGER_ERROR'
-      )
-    }
+    return c.json(result, 202)
   })
 
   router.get('/workflows', async (c) => {
     const cityId = c.req.query('cityId')
     if (!cityId) {
-      throw new BadRequestError('cityId query parameter is required', 'MISSING_CITY_ID')
+      throw new BadRequestError(
+        'cityId query parameter is required',
+        'MISSING_CITY_ID'
+      )
     }
 
     const workflows = await workflowController.getPublishedByCity(cityId)
@@ -144,16 +125,27 @@ export const createBuilderRouter = (workflowController: WorkflowController) => {
 
   router.post('/workflow', auth, async (c) => {
     const user = c.get('user' as any) as { id: string }
-    let body: { name: string; cityId: string; definition: unknown; description?: string }
+    let body: {
+      name: string
+      cityId: string
+      definition: unknown
+      description?: string
+    }
 
     try {
       body = await c.req.json()
     } catch {
-      throw new BadRequestError('Request body must be valid JSON', 'INVALID_JSON')
+      throw new BadRequestError(
+        'Request body must be valid JSON',
+        'INVALID_JSON'
+      )
     }
 
     if (!body.name || !body.cityId || !body.definition) {
-      throw new BadRequestError('name, cityId, and definition are required', 'MISSING_FIELDS')
+      throw new BadRequestError(
+        'name, cityId, and definition are required',
+        'MISSING_FIELDS'
+      )
     }
 
     const existingCount = await workflowController.countByAuthor(user.id)
@@ -169,10 +161,18 @@ export const createBuilderRouter = (workflowController: WorkflowController) => {
       body.cityId,
       user.id,
       body.definition,
-      body.description,
+      body.description
     )
 
-    return c.json({ workflow }, 201)
+    const validation = validateGraph(body.definition)
+
+    return c.json(
+      {
+        workflow,
+        validation: { ok: validation.ok, issues: validation.issues },
+      },
+      201
+    )
   })
 
   router.get('/workflow/:id', async (c) => {
@@ -193,7 +193,10 @@ export const createBuilderRouter = (workflowController: WorkflowController) => {
     try {
       body = await c.req.json()
     } catch {
-      throw new BadRequestError('Request body must be valid JSON', 'INVALID_JSON')
+      throw new BadRequestError(
+        'Request body must be valid JSON',
+        'INVALID_JSON'
+      )
     }
 
     if (!body.definition) {
@@ -205,8 +208,17 @@ export const createBuilderRouter = (workflowController: WorkflowController) => {
       throw new BadRequestError('Workflow not found', 'WORKFLOW_NOT_FOUND')
     }
 
-    const workflow = await workflowController.updateDefinition(id, body.definition)
-    return c.json({ workflow })
+    const workflow = await workflowController.updateDefinition(
+      id,
+      body.definition
+    )
+
+    const validation = validateGraph(body.definition)
+
+    return c.json({
+      workflow,
+      validation: { ok: validation.ok, issues: validation.issues },
+    })
   })
 
   router.put('/workflow/:id/publish', auth, async (c) => {
@@ -216,16 +228,46 @@ export const createBuilderRouter = (workflowController: WorkflowController) => {
     try {
       body = await c.req.json()
     } catch {
-      throw new BadRequestError('Request body must be valid JSON', 'INVALID_JSON')
+      throw new BadRequestError(
+        'Request body must be valid JSON',
+        'INVALID_JSON'
+      )
     }
 
     if (typeof body.isPublished !== 'boolean') {
-      throw new BadRequestError('isPublished (boolean) is required', 'MISSING_IS_PUBLISHED')
+      throw new BadRequestError(
+        'isPublished (boolean) is required',
+        'MISSING_IS_PUBLISHED'
+      )
     }
 
     const existing = await workflowController.getById(id)
     if (!existing) {
       throw new BadRequestError('Workflow not found', 'WORKFLOW_NOT_FOUND')
+    }
+
+    if (body.isPublished) {
+      const validation = validateGraph(existing.definition)
+      if (!validation.ok) {
+        throw new BadRequestError(
+          'Cannot publish: workflow definition is invalid',
+          'VALIDATION_ERROR',
+          { issues: validation.issues }
+        )
+      }
+
+      try {
+        compileGraphToIr(existing.definition)
+      } catch (err) {
+        if (err instanceof CompileError) {
+          throw new BadRequestError(
+            'Cannot publish: workflow definition does not compile',
+            'COMPILE_ERROR',
+            { issues: err.issues }
+          )
+        }
+        throw err
+      }
     }
 
     const workflow = await workflowController.publish(id, body.isPublished)
