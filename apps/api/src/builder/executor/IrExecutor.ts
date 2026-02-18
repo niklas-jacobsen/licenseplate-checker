@@ -192,6 +192,42 @@ export class IrExecutor {
         await this.page.fill(op.selector, op.text)
         break
 
+      case 'waitDuration':
+        this.log('info', `Waiting ${op.seconds}s`)
+        await new Promise((resolve) =>
+          setTimeout(resolve, op.seconds * 1000)
+        )
+        break
+
+      case 'waitSelector':
+        this.log('info', `Waiting for selector: ${op.selector}`)
+        await this.page.waitForSelector(op.selector, {
+          timeout: op.timeoutMs ?? 10000,
+        })
+        break
+
+      case 'waitNewTab': {
+        this.log('info', 'Waiting for new tab')
+        const context = this.page.context()
+        const newPage = await context.waitForEvent('page', {
+          timeout: op.timeoutMs ?? 10000,
+        })
+        await newPage.waitForLoadState('domcontentloaded')
+        await newPage.route('**/*', (route) => {
+          const url = route.request().url()
+          try {
+            this.validateUrl(url)
+            route.continue()
+          } catch {
+            this.log('warn', `Blocked outbound request: ${url}`)
+            route.abort('blockedbyclient')
+          }
+        })
+        this.page = newPage
+        this.log('info', `Switched to new tab: ${newPage.url()}`)
+        break
+      }
+
       default:
         throw new UnknownActionTypeError((op as any).type)
     }

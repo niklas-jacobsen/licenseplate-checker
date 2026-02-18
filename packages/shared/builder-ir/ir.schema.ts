@@ -10,6 +10,19 @@ export const ActionOpSchema = z.discriminatedUnion('type', [
     selector: z.string().min(1),
     text: z.string(),
   }),
+  z.object({
+    type: z.literal('waitDuration'),
+    seconds: z.number().min(1).max(10),
+  }),
+  z.object({
+    type: z.literal('waitSelector'),
+    selector: z.string().min(1),
+    timeoutMs: z.number().int().positive().optional(),
+  }),
+  z.object({
+    type: z.literal('waitNewTab'),
+    timeoutMs: z.number().int().positive().optional(),
+  }),
 ])
 
 export const BranchConditionSchema = z.discriminatedUnion('op', [

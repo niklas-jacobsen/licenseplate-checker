@@ -5,6 +5,7 @@ import { openPageNode } from './nodes/core.openPage'
 import { clickNode } from './nodes/core.click'
 import { typeTextNode } from './nodes/core.typeText'
 import { conditionalNode } from './nodes/core.conditional'
+import { waitNode } from './nodes/core.wait'
 
 export const BUILDER_REGISTRY_VERSION = 'v1'
 
@@ -15,4 +16,5 @@ export const nodeRegistry: Record<string, NodeSpec> = {
   [clickNode.type]: clickNode,
   [typeTextNode.type]: typeTextNode,
   [conditionalNode.type]: conditionalNode,
+  [waitNode.type]: waitNode,
 }

@@ -31,6 +31,23 @@ export const ConditionalNodeConfig = z.discriminatedUnion('operator', [
   }),
 ])
 
+//Wait
+export const WaitNodeConfig = z.discriminatedUnion('mode', [
+  z.object({
+    mode: z.literal('duration'),
+    seconds: z.number().min(1).max(10),
+  }),
+  z.object({
+    mode: z.literal('selector'),
+    selector: z.string().min(1),
+    timeoutMs: z.number().int().positive().optional(),
+  }),
+  z.object({
+    mode: z.literal('newTab'),
+    timeoutMs: z.number().int().positive().optional(),
+  }),
+])
+
 //Start and End
 export const StartNodeConfig = z.object({})
 export const EndNodeConfig = z.object({})
@@ -40,3 +57,4 @@ export type OpenPageConfig = z.infer<typeof OpenPageNodeConfig>
 export type ClickConfig = z.infer<typeof ClickNodeConfig>
 export type TypeTextConfig = z.infer<typeof TypeTextNodeConfig>
 export type ConditionalConfig = z.infer<typeof ConditionalNodeConfig>
+export type WaitConfig = z.infer<typeof WaitNodeConfig>

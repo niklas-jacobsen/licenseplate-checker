@@ -130,6 +130,21 @@ function toActionOp(node: WorkflowNode): ActionOp | undefined {
         text: node.data.config.text,
       }
 
+    case 'core.wait': {
+      const cfg = node.data.config
+      if (cfg.mode === 'duration')
+        return { type: 'waitDuration', seconds: cfg.seconds }
+      if (cfg.mode === 'selector')
+        return {
+          type: 'waitSelector',
+          selector: cfg.selector,
+          timeoutMs: cfg.timeoutMs,
+        }
+      if (cfg.mode === 'newTab')
+        return { type: 'waitNewTab', timeoutMs: cfg.timeoutMs }
+      return undefined
+    }
+
     default:
       return undefined
   }
