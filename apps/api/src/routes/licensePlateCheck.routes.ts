@@ -96,6 +96,7 @@ licensePlateCheckRouter.post(
 
       return c.json(
         {
+          checkId: request.id,
           message: `Check for ${body.city}-${uppercaseLetters}-${body.numbers} was created successfully`,
         },
         200
