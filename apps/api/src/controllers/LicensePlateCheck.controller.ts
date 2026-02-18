@@ -75,6 +75,13 @@ class LicenseplateCheckController {
     })
   }
 
+  async updateScheduleId(id: string, triggerScheduleId: string | null) {
+    return prisma.licenseplateCheck.update({
+      where: { id },
+      data: { triggerScheduleId },
+    })
+  }
+
   async deleteCheck(id: string) {
     return prisma.licenseplateCheck.delete({
       where: { id },
