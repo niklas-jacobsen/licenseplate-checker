@@ -17,7 +17,10 @@ import {
   type EdgeChange,
 } from '@xyflow/react'
 
-import type { WorkflowNode, CoreNodeType } from '@licenseplate-checker/shared/workflow-dsl/types'
+import type {
+  WorkflowNode,
+  CoreNodeType,
+} from '@licenseplate-checker/shared/workflow-dsl/types'
 import { nodeRegistry } from '@licenseplate-checker/shared/node-registry'
 import { PALETTE_NODES } from './config'
 
@@ -111,6 +114,17 @@ function createNode(
         data: {
           label,
           config: { operator: 'exists', selector: '' },
+        },
+      }
+
+    case 'core.wait':
+      return {
+        id,
+        type: 'core.wait',
+        position,
+        data: {
+          label,
+          config: { mode: 'duration', seconds: 1 },
         },
       }
 

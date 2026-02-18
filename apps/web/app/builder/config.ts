@@ -6,4 +6,5 @@ export const PALETTE_NODES = [
   nodes.typeTextNode,
   nodes.openPageNode,
   nodes.conditionalNode,
+  nodes.waitNode,
 ]
