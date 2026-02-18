@@ -81,7 +81,7 @@ model LicenseplateCheck {
   lastCheckedAt DateTime?
 
   // Scheduling
-  cron String?
+  triggerScheduleId String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
