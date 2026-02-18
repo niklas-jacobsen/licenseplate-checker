@@ -1,12 +1,15 @@
 import { zValidator } from '@hono/zod-validator'
 import { zCheckRequestScheme } from '@licenseplate-checker/shared/validators'
 import { Context, Hono } from 'hono'
+import { schedules } from '@trigger.dev/sdk/v3'
 import CityController from '../controllers/City.controller'
+import WorkflowController from '../controllers/Workflow.controller'
 import LicenseplateCheckController from '../controllers/LicensePlateCheck.controller'
 
 export const licensePlateCheckRouter = new Hono()
 
 const cityController = new CityController()
+const workflowController = new WorkflowController()
 const checkController = new LicenseplateCheckController()
 
 /**
@@ -49,9 +52,21 @@ licensePlateCheckRouter.post(
         )
       }
 
+      if (body.workflowId) {
+        const workflow = await workflowController.getById(body.workflowId)
+        if (!workflow) {
+          return c.json({ message: 'Workflow not found' }, 400)
+        }
+        if (!workflow.isPublished) {
+          return c.json(
+            { message: 'Workflow is not published and cannot be used' },
+            400
+          )
+        }
+      }
+
       const uppercaseLetters = String(body.letters).toUpperCase()
 
-      // Create a new license plate check
       const request = await checkController.createCheck({
         cityId: body.city,
         letters: uppercaseLetters,
@@ -64,7 +79,21 @@ licensePlateCheckRouter.post(
         return c.json({ message: 'Check could not be created' }, 400)
       }
 
-      // Return confirmation message
+      // create daily schedule if workflow linked
+      if (body.workflowId && request.id) {
+        const hour = Math.floor(Math.random() * 24)
+        const minute = Math.floor(Math.random() * 60)
+
+        const schedule = await schedules.create({
+          task: 'scheduled-check-execution',
+          cron: `${minute} ${hour} * * *`,
+          externalId: request.id,
+          deduplicationKey: request.id,
+        })
+
+        await checkController.updateScheduleId(request.id, schedule.id)
+      }
+
       return c.json(
         {
           message: `Check for ${body.city}-${uppercaseLetters}-${body.numbers} was created successfully`,
@@ -89,15 +118,12 @@ licensePlateCheckRouter.get('/me', async (c: Context) => {
   }
 
   try {
-    // Get all checks for the authenticated user
     const checks = await checkController.getByUserId(userId)
 
-    // If no checks are found, return a 404 response
     if (checks.length === 0) {
       return c.json({ message: 'No checks found for this user' }, 404)
     }
 
-    // Return the found checks
     return c.json({ checks }, 200)
   } catch (error) {
     console.error('Error fetching license plate checks:', error)
@@ -118,14 +144,23 @@ licensePlateCheckRouter.delete('/delete/:id', async (c: Context) => {
   }
 
   try {
-    // Check if the check exists and belongs to the user
     const existingCheck = await checkController.getById(checkId)
 
     if (!existingCheck || existingCheck.userId !== userId) {
       return c.json({ message: 'Check not found' }, 404)
     }
 
-    // Delete the check
+    if (existingCheck.triggerScheduleId) {
+      try {
+        await schedules.del(existingCheck.triggerScheduleId)
+      } catch {
+        console.error(
+          'Failed to delete schedule:',
+          existingCheck.triggerScheduleId
+        )
+      }
+    }
+
     await checkController.deleteCheck(checkId)
 
     return c.json({ message: 'Check successfully deleted' }, 200)
