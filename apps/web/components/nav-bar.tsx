@@ -19,6 +19,9 @@ export default function NavBar() {
             <li className="text-sm font-medium text-gray-700 hover:text-blue-600">
               <Link href="/requests">My Requests</Link>
             </li>
+            <li className="text-sm font-medium text-gray-700 hover:text-blue-600">
+              <Link href="/builder">Builder</Link>
+            </li>
             <li className="text-sm font-medium text-gray-700 hover:text-blue-600 hidden md:block">
               <Link href="/profile">Profile</Link>
             </li>
