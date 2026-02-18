@@ -57,6 +57,12 @@ class WorkflowController {
     })
   }
 
+  async countByAuthor(authorId: string) {
+    return prisma.workflow.count({
+      where: { authorId },
+    })
+  }
+
   async updateDefinition(id: string, definition: Prisma.InputJsonValue) {
     return prisma.workflow.update({
       where: { id },

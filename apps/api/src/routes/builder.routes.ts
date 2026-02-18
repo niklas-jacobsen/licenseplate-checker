@@ -3,6 +3,7 @@ import {
   BUILDER_REGISTRY_VERSION,
   nodeRegistry,
 } from '@licenseplate-checker/shared/node-registry'
+import { BUILDER_MAX_WORKFLOWS_PER_USER } from '@licenseplate-checker/shared/constants/limits'
 import { validateGraph } from '../builder/validate/validateGraph'
 import {
   compileGraphToIr,
@@ -52,7 +53,7 @@ export const createBuilderRouter = (workflowController: WorkflowController) => {
     })
   })
 
-  router.post('/compile', async (c) => {
+  router.post('/compile', auth, async (c) => {
     let body: unknown
 
     try {
@@ -72,7 +73,7 @@ export const createBuilderRouter = (workflowController: WorkflowController) => {
     }
   })
 
-  router.post('/execute', async (c) => {
+  router.post('/execute', auth, async (c) => {
     let body: unknown
 
     try {
@@ -103,6 +104,9 @@ export const createBuilderRouter = (workflowController: WorkflowController) => {
         executionId: execution.id,
         callbackUrl: `${ENV.API_BASE_URL}/webhooks/trigger`,
         callbackSecret: ENV.TRIGGER_WEBHOOK_SECRET,
+        allowedDomains: workflow.city.allowedDomains,
+      }, {
+        idempotencyKey: execution.id,
       })
 
       await workflowController.updateExecution(execution.id, {
@@ -150,6 +154,14 @@ export const createBuilderRouter = (workflowController: WorkflowController) => {
 
     if (!body.name || !body.cityId || !body.definition) {
       throw new BadRequestError('name, cityId, and definition are required', 'MISSING_FIELDS')
+    }
+
+    const existingCount = await workflowController.countByAuthor(user.id)
+    if (existingCount >= BUILDER_MAX_WORKFLOWS_PER_USER) {
+      throw new BadRequestError(
+        `Maximum of ${BUILDER_MAX_WORKFLOWS_PER_USER} workflows per user reached`,
+        'WORKFLOW_LIMIT_REACHED'
+      )
     }
 
     const workflow = await workflowController.create(
