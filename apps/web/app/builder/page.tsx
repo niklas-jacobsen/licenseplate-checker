@@ -12,25 +12,15 @@ import {
   type Edge,
 } from '@xyflow/react'
 
-import type {
-  WorkflowNode,
-  CoreNodeType,
-} from '@licenseplate-checker/shared/workflow-dsl/types'
+import type { CoreNodeType } from '@licenseplate-checker/shared/workflow-dsl/types'
 import { WORKFLOW_NAME_MAX_LENGTH } from '@licenseplate-checker/shared/constants/limits'
 import { PALETTE_NODES } from './config'
 import { BuilderStoreProvider, useBuilderStore, useShallow } from './store'
+import { nodeTypes } from './components/nodes'
 
 import '@xyflow/react/dist/style.css'
 
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-  CardAction,
-} from '@/components/ui/card'
+import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Save, ArrowLeft, Loader2, Pencil, Check } from 'lucide-react'
@@ -69,85 +59,6 @@ function BottomPalette({ onAdd }: { onAdd: (type: CoreNodeType) => void }) {
   )
 }
 
-function OptionsSidebar({
-  selectedNode,
-  onClose,
-}: {
-  selectedNode: WorkflowNode | null
-  onClose: () => void
-}) {
-  const isOpen = !!selectedNode
-
-  return (
-    <Card
-      className={[
-        'absolute bottom-4 right-4 top-4 z-20 w-80',
-        'flex flex-col shadow-2xl transition-transform duration-300 ease-in-out',
-        'border bg-background/95 backdrop-blur-sm',
-        isOpen ? 'translate-x-0' : 'translate-x-[120%]',
-      ].join(' ')}
-    >
-      <CardHeader>
-        <CardTitle>Node Options</CardTitle>
-        <CardDescription>
-          {selectedNode ? selectedNode.data.label : 'Select a node'}
-        </CardDescription>
-
-        <CardAction>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 rounded-full"
-            onClick={onClose}
-          >
-            ✕
-          </Button>
-        </CardAction>
-      </CardHeader>
-
-      <CardContent className="flex-1 overflow-y-auto">
-        {selectedNode ? (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-xs font-medium uppercase text-muted-foreground">
-                Type
-              </label>
-              <div className="rounded-md border bg-muted/30 p-2 text-sm font-medium">
-                {selectedNode.type}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs font-medium uppercase text-muted-foreground">
-                Config
-              </label>
-              <div className="rounded-md border border-dashed p-4 text-xs text-muted-foreground">
-                Form fields for <strong>{selectedNode.type}</strong> will be
-                rendered here.
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-            No node selected
-          </div>
-        )}
-      </CardContent>
-
-      {selectedNode && (
-        <CardFooter className="flex gap-2">
-          <Button variant="outline" className="flex-1">
-            Duplicate
-          </Button>
-          <Button variant="destructive" className="flex-1 text-white">
-            Delete
-          </Button>
-        </CardFooter>
-      )}
-    </Card>
-  )
-}
-
 function FlowCanvas() {
   const { screenToFlowPosition, getViewport } = useReactFlow()
 
@@ -174,7 +85,7 @@ function FlowCanvas() {
   const onSelectionChange = useCallback(
     (payload: { nodes: Node[]; edges: Edge[] }) => {
       setSelectedNodeId(
-        payload.nodes[0] ? (payload.nodes[0] as WorkflowNode).id : null
+        payload.nodes[0]?.id ?? null
       )
     },
     [setSelectedNodeId]
@@ -204,6 +115,7 @@ function FlowCanvas() {
       <ReactFlow
         nodes={nodes}
         edges={edges}
+        nodeTypes={nodeTypes}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
@@ -342,27 +254,6 @@ function BuilderToolbar() {
   )
 }
 
-function BuilderSidebar() {
-  const { selectedNodeId, nodes, setSelectedNodeId } = useBuilderStore(
-    useShallow((s) => ({
-      selectedNodeId: s.selectedNodeId,
-      nodes: s.nodes,
-      setSelectedNodeId: s.setSelectedNodeId,
-    }))
-  )
-
-  const selectedNode = selectedNodeId
-    ? nodes.find((n) => n.id === selectedNodeId) ?? null
-    : null
-
-  return (
-    <OptionsSidebar
-      selectedNode={selectedNode}
-      onClose={() => setSelectedNodeId(null)}
-    />
-  )
-}
-
 function BuilderContent() {
   const searchParams = useSearchParams()
   const workflowId = searchParams.get('id')
@@ -406,8 +297,6 @@ function BuilderInner() {
         <ReactFlowProvider>
           <FlowCanvas />
         </ReactFlowProvider>
-
-        <BuilderSidebar />
       </div>
     </div>
   )
