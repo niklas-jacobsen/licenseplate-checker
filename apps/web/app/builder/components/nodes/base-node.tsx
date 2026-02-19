@@ -1,7 +1,9 @@
 import { type ReactNode } from 'react'
-import { type Node } from '@xyflow/react'
+import { type Node, useNodeId } from '@xyflow/react'
 import { cn } from '@/lib/utils'
 import { type LucideIcon, X } from 'lucide-react'
+import { NodeStatusIndicator } from './node-status-indicator'
+import { useBuilderStore } from '../../store'
 
 export type NodeData = {
   label: string
@@ -17,17 +19,24 @@ export function BaseNode({
   children: ReactNode
   className?: string
 }) {
+  const nodeId = useNodeId()
+  const status = useBuilderStore(
+    (s) => (nodeId ? s.nodeStatuses[nodeId] : undefined) ?? 'idle'
+  )
+
   return (
-    <div
-      className={cn(
-        'w-65 rounded-md border bg-card shadow-sm',
-        'hover:ring-1 hover:ring-border',
-        '[.react-flow__node.selected_&]:ring-2 [.react-flow__node.selected_&]:ring-primary [.react-flow__node.selected_&]:shadow-lg',
-        className
-      )}
-    >
-      {children}
-    </div>
+    <NodeStatusIndicator status={status}>
+      <div
+        className={cn(
+          'w-65 rounded-md border bg-card shadow-sm',
+          'hover:ring-1 hover:ring-border',
+          '[.react-flow__node.selected_&]:ring-2 [.react-flow__node.selected_&]:ring-primary [.react-flow__node.selected_&]:shadow-lg',
+          className
+        )}
+      >
+        {children}
+      </div>
+    </NodeStatusIndicator>
   )
 }
 
