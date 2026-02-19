@@ -18,6 +18,7 @@ import { BuilderStoreProvider, useBuilderStore, useShallow } from './store'
 import { nodeTypes } from './components/nodes'
 import { edgeTypes } from './components/edges'
 import { BottomPalette } from './components/bottom-palette'
+import { ExecutionErrorBanner } from './components/execution-error-banner'
 import { useDragAndDrop } from './hooks/useDragAndDrop'
 
 import '@xyflow/react/dist/style.css'
@@ -96,6 +97,7 @@ function FlowCanvas() {
         attributionPosition="bottom-right"
       >
         <Background gap={18} />
+        <ExecutionErrorBanner />
         <BottomPalette onAdd={addNodeFromPalette} />
       </ReactFlow>
     </div>

@@ -7,10 +7,14 @@ import {
   Globe,
   GitBranch,
   Clock,
+  Play,
+  Loader2,
+  RotateCcw,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { CoreNodeType } from '@licenseplate-checker/shared/workflow-dsl/types'
 import { PALETTE_NODES } from '../config'
+import { useBuilderStore, useShallow } from '../store'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -74,6 +78,58 @@ function PaletteItem({
   )
 }
 
+function TestButton() {
+  const { isExecuting, executionError, testExecute, resetExecution } =
+    useBuilderStore(
+      useShallow((s) => ({
+        isExecuting: s.isExecuting,
+        executionError: s.executionError,
+        testExecute: s.testExecute,
+        resetExecution: s.resetExecution,
+      }))
+    )
+
+  if (isExecuting) {
+    return (
+      <Button
+        variant="ghost"
+        size="sm"
+        className="rounded-full text-muted-foreground"
+        disabled
+      >
+        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        Running
+      </Button>
+    )
+  }
+
+  if (executionError) {
+    return (
+      <Button
+        variant="ghost"
+        size="sm"
+        className="rounded-full text-muted-foreground"
+        onClick={resetExecution}
+      >
+        <RotateCcw className="h-3.5 w-3.5" />
+        Reset
+      </Button>
+    )
+  }
+
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      className="rounded-full text-muted-foreground"
+      onClick={testExecute}
+    >
+      <Play className="h-3.5 w-3.5" />
+      Test
+    </Button>
+  )
+}
+
 export function BottomPalette({
   onAdd,
 }: {
@@ -94,15 +150,7 @@ export function BottomPalette({
 
       <div className="mx-2 h-6 w-px bg-border" />
 
-      <div className="flex items-center gap-1">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="rounded-full text-muted-foreground"
-        >
-          Test
-        </Button>
-      </div>
+      <TestButton />
     </Card>
   )
 }
