@@ -1,7 +1,8 @@
 'use client'
 
 import NavBar from '@/components/nav-bar'
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useEffect, Suspense } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import {
   ReactFlow,
   Background as BackgroundComponent,
@@ -22,7 +23,9 @@ import type {
   CoreNodeType,
 } from '@licenseplate-checker/shared/workflow-dsl/types'
 import { nodeRegistry } from '@licenseplate-checker/shared/node-registry'
+import { BUILDER_REGISTRY_VERSION } from '@licenseplate-checker/shared/node-registry'
 import { PALETTE_NODES } from './config'
+import { workflowService } from '@/services/workflow.service'
 
 import '@xyflow/react/dist/style.css'
 
@@ -36,10 +39,11 @@ import {
   CardAction,
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Save, ArrowLeft, Loader2 } from 'lucide-react'
 
 const Background = BackgroundComponent as any
 
-const initialNodes: WorkflowNode[] = [
+const defaultNodes: WorkflowNode[] = [
   {
     id: 'start',
     type: 'core.start',
@@ -54,7 +58,7 @@ const initialNodes: WorkflowNode[] = [
   },
 ]
 
-const initialEdges: Edge[] = [
+const defaultEdges: Edge[] = [
   {
     id: 'start-end',
     source: 'start',
@@ -145,7 +149,6 @@ function createNode(
       }
 
     default:
-      //should never be reached
       throw new Error(`Unknown node type: ${type}`)
   }
 }
@@ -176,13 +179,6 @@ function BottomPalette({ onAdd }: { onAdd: (type: CoreNodeType) => void }) {
           className="rounded-full text-muted-foreground"
         >
           Test
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="rounded-full text-muted-foreground"
-        >
-          Exit
         </Button>
       </div>
     </Card>
@@ -365,14 +361,109 @@ function FlowWithProvider(props: {
   )
 }
 
-export default function BuilderPage() {
-  const [nodes, setNodes] = useState<WorkflowNode[]>(initialNodes)
-  const [edges, setEdges] = useState<Edge[]>(initialEdges)
+function BuilderContent() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const workflowId = searchParams.get('id')
+
+  const [nodes, setNodes] = useState<WorkflowNode[]>(defaultNodes)
+  const [edges, setEdges] = useState<Edge[]>(defaultEdges)
   const [selectedNode, setSelectedNode] = useState<WorkflowNode | null>(null)
+  const [workflowName, setWorkflowName] = useState('New Workflow')
+  const [isLoading, setIsLoading] = useState(!!workflowId)
+  const [isSaving, setIsSaving] = useState(false)
+  const [saveError, setSaveError] = useState('')
+
+  useEffect(() => {
+    if (!workflowId) return
+
+    const loadWorkflow = async () => {
+      try {
+        const response = await workflowService.getById(workflowId)
+        const workflow = response.data?.workflow
+        if (!workflow) return
+
+        setWorkflowName(workflow.name)
+
+        const definition = workflow.definition as {
+          nodes?: WorkflowNode[]
+          edges?: Edge[]
+        }
+        if (definition?.nodes) setNodes(definition.nodes)
+        if (definition?.edges) setEdges(definition.edges)
+      } catch (err) {
+        console.error('Failed to load workflow', err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadWorkflow()
+  }, [workflowId])
+
+  const handleSave = async () => {
+    if (!workflowId) return
+    setIsSaving(true)
+    setSaveError('')
+
+    try {
+      const definition = {
+        id: workflowId,
+        registryVersion: BUILDER_REGISTRY_VERSION,
+        nodes,
+        edges,
+      }
+      await workflowService.updateDefinition(workflowId, definition)
+    } catch (err) {
+      console.error('Failed to save workflow', err)
+      setSaveError('Failed to save')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
 
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden">
       <NavBar />
+
+      <div className="flex items-center justify-between border-b bg-white px-4 py-2">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => router.push('/workflows')}
+          >
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Back
+          </Button>
+          <div className="h-5 w-px bg-border" />
+          <span className="text-sm font-medium">{workflowName}</span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {saveError && (
+            <span className="text-xs text-destructive">{saveError}</span>
+          )}
+          {workflowId && (
+            <Button size="sm" onClick={handleSave} disabled={isSaving}>
+              {isSaving ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-1" />
+              ) : (
+                <Save className="h-4 w-4 mr-1" />
+              )}
+              Save
+            </Button>
+          )}
+        </div>
+      </div>
 
       <div className="relative h-full w-full flex-1">
         <FlowWithProvider
@@ -389,5 +480,19 @@ export default function BuilderPage() {
         />
       </div>
     </div>
+  )
+}
+
+export default function BuilderPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex h-screen w-screen items-center justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      }
+    >
+      <BuilderContent />
+    </Suspense>
   )
 }

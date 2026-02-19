@@ -429,7 +429,7 @@ export default function LicensePlateCheckForm() {
             </div>
             <AlertDialogFooter>
               <AlertDialogCancel>Go Back</AlertDialogCancel>
-              <Link href="/builder">
+              <Link href="/workflows">
                 <Button variant="outline">Go to Builder</Button>
               </Link>
               <AlertDialogAction onClick={handleConfirmNoWorkflow}>

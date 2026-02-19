@@ -4,9 +4,10 @@ import { useEffect, useState } from 'react'
 import { Card, CardContent } from './ui/card'
 import { Button } from './ui/button'
 import { format } from 'date-fns'
-import { Plus, Trash2, Globe, GlobeLock } from 'lucide-react'
+import { Plus, Trash2, Globe, GlobeLock, Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { workflowService } from '../services/workflow.service'
+import { cityService } from '../services/city.service'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,6 +18,26 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from './ui/alert-dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from './ui/dialog'
+import { Input } from './ui/input'
+import { Label } from './ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/select'
+import { BUILDER_REGISTRY_VERSION } from '@licenseplate-checker/shared/node-registry'
+import type { WorkflowNode } from '@licenseplate-checker/shared/workflow-dsl/types'
 
 interface Workflow {
   id: string
@@ -29,30 +50,65 @@ interface Workflow {
   city: { name: string }
 }
 
+interface City {
+  id: string
+  name: string
+}
+
+const defaultNodes: WorkflowNode[] = [
+  {
+    id: 'start',
+    type: 'core.start',
+    position: { x: 120, y: 140 },
+    data: { label: 'Start', config: {} },
+  },
+  {
+    id: 'end',
+    type: 'core.end',
+    position: { x: 560, y: 140 },
+    data: { label: 'End', config: {} },
+  },
+]
+
 export default function WorkflowList() {
   const router = useRouter()
   const [workflows, setWorkflows] = useState<Workflow[]>([])
+  const [cities, setCities] = useState<City[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
 
+  // Creation state
+  const [isCreateOpen, setIsCreateOpen] = useState(false)
+  const [newName, setNewName] = useState('')
+  const [newCityId, setNewCityId] = useState('')
+  const [isCreating, setIsCreating] = useState(false)
+  const [createError, setCreateError] = useState('')
+
   useEffect(() => {
-    const fetchWorkflows = async () => {
+    const fetchData = async () => {
       try {
-        const response = await workflowService.getMyWorkflows()
-        if (response.data?.workflows) {
-          setWorkflows(response.data.workflows)
+        const [workflowsRes, citiesRes] = await Promise.all([
+          workflowService.getMyWorkflows(),
+          cityService.getCities(),
+        ])
+
+        if (workflowsRes.data?.workflows) {
+          setWorkflows(workflowsRes.data.workflows)
+        }
+        if (citiesRes.data?.cities) {
+          setCities(citiesRes.data.cities)
         }
       } catch (err) {
-        setError('Failed to load workflows')
+        setError('Failed to load data')
         console.error(err)
       } finally {
         setLoading(false)
       }
     }
 
-    fetchWorkflows()
+    fetchData()
   }, [])
 
   const handleDelete = async () => {
@@ -69,6 +125,47 @@ export default function WorkflowList() {
     }
   }
 
+  const handleCreate = async () => {
+    if (!newName || !newCityId) {
+      setCreateError('Name and City are required')
+      return
+    }
+    setIsCreating(true)
+    setCreateError('')
+
+    try {
+      const definition = {
+        registryVersion: BUILDER_REGISTRY_VERSION,
+        nodes: defaultNodes,
+        edges: [
+          {
+            id: 'start-end',
+            source: 'start',
+            target: 'end',
+            sourceHandle: 'next',
+            targetHandle: 'in',
+            type: 'smoothstep',
+          },
+        ],
+      }
+
+      const response = await workflowService.create({
+        name: newName,
+        cityId: newCityId,
+        definition,
+      })
+
+      if (response.data?.workflow) {
+        setIsCreateOpen(false)
+        router.push(`/builder?id=${response.data.workflow.id}`)
+      }
+    } catch (err) {
+      console.error('Failed to create workflow', err)
+      setCreateError('Failed to create workflow')
+      setIsCreating(false)
+    }
+  }
+
   const deleteTarget = workflows.find((w) => w.id === deleteTargetId)
 
   if (loading) {
@@ -82,19 +179,18 @@ export default function WorkflowList() {
   return (
     <>
       <div className="flex justify-end mb-6">
-        <Button onClick={() => router.push('/builder')}>
+        <Button onClick={() => setIsCreateOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
           New Workflow
         </Button>
       </div>
-
       {workflows.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
             <p className="text-muted-foreground mb-4">
               You haven't created any workflows yet.
             </p>
-            <Button onClick={() => router.push('/builder')}>
+            <Button onClick={() => setIsCreateOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Create Your First Workflow
             </Button>
@@ -162,7 +258,6 @@ export default function WorkflowList() {
           ))}
         </div>
       )}
-
       <AlertDialog
         open={!!deleteTargetId}
         onOpenChange={(open) => {
@@ -190,6 +285,71 @@ export default function WorkflowList() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      // Create Dialog
+      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Create New Workflow</DialogTitle>
+            <DialogDescription>
+              Start by naming your workflow and selecting the city it applies
+              to.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="name" className="text-right">
+                Name
+              </Label>
+              <Input
+                id="name"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                className="col-span-3"
+                placeholder="e.g. Daily Check"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="city" className="text-right">
+                City
+              </Label>
+              <div className="col-span-3">
+                <Select value={newCityId} onValueChange={setNewCityId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a city" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {cities.map((city) => (
+                      <SelectItem key={city.id} value={city.id}>
+                        {city.name} ({city.id})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            {createError && (
+              <div className="text-sm text-destructive text-center">
+                {createError}
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsCreateOpen(false)}
+              disabled={isCreating}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleCreate} disabled={isCreating}>
+              {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Create & Edit
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }
