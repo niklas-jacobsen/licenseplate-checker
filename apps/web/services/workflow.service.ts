@@ -39,4 +39,28 @@ export const workflowService = {
   async deleteWorkflow(id: string) {
     return apiClient.delete<{ message: string }>(`/builder/workflow/${id}`)
   },
+
+  async create(data: {
+    name: string
+    cityId: string
+    definition: unknown
+    description?: string
+  }) {
+    return apiClient.post<{ workflow: Workflow }>('/builder/workflow', data)
+  },
+
+  async getById(id: string) {
+    return apiClient.get<{
+      workflow: Workflow & {
+        definition: unknown
+        author: { email: string; firstname: string; lastname: string }
+      }
+    }>(`/builder/workflow/${id}`)
+  },
+
+  async updateDefinition(id: string, definition: unknown) {
+    return apiClient.put<{ workflow: Workflow }>(`/builder/workflow/${id}`, {
+      definition,
+    })
+  },
 }

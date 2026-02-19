@@ -49,7 +49,7 @@ class LicenseplateCheckController {
       include: {
         city: true,
         workflow: true,
-        executions: true,  // Send recent automation runs with query
+        executions: true, // Send recent automation runs with query
       },
     })
   }
@@ -60,6 +60,10 @@ class LicenseplateCheckController {
       include: {
         city: true,
         workflow: true,
+        executions: {
+          take: 1,
+          orderBy: { startedAt: 'desc' },
+        },
       },
       orderBy: { createdAt: 'desc' },
     })
