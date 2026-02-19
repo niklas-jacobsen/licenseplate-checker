@@ -39,7 +39,8 @@ import {
   CardAction,
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Save, ArrowLeft, Loader2 } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Save, ArrowLeft, Loader2, Pencil } from 'lucide-react'
 
 const Background = BackgroundComponent as any
 
@@ -375,6 +376,10 @@ function BuilderContent() {
   const [isSaving, setIsSaving] = useState(false)
   const [saveError, setSaveError] = useState('')
 
+  // Renaming state
+  const [isEditingName, setIsEditingName] = useState(false)
+  const [newName, setNewName] = useState('')
+
   useEffect(() => {
     if (!workflowId) return
 
@@ -423,6 +428,24 @@ function BuilderContent() {
     }
   }
 
+  const handleRename = async () => {
+    if (!workflowId || !newName.trim() || newName === workflowName) {
+      setIsEditingName(false)
+      setNewName(workflowName)
+      return
+    }
+
+    try {
+      await workflowService.update(workflowId, { name: newName })
+      setWorkflowName(newName)
+      setIsEditingName(false)
+    } catch (err) {
+      console.error('Failed to rename', err)
+      setNewName(workflowName)
+      setIsEditingName(false)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="flex h-screen w-screen items-center justify-center">
@@ -440,13 +463,44 @@ function BuilderContent() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => router.push('/workflows')}
+            onClick={() => router.push(`/workflows/${workflowId}`)}
           >
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back
           </Button>
           <div className="h-5 w-px bg-border" />
-          <span className="text-sm font-medium">{workflowName}</span>
+
+          {isEditingName ? (
+            <Input
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              className="h-7 w-48 text-sm"
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') handleRename()
+                if (e.key === 'Escape') {
+                  setNewName(workflowName)
+                  setIsEditingName(false)
+                }
+              }}
+              onBlur={handleRename}
+            />
+          ) : (
+            <div className="flex items-center gap-2 group">
+              <span className="text-sm font-medium">{workflowName}</span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground"
+                onClick={() => {
+                  setNewName(workflowName)
+                  setIsEditingName(true)
+                }}
+              >
+                <Pencil className="h-3 w-3" />
+              </Button>
+            </div>
+          )}
         </div>
 
         <div className="flex items-center gap-2">
