@@ -14,54 +14,23 @@ import {
 
 import type { CoreNodeType } from '@licenseplate-checker/shared/workflow-dsl/types'
 import { WORKFLOW_NAME_MAX_LENGTH } from '@licenseplate-checker/shared/constants/limits'
-import { PALETTE_NODES } from './config'
 import { BuilderStoreProvider, useBuilderStore, useShallow } from './store'
 import { nodeTypes } from './components/nodes'
 import { edgeTypes } from './components/edges'
+import { BottomPalette } from './components/bottom-palette'
+import { useDragAndDrop } from './hooks/useDragAndDrop'
 
 import '@xyflow/react/dist/style.css'
 
-import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Save, ArrowLeft, Loader2, Pencil, Check } from 'lucide-react'
 
 const Background = BackgroundComponent as any
 
-function BottomPalette({ onAdd }: { onAdd: (type: CoreNodeType) => void }) {
-  return (
-    <Card className="nopan absolute bottom-6 left-1/2 z-20 flex w-fit -translate-x-1/2 flex-row items-center gap-2 rounded-full border bg-background/90 p-2 shadow-xl backdrop-blur-sm">
-      <div className="flex items-center gap-1">
-        {PALETTE_NODES.map((node) => (
-          <Button
-            key={node.type}
-            variant="ghost"
-            size="sm"
-            className="rounded-full"
-            onClick={() => onAdd(node.type)}
-          >
-            {node.label}
-          </Button>
-        ))}
-      </div>
-
-      <div className="mx-2 h-6 w-px bg-border" />
-
-      <div className="flex items-center gap-1">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="rounded-full text-muted-foreground"
-        >
-          Test
-        </Button>
-      </div>
-    </Card>
-  )
-}
-
 function FlowCanvas() {
   const { screenToFlowPosition, getViewport } = useReactFlow()
+  const { onDrop, onDragOver } = useDragAndDrop()
 
   const {
     nodes,
@@ -121,6 +90,8 @@ function FlowCanvas() {
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         onSelectionChange={onSelectionChange}
+        onDrop={onDrop}
+        onDragOver={onDragOver}
         fitView
         attributionPosition="bottom-right"
       >
