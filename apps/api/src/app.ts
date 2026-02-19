@@ -22,8 +22,8 @@ app.use(
     },
   })
 )
-app.use('*', limiter)
 app.use('*', corsMiddleware)
+app.use('*', limiter)
 app.use('*', csrfMiddleware)
 app.use('/user/*', auth)
 app.use('/request/*', auth)
