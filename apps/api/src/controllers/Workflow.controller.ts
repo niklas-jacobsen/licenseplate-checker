@@ -150,6 +150,15 @@ class WorkflowController {
     })
   }
 
+  async countRecentExecutions(workflowId: string, since: Date) {
+    return prisma.workflowExecution.count({
+      where: {
+        workflowId,
+        startedAt: { gte: since },
+      },
+    })
+  }
+
   async getExecution(executionId: string) {
     return prisma.workflowExecution.findUnique({
       where: { id: executionId },
