@@ -84,4 +84,31 @@ export const workflowService = {
       data
     )
   },
+
+  async testExecute(workflowId: string) {
+    return apiClient.post<{
+      executionId: string
+      triggerRunId: string
+      testsRemaining: number
+    }>('/builder/test-execute', { workflowId })
+  },
+
+  async getExecution(executionId: string) {
+    return apiClient.get<{
+      execution: {
+        id: string
+        status: 'PENDING' | 'RUNNING' | 'SUCCESS' | 'FAILED'
+        logs: unknown[] | null
+        errorNodeId: string | null
+        result: { error?: string; success?: boolean } | null
+        currentNodeId: string | null
+        completedNodes:
+          | { nodeId: string; status: string }[]
+          | null
+        startedAt: string
+        finishedAt: string | null
+        duration: number | null
+      }
+    }>(`/builder/execution/${executionId}`)
+  },
 }

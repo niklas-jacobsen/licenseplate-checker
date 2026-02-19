@@ -13,6 +13,7 @@ import type {
   WorkflowNode,
   CoreNodeType,
 } from '@licenseplate-checker/shared/workflow-dsl/types'
+import type { NodeStatus } from '../components/nodes/node-status-indicator'
 import {
   nodeRegistry,
   BUILDER_REGISTRY_VERSION,
@@ -124,6 +125,13 @@ export type BuilderState = {
   isSaving: boolean
   isLoading: boolean
   saveError: string
+
+  // execution
+  nodeStatuses: Record<string, NodeStatus>
+  isExecuting: boolean
+  executionId: string | null
+  executionError: { message: string; issues?: string[] } | null
+  testsRemaining: number | null
 }
 
 export type BuilderActions = {
@@ -154,6 +162,11 @@ export type BuilderActions = {
     name: string
   ) => Promise<{ success: boolean; error?: string }>
 
+  // execution
+  testExecute: () => Promise<void>
+  stopPolling: () => void
+  resetExecution: () => void
+
   // getters
   getNodes: () => WorkflowNode[]
   getEdges: () => Edge[]
@@ -162,6 +175,8 @@ export type BuilderActions = {
 export type BuilderStore = BuilderState & BuilderActions
 
 export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
+  let pollingTimer: number | null = null
+
   return createStore<BuilderStore>()(
     subscribeWithSelector((set, get) => ({
       // state
@@ -173,6 +188,11 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
       isSaving: false,
       isLoading: false,
       saveError: '',
+      nodeStatuses: {},
+      isExecuting: false,
+      executionId: null,
+      executionError: null,
+      testsRemaining: null,
       ...initialState,
 
       // reactflow handlers
@@ -237,14 +257,47 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
               edges?: Edge[]
             }
             if (def?.nodes) set({ nodes: def.nodes })
-            if (def?.edges)
-              set({
-                edges: def.edges.map((e) => ({
+            if (def?.edges) {
+              const nodeMap = new Map((def.nodes ?? []).map((n) => [n.id, n]))
+              const normalized = def.edges.map((e) => {
+                let { sourceHandle, targetHandle } = e
+                // infer missing handle id´s from node registry
+                if (!sourceHandle) {
+                  const sourceNode = nodeMap.get(e.source)
+                  if (sourceNode) {
+                    const spec = nodeRegistry[sourceNode.type]
+                    if (spec?.outputs.length === 1) {
+                      sourceHandle = spec.outputs[0].id
+                    }
+                  }
+                }
+                if (!targetHandle) {
+                  const targetNode = nodeMap.get(e.target)
+                  if (targetNode) {
+                    const spec = nodeRegistry[targetNode.type]
+                    if (spec?.inputs.length === 1) {
+                      targetHandle = spec.inputs[0].id
+                    }
+                  }
+                }
+                return {
                   ...e,
+                  sourceHandle,
+                  targetHandle,
                   type: 'workflow',
                   animated: true,
-                })),
+                }
               })
+              // deduplicate edges with same connection. !might need to refactor this!
+              const seen = new Set<string>()
+              const deduped = normalized.filter((e) => {
+                const key = `${e.source}:${e.sourceHandle}→${e.target}:${e.targetHandle}`
+                if (seen.has(key)) return false
+                seen.add(key)
+                return true
+              })
+              set({ edges: deduped })
+            }
           }
         } catch (err) {
           console.error('Failed to load workflow', err)
@@ -282,6 +335,145 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
           return { success: true }
         }
         return { success: false, error: res.error || 'Failed to rename' }
+      },
+
+      // execution
+      testExecute: async () => {
+        const { workflowId, nodes, edges, isExecuting } = get()
+        if (!workflowId || isExecuting) return
+
+        // save first so the backend compiles the latest definition
+        set({ isSaving: true, saveError: '' })
+        try {
+          await workflowService.updateDefinition(workflowId, {
+            id: workflowId,
+            registryVersion: BUILDER_REGISTRY_VERSION,
+            nodes,
+            edges,
+          })
+        } catch {
+          set({ isSaving: false, saveError: 'Failed to save before test' })
+          return
+        }
+        set({ isSaving: false })
+
+        // reset statuses and start
+        const initialStatuses: Record<string, NodeStatus> = {}
+        for (const n of nodes) {
+          initialStatuses[n.id] = 'idle'
+        }
+        set({
+          isExecuting: true,
+          executionError: null,
+          nodeStatuses: initialStatuses,
+          executionId: null,
+        })
+
+        try {
+          const res = await workflowService.testExecute(workflowId)
+          if (!res.data) {
+            const details = res.errorDetails as
+              | { issues?: { message: string }[] }
+              | undefined
+            const issues = details?.issues?.map((i) => i.message)
+            set({
+              isExecuting: false,
+              executionError: {
+                message: res.error || 'Failed to start execution',
+                issues,
+              },
+            })
+            return
+          }
+
+          const execId = res.data.executionId
+          set({
+            executionId: execId,
+            testsRemaining: res.data.testsRemaining,
+          })
+
+          // poll execution status
+          const poll = async () => {
+            const current = get()
+            if (!current.isExecuting || current.executionId !== execId) return
+
+            try {
+              const pollRes = await workflowService.getExecution(execId)
+              const exec = pollRes.data?.execution
+              if (!exec) return
+
+              // update node statuses from completedNodes + currentNodeId
+              const statuses: Record<string, NodeStatus> = {}
+              for (const n of current.nodes) {
+                statuses[n.id] = 'idle'
+              }
+
+              if (exec.completedNodes) {
+                for (const cn of exec.completedNodes) {
+                  statuses[cn.nodeId] =
+                    cn.status === 'success' ? 'success' : 'error'
+                }
+              }
+
+              if (exec.currentNodeId && exec.status === 'RUNNING') {
+                statuses[exec.currentNodeId] = 'loading'
+              }
+
+              if (exec.status === 'SUCCESS' || exec.status === 'FAILED') {
+                if (exec.status === 'FAILED' && exec.errorNodeId) {
+                  statuses[exec.errorNodeId] = 'error'
+                }
+                set({
+                  nodeStatuses: statuses,
+                  isExecuting: false,
+                  executionError:
+                    exec.status === 'FAILED'
+                      ? {
+                          message: exec.result?.error || 'Execution failed',
+                        }
+                      : null,
+                })
+                return
+              }
+
+              set({ nodeStatuses: statuses })
+
+              // schedule next poll
+              pollingTimer = window.setTimeout(poll, 1500)
+            } catch {
+              // keep polling on network errors
+              pollingTimer = window.setTimeout(poll, 3000)
+            }
+          }
+
+          pollingTimer = window.setTimeout(poll, 1000)
+        } catch {
+          set({
+            isExecuting: false,
+            executionError: { message: 'Failed to start execution' },
+          })
+        }
+      },
+
+      stopPolling: () => {
+        if (pollingTimer) {
+          clearTimeout(pollingTimer)
+          pollingTimer = null
+        }
+        set({ isExecuting: false })
+      },
+
+      resetExecution: () => {
+        if (pollingTimer) {
+          clearTimeout(pollingTimer)
+          pollingTimer = null
+        }
+        set({
+          isExecuting: false,
+          executionId: null,
+          executionError: null,
+          nodeStatuses: {},
+        })
       },
 
       // getters
