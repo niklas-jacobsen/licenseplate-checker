@@ -1,5 +1,9 @@
 // This file exports constants that define limits for the application.
 
+// Frontend API Calls
+export const API_CALL_MAX_RETRIES = 2
+export const API_CALL_RETRY_DELAY_MS = 500
+
 // Builder
 export const BUILDER_MAX_NODES_PER_GRAPH = 20
 export const BUILDER_MAX_WORKFLOWS_PER_USER = 10
