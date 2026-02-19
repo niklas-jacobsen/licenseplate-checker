@@ -131,6 +131,49 @@ licensePlateCheckRouter.get('/me', async (c: Context) => {
   }
 })
 
+licensePlateCheckRouter.put('/:id/workflow', async (c: Context) => {
+  const user = c.get('user')
+  const userId = user.id
+  const checkId = c.req.param('id')
+  const { workflowId } = await c.req.json<{ workflowId: string }>()
+
+  if (!workflowId) {
+    return c.json({ message: 'workflowId is required' }, 400)
+  }
+
+  const existingCheck = await checkController.getById(checkId)
+  if (!existingCheck || existingCheck.userId !== userId) {
+    return c.json({ message: 'Check not found' }, 404)
+  }
+
+  if (existingCheck.workflowId) {
+    return c.json({ message: 'Check already has a workflow assigned' }, 400)
+  }
+
+  const workflow = await workflowController.getById(workflowId)
+  if (!workflow) {
+    return c.json({ message: 'Workflow not found' }, 400)
+  }
+  if (!workflow.isPublished) {
+    return c.json({ message: 'Workflow is not published' }, 400)
+  }
+
+  const updated = await checkController.assignWorkflow(checkId, workflowId)
+
+  // create daily schedule
+  const hour = Math.floor(Math.random() * 24)
+  const minute = Math.floor(Math.random() * 60)
+  const schedule = await schedules.create({
+    task: 'scheduled-check-execution',
+    cron: `${minute} ${hour} * * *`,
+    externalId: checkId,
+    deduplicationKey: checkId,
+  })
+  await checkController.updateScheduleId(checkId, schedule.id)
+
+  return c.json({ check: updated }, 200)
+})
+
 licensePlateCheckRouter.delete('/delete/:id', async (c: Context) => {
   const user = c.get('user')
   const userId = user.id

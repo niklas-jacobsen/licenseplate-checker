@@ -86,6 +86,14 @@ class LicenseplateCheckController {
     })
   }
 
+  async assignWorkflow(id: string, workflowId: string) {
+    return prisma.licenseplateCheck.update({
+      where: { id },
+      data: { workflow: { connect: { id: workflowId } } },
+      include: { city: true, workflow: true, executions: { take: 1, orderBy: { startedAt: 'desc' } } },
+    })
+  }
+
   async deleteCheck(id: string) {
     return prisma.licenseplateCheck.delete({
       where: { id },

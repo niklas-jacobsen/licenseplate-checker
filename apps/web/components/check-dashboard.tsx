@@ -4,9 +4,18 @@ import { Button } from './ui/button'
 import LicensePlatePreview from './plate-preview'
 import { useRouter } from 'next/navigation'
 import { checkService } from '../services/check.service'
+import { workflowService } from '../services/workflow.service'
 import { format } from 'date-fns'
 import type { LicensePlateCheck } from '@licenseplate-checker/shared/types'
-import { Trash2, Search, Loader2, Check, X, Clock } from 'lucide-react'
+import {
+  Trash2,
+  Search,
+  Loader2,
+  Check,
+  X,
+  Clock,
+  AlertTriangle,
+} from 'lucide-react'
 import { Badge } from './ui/badge'
 import {
   AlertDialog,
@@ -18,6 +27,21 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from './ui/alert-dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from './ui/dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/select'
 import { toTitleCase } from '@/lib/utils'
 
 const LicensePlateCheckDashboard = () => {
@@ -27,6 +51,13 @@ const LicensePlateCheckDashboard = () => {
   const [error, setError] = useState<string>('')
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [assignTargetId, setAssignTargetId] = useState<string | null>(null)
+  const [availableWorkflows, setAvailableWorkflows] = useState<
+    { id: string; name: string; description: string | null }[]
+  >([])
+  const [selectedWorkflowId, setSelectedWorkflowId] = useState('')
+  const [isLoadingWorkflows, setIsLoadingWorkflows] = useState(false)
+  const [isAssigning, setIsAssigning] = useState(false)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -98,6 +129,31 @@ const LicensePlateCheckDashboard = () => {
     }
   }
 
+  const openAssignDialog = async (check: LicensePlateCheck) => {
+    setAssignTargetId(check.id)
+    setSelectedWorkflowId('')
+    setIsLoadingWorkflows(true)
+    const res = await workflowService.getPublishedByCity(check.cityId)
+    setAvailableWorkflows(res.data?.workflows ?? [])
+    setIsLoadingWorkflows(false)
+  }
+
+  const handleAssignWorkflow = async () => {
+    if (!assignTargetId || !selectedWorkflowId) return
+    setIsAssigning(true)
+    const res = await checkService.assignWorkflow(
+      assignTargetId,
+      selectedWorkflowId
+    )
+    if (res.data?.check) {
+      setChecks((prev) =>
+        prev.map((c) => (c.id === assignTargetId ? res.data!.check : c))
+      )
+    }
+    setIsAssigning(false)
+    setAssignTargetId(null)
+  }
+
   const deleteTarget = checks.find((c) => c.id === deleteTargetId)
 
   const getStatusBadge = (status: string) => {
@@ -156,7 +212,7 @@ const LicensePlateCheckDashboard = () => {
           <h3 className="text-lg font-semibold mb-2">No Requests Yet</h3>
           <p className="text-muted-foreground mb-6 max-w-sm">
             You haven't submitted any license plate checks yet. Create your
-            first request to get started.
+            first request to get started!
           </p>
           <Button onClick={() => router.push('/')}>
             Make Your First Request
@@ -189,42 +245,48 @@ const LicensePlateCheckDashboard = () => {
               </div>
 
               <div className="space-y-2 mt-4 pt-4 border-t text-sm">
-                {check.workflow && (
-                  <div className="flex justify-between items-center text-muted-foreground">
-                    <span>Workflow</span>
-                    <div
-                      className="flex items-center gap-2 cursor-pointer hover:underline"
-                      onClick={() =>
-                        router.push(`/workflows/${check.workflow!.id}`)
-                      }
-                    >
-                      <span className="font-medium text-foreground text-xs">
+                <div className="flex justify-between items-center text-muted-foreground">
+                  <span>Workflow</span>
+                  {check.workflow ? (
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                        onClick={() =>
+                          router.push(`/workflows/${check.workflow!.id}`)
+                        }
+                      >
                         {check.workflow.name}
-                      </span>
+                      </button>
+                      {check.executions &&
+                        check.executions.length > 0 &&
+                        getExecutionBadge(check.executions[0].status)}
                     </div>
-                    {check.executions && check.executions.length > 0 ? (
-                      getExecutionBadge(check.executions[0].status)
-                    ) : (
-                      <span className="text-xs text-muted-foreground">
-                        No runs
-                      </span>
-                    )}
-                  </div>
-                )}
+                  ) : (
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-1 text-xs font-medium px-2 py-0.5 rounded-md bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors"
+                      onClick={() => openAssignDialog(check)}
+                    >
+                      <AlertTriangle className="h-3 w-3" />
+                      No workflow
+                    </button>
+                  )}
+                </div>
                 <div className="flex justify-between text-muted-foreground">
                   <span>Created</span>
                   <span className="font-medium text-foreground">
                     {format(new Date(check.createdAt), 'PP')}
                   </span>
                 </div>
-                {check.lastCheckedAt && (
-                  <div className="flex justify-between text-muted-foreground">
-                    <span>Last Checked</span>
-                    <span className="font-medium text-foreground">
-                      {format(new Date(check.lastCheckedAt), 'PP p')}
-                    </span>
-                  </div>
-                )}
+                <div className="flex justify-between text-muted-foreground">
+                  <span>Last Checked</span>
+                  <span className="font-medium text-foreground">
+                    {check.lastCheckedAt
+                      ? format(new Date(check.lastCheckedAt), 'PP p')
+                      : 'Never'}
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -277,6 +339,67 @@ const LicensePlateCheckDashboard = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog
+        open={!!assignTargetId}
+        onOpenChange={(open) => {
+          if (!open) {
+            setAssignTargetId(null)
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Assign Workflow</DialogTitle>
+            <DialogDescription>
+              Select a published workflow to automate checks for this license
+              plate
+            </DialogDescription>
+          </DialogHeader>
+          {isLoadingWorkflows ? (
+            <div className="flex justify-center py-4">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : availableWorkflows.length === 0 ? (
+            <p className="text-sm text-muted-foreground py-2">
+              No published workflows available for this city
+            </p>
+          ) : (
+            <Select
+              value={selectedWorkflowId}
+              onValueChange={setSelectedWorkflowId}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a workflow" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableWorkflows.map((wf) => (
+                  <SelectItem key={wf.id} value={wf.id}>
+                    {wf.name}
+                    {wf.description ? ` — ${wf.description}` : ''}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setAssignTargetId(null)}
+              disabled={isAssigning}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleAssignWorkflow}
+              disabled={isAssigning || !selectedWorkflowId}
+            >
+              {isAssigning && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Assign
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }
