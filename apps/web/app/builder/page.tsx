@@ -24,6 +24,7 @@ import type {
 } from '@licenseplate-checker/shared/workflow-dsl/types'
 import { nodeRegistry } from '@licenseplate-checker/shared/node-registry'
 import { BUILDER_REGISTRY_VERSION } from '@licenseplate-checker/shared/node-registry'
+import { WORKFLOW_NAME_MAX_LENGTH } from '@licenseplate-checker/shared/constants/limits'
 import { PALETTE_NODES } from './config'
 import { workflowService } from '@/services/workflow.service'
 
@@ -40,7 +41,7 @@ import {
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Save, ArrowLeft, Loader2, Pencil } from 'lucide-react'
+import { Save, ArrowLeft, Loader2, Pencil, Check } from 'lucide-react'
 
 const Background = BackgroundComponent as any
 
@@ -379,6 +380,7 @@ function BuilderContent() {
   // Renaming state
   const [isEditingName, setIsEditingName] = useState(false)
   const [newName, setNewName] = useState('')
+  const [renameError, setRenameError] = useState('')
 
   useEffect(() => {
     if (!workflowId) return
@@ -432,17 +434,19 @@ function BuilderContent() {
     if (!workflowId || !newName.trim() || newName === workflowName) {
       setIsEditingName(false)
       setNewName(workflowName)
+      setRenameError('')
       return
     }
 
-    try {
-      await workflowService.update(workflowId, { name: newName })
+    setRenameError('')
+    const response = await workflowService.update(workflowId, { name: newName })
+
+    if (response.data?.workflow) {
       setWorkflowName(newName)
       setIsEditingName(false)
-    } catch (err) {
-      console.error('Failed to rename', err)
+    } else {
+      setRenameError(response.error || 'Failed to rename')
       setNewName(workflowName)
-      setIsEditingName(false)
     }
   }
 
@@ -471,20 +475,41 @@ function BuilderContent() {
           <div className="h-5 w-px bg-border" />
 
           {isEditingName ? (
-            <Input
-              value={newName}
-              onChange={(e) => setNewName(e.target.value)}
-              className="h-7 w-48 text-sm"
-              autoFocus
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleRename()
-                if (e.key === 'Escape') {
-                  setNewName(workflowName)
-                  setIsEditingName(false)
-                }
-              }}
-              onBlur={handleRename}
-            />
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <Input
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  maxLength={WORKFLOW_NAME_MAX_LENGTH}
+                  className={`h-7 w-48 pr-7 text-sm ${renameError ? 'border-destructive' : ''}`}
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleRename()
+                    if (e.key === 'Escape') {
+                      setNewName(workflowName)
+                      setIsEditingName(false)
+                      setRenameError('')
+                    }
+                  }}
+                  onBlur={handleRename}
+                />
+                <button
+                  type="button"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-5 w-5 flex items-center justify-center rounded-sm bg-primary text-primary-foreground hover:bg-primary/90"
+                  onMouseDown={(e) => {
+                    e.preventDefault()
+                    handleRename()
+                  }}
+                >
+                  <Check className="h-3 w-3" strokeWidth={3} />
+                </button>
+              </div>
+              {renameError && (
+                <span className="text-xs text-destructive whitespace-nowrap">
+                  {renameError}
+                </span>
+              )}
+            </div>
           ) : (
             <div className="flex items-center gap-2 group">
               <span className="text-sm font-medium">{workflowName}</span>

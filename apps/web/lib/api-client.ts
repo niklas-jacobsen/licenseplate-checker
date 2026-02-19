@@ -87,9 +87,10 @@ class ApiClient {
     }
 
     const error = lastError!
+    const status = error.response?.status ?? 0
     if (this.isNetworkError(error)) {
       console.warn('API unreachable:', endpoint)
-    } else if (error.response?.status !== 401) {
+    } else if (status >= 500) {
       console.error('API request failed:', error.message)
     }
 

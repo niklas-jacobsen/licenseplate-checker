@@ -5,11 +5,16 @@ import {
   nodeRegistry,
 } from '@licenseplate-checker/shared/node-registry'
 import { BUILDER_MAX_WORKFLOWS_PER_USER } from '@licenseplate-checker/shared/constants/limits'
+import {
+  zWorkflowNameSchema,
+  zWorkflowDescriptionSchema,
+} from '@licenseplate-checker/shared/validators'
 import { validateGraph } from '../builder/validate/validateGraph'
 import { compileGraphToIr } from '../builder/compiler/GraphToIrCompiler'
 import { CompileError } from '../types/compiler.types'
 import {
   BadRequestError,
+  ConflictError,
   InternalServerError,
 } from '@licenseplate-checker/shared/types'
 import WorkflowController from '../controllers/Workflow.controller'
@@ -155,6 +160,24 @@ export const createBuilderRouter = (workflowController: WorkflowController) => {
       )
     }
 
+    const nameResult = zWorkflowNameSchema.safeParse(body.name)
+    if (!nameResult.success) {
+      throw new BadRequestError(
+        nameResult.error.issues[0].message,
+        'INVALID_NAME'
+      )
+    }
+
+    if (body.description !== undefined) {
+      const descResult = zWorkflowDescriptionSchema.safeParse(body.description)
+      if (!descResult.success) {
+        throw new BadRequestError(
+          descResult.error.issues[0].message,
+          'INVALID_DESCRIPTION'
+        )
+      }
+    }
+
     const existingCount = await workflowController.countByAuthor(user.id)
     if (existingCount >= BUILDER_MAX_WORKFLOWS_PER_USER) {
       throw new BadRequestError(
@@ -215,6 +238,26 @@ export const createBuilderRouter = (workflowController: WorkflowController) => {
       throw new BadRequestError('Workflow not found', 'WORKFLOW_NOT_FOUND')
     }
 
+    if (body.name !== undefined) {
+      const nameResult = zWorkflowNameSchema.safeParse(body.name)
+      if (!nameResult.success) {
+        throw new BadRequestError(
+          nameResult.error.issues[0].message,
+          'INVALID_NAME'
+        )
+      }
+    }
+
+    if (body.description !== undefined) {
+      const descResult = zWorkflowDescriptionSchema.safeParse(body.description)
+      if (!descResult.success) {
+        throw new BadRequestError(
+          descResult.error.issues[0].message,
+          'INVALID_DESCRIPTION'
+        )
+      }
+    }
+
     let validation: { ok: boolean; issues: any[] } = { ok: true, issues: [] }
 
     if (body.definition) {
@@ -224,11 +267,30 @@ export const createBuilderRouter = (workflowController: WorkflowController) => {
       }
     }
 
-    const workflow = await workflowController.update(id, {
-      name: body.name,
-      description: body.description,
-      definition: body.definition as Prisma.InputJsonValue,
-    })
+    let workflow
+    try {
+      const updateName =
+        body.name !== undefined && body.name !== existing.name
+          ? body.name
+          : undefined
+
+      workflow = await workflowController.update(id, {
+        name: updateName,
+        description: body.description,
+        definition: body.definition as Prisma.InputJsonValue,
+      })
+    } catch (err) {
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === 'P2002'
+      ) {
+        throw new ConflictError(
+          'A workflow with this name already exists for this city',
+          'DUPLICATE_WORKFLOW_NAME'
+        )
+      }
+      throw err
+    }
 
     return c.json({
       workflow,

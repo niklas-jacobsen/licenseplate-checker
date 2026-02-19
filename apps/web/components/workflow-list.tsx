@@ -4,7 +4,14 @@ import { useEffect, useState } from 'react'
 import { Card, CardContent } from './ui/card'
 import { Button } from './ui/button'
 import { format } from 'date-fns'
-import { Plus, Trash2, Globe, GlobeLock, Loader2, Workflow as WorkflowIcon } from 'lucide-react'
+import {
+  Plus,
+  Trash2,
+  Globe,
+  GlobeLock,
+  Loader2,
+  Workflow as WorkflowIcon,
+} from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { workflowService } from '../services/workflow.service'
 import { cityService } from '../services/city.service'
@@ -37,6 +44,7 @@ import {
   SelectValue,
 } from './ui/select'
 import { BUILDER_REGISTRY_VERSION } from '@licenseplate-checker/shared/node-registry'
+import { WORKFLOW_NAME_MAX_LENGTH } from '@licenseplate-checker/shared/constants/limits'
 import type { WorkflowNode } from '@licenseplate-checker/shared/workflow-dsl/types'
 
 interface Workflow {
@@ -213,7 +221,11 @@ export default function WorkflowList() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {workflows.map((workflow) => (
-            <Card key={workflow.id} className="flex flex-col h-[180px] py-0">
+            <Card
+              key={workflow.id}
+              className="flex flex-col h-[180px] py-0 cursor-pointer hover:border-primary/50 transition-colors"
+              onClick={() => router.push(`/workflows/${workflow.id}`)}
+            >
               <CardContent className="py-4 flex-1 flex flex-col">
                 <div className="flex items-center justify-between mb-2">
                   <span
@@ -230,24 +242,17 @@ export default function WorkflowList() {
                     )}
                     {workflow.isPublished ? 'Published' : 'Draft'}
                   </span>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 px-2"
-                      onClick={() => router.push(`/workflows/${workflow.id}`)}
-                    >
-                      View
-                    </Button>
-                    <button
-                      type="button"
-                      className="text-muted-foreground hover:text-destructive transition-colors p-1.5 rounded-md hover:bg-destructive/10"
-                      onClick={() => setDeleteTargetId(workflow.id)}
-                      aria-label="Delete workflow"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    className="text-muted-foreground hover:text-destructive transition-colors p-1.5 rounded-md hover:bg-destructive/10"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setDeleteTargetId(workflow.id)
+                    }}
+                    aria-label="Delete workflow"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </div>
 
                 <div className="flex-1">
@@ -255,7 +260,11 @@ export default function WorkflowList() {
                     {workflow.name}
                   </h3>
                   <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                    <span>{workflow.city.name}</span>
+                    <span>
+                      {workflow.city.name.length > 22
+                        ? `${workflow.city.name.substring(0, 22)}…`
+                        : workflow.city.name}
+                    </span>
                     <span>•</span>
                     <span>{format(new Date(workflow.updatedAt), 'PP')}</span>
                   </div>
@@ -321,6 +330,7 @@ export default function WorkflowList() {
                 onChange={(e) => setNewName(e.target.value)}
                 className="col-span-3"
                 placeholder="e.g. Daily Check"
+                maxLength={WORKFLOW_NAME_MAX_LENGTH}
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">

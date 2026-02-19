@@ -36,6 +36,9 @@ class WorkflowController {
         executions: {
           take: 20,
           orderBy: { startedAt: 'desc' },
+          include: {
+            check: { select: { cityId: true, letters: true, numbers: true } },
+          },
         },
       },
     })
