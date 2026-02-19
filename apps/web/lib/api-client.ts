@@ -100,6 +100,7 @@ class ApiClient {
     const backendError = responseData?.error
 
     let errorMessage = 'Unknown error'
+    let errorDetails: unknown
     if (typeof backendError === 'string') {
       errorMessage = backendError
     } else if (
@@ -107,7 +108,9 @@ class ApiClient {
       typeof backendError === 'object' &&
       'message' in backendError
     ) {
-      errorMessage = (backendError as { message: string }).message
+      const errObj = backendError as { message: string; details?: unknown }
+      errorMessage = errObj.message
+      errorDetails = errObj.details
     } else if (this.isNetworkError(error)) {
       errorMessage = 'Network error — please check your connection'
     } else if (error.message) {
@@ -116,6 +119,7 @@ class ApiClient {
 
     return {
       error: errorMessage,
+      errorDetails,
       status: error.response?.status || 0,
     }
   }

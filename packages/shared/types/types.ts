@@ -3,6 +3,7 @@ export interface ApiResponse<T> {
   error?: string
   message?: string
   status: number
+  errorDetails?: unknown
 }
 
 export interface LicensePlateCheck {
