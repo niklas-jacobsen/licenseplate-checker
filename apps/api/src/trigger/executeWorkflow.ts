@@ -1,4 +1,4 @@
-import { task, logger, queue } from "@trigger.dev/sdk/v3"
+import { task, logger } from "@trigger.dev/sdk/v3"
 import {
   TRIGGER_WORKER_CONCURRENCY_LIMIT,
   TRIGGER_WORKER_RETRY_MAX_ATTEMPTS,
@@ -15,6 +15,35 @@ interface ExecuteWorkflowPayload {
   callbackUrl: string
   callbackSecret: string
   allowedDomains: string[]
+}
+
+async function reportProgress(
+  callbackUrl: string,
+  callbackSecret: string,
+  executionId: string,
+  currentNodeId: string | null,
+  completedNodes: { nodeId: string; status: 'success' | 'error' }[],
+) {
+  try {
+    await fetch(callbackUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Webhook-Secret': callbackSecret,
+      },
+      body: JSON.stringify({
+        type: 'progress',
+        executionId,
+        currentNodeId,
+        completedNodes,
+      }),
+    })
+  } catch (err) {
+    logger.warn("Failed to report progress", {
+      executionId,
+      error: err instanceof Error ? err.message : String(err),
+    })
+  }
 }
 
 export const executeWorkflow = task({
@@ -37,26 +66,29 @@ export const executeWorkflow = task({
 
     logger.info("Starting workflow execution", { executionId, entryBlockId: ir.entryBlockId })
 
-    const executor = new IrExecutor({ allowedDomains })
+    const completedNodes: { nodeId: string; status: 'success' | 'error' }[] = []
+
+    const executor = new IrExecutor({
+      allowedDomains,
+      onBlockStart: async (sourceNodeId: string) => {
+        await reportProgress(callbackUrl, callbackSecret, executionId, sourceNodeId, completedNodes)
+      },
+      onBlockComplete: async (sourceNodeId: string, success: boolean) => {
+        completedNodes.push({ nodeId: sourceNodeId, status: success ? 'success' : 'error' })
+        await reportProgress(callbackUrl, callbackSecret, executionId, null, completedNodes)
+      },
+    })
+
     const result = await executor.execute(ir)
     const duration = Date.now() - startTime
 
-    let errorNodeId: string | undefined
-    if (!result.success && result.logs.length > 0) {
-      const lastDebugLog = result.logs
-        .filter(log => log.level === 'debug' && log.message.startsWith('Executing block'))
-        .pop()
-      if (lastDebugLog?.details && typeof lastDebugLog.details === 'object' && 'kind' in (lastDebugLog.details as any)) {
-        errorNodeId = lastDebugLog.message.match(/block (\S+)/)?.[1]
-      }
-    }
-
     const callbackPayload = {
+      type: 'completion' as const,
       executionId,
       status: result.success ? 'SUCCESS' : 'FAILED',
       logs: result.logs,
       error: result.error,
-      errorNodeId,
+      errorNodeId: result.errorNodeId,
       duration,
     }
 
