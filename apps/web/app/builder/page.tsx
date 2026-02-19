@@ -17,6 +17,7 @@ import { WORKFLOW_NAME_MAX_LENGTH } from '@licenseplate-checker/shared/constants
 import { PALETTE_NODES } from './config'
 import { BuilderStoreProvider, useBuilderStore, useShallow } from './store'
 import { nodeTypes } from './components/nodes'
+import { edgeTypes } from './components/edges'
 
 import '@xyflow/react/dist/style.css'
 
@@ -84,9 +85,7 @@ function FlowCanvas() {
 
   const onSelectionChange = useCallback(
     (payload: { nodes: Node[]; edges: Edge[] }) => {
-      setSelectedNodeId(
-        payload.nodes[0]?.id ?? null
-      )
+      setSelectedNodeId(payload.nodes[0]?.id ?? null)
     },
     [setSelectedNodeId]
   )
@@ -116,6 +115,8 @@ function FlowCanvas() {
         nodes={nodes}
         edges={edges}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
+        defaultEdgeOptions={{ type: 'workflow', animated: true }}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
@@ -133,17 +134,23 @@ function FlowCanvas() {
 function BuilderToolbar() {
   const router = useRouter()
 
-  const { workflowId, workflowName, isSaving, saveError, saveWorkflow, renameWorkflow } =
-    useBuilderStore(
-      useShallow((s) => ({
-        workflowId: s.workflowId,
-        workflowName: s.workflowName,
-        isSaving: s.isSaving,
-        saveError: s.saveError,
-        saveWorkflow: s.saveWorkflow,
-        renameWorkflow: s.renameWorkflow,
-      }))
-    )
+  const {
+    workflowId,
+    workflowName,
+    isSaving,
+    saveError,
+    saveWorkflow,
+    renameWorkflow,
+  } = useBuilderStore(
+    useShallow((s) => ({
+      workflowId: s.workflowId,
+      workflowName: s.workflowName,
+      isSaving: s.isSaving,
+      saveError: s.saveError,
+      saveWorkflow: s.saveWorkflow,
+      renameWorkflow: s.renameWorkflow,
+    }))
+  )
 
   const [isEditingName, setIsEditingName] = useState(false)
   const [newName, setNewName] = useState('')
