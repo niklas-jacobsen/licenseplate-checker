@@ -11,6 +11,7 @@ export async function executeWorkflowForCheck(
   workflowController: WorkflowController,
   workflowId: string,
   checkId?: string,
+  options?: { skipPublishCheck?: boolean },
 ) {
   const workflow = await workflowController.getById(workflowId)
 
@@ -18,7 +19,7 @@ export async function executeWorkflowForCheck(
     throw new BadRequestError('Workflow not found', 'WORKFLOW_NOT_FOUND')
   }
 
-  if (!workflow.isPublished) {
+  if (!options?.skipPublishCheck && !workflow.isPublished) {
     throw new BadRequestError('Workflow is not published', 'WORKFLOW_NOT_PUBLISHED')
   }
 

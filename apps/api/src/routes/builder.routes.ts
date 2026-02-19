@@ -116,6 +116,37 @@ export const createBuilderRouter = (workflowController: WorkflowController) => {
     return c.json(result, 202)
   })
 
+  router.post('/test-execute', auth, async (c) => {
+    let body: unknown
+
+    try {
+      body = await c.req.json()
+    } catch {
+      throw new BadRequestError(
+        'Request body must be valid JSON',
+        'INVALID_JSON'
+      )
+    }
+
+    const { workflowId } = body as { workflowId: string }
+
+    if (!workflowId) {
+      throw new BadRequestError(
+        'workflowId is required',
+        'MISSING_WORKFLOW_ID'
+      )
+    }
+
+    const result = await executeWorkflowForCheck(
+      workflowController,
+      workflowId,
+      undefined,
+      { skipPublishCheck: true }
+    )
+
+    return c.json(result, 202)
+  })
+
   router.get('/workflows', async (c) => {
     const cityId = c.req.query('cityId')
     if (!cityId) {
