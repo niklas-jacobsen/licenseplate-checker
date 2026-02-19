@@ -23,6 +23,8 @@ import {
 
 export interface ExecutorOptions {
   allowedDomains?: string[]
+  onBlockStart?: (sourceNodeId: string) => Promise<void>
+  onBlockComplete?: (sourceNodeId: string, success: boolean) => Promise<void>
 }
 
 export class IrExecutor {
@@ -30,9 +32,13 @@ export class IrExecutor {
   private browser: Browser | null = null
   private page: Page | null = null
   private allowedDomains: string[]
+  private onBlockStart?: ExecutorOptions['onBlockStart']
+  private onBlockComplete?: ExecutorOptions['onBlockComplete']
 
   constructor(options: ExecutorOptions = {}) {
     this.allowedDomains = options.allowedDomains ?? []
+    this.onBlockStart = options.onBlockStart
+    this.onBlockComplete = options.onBlockComplete
   }
 
   private log(
@@ -84,7 +90,7 @@ export class IrExecutor {
       )
       if (!isAllowed) {
         throw new Error(
-          `Domain '${hostname}' is not in the allowed list: [${this.allowedDomains.join(', ')}]`
+          `The Address '${hostname}' is not in the list of allowed domains: ${this.allowedDomains.join(', ')}`
         )
       }
     }
@@ -98,6 +104,7 @@ export class IrExecutor {
 
   async execute(ir: BuilderIr): Promise<ExecutionResult> {
     this.logs = []
+    let errorNodeId: string | undefined
 
     try {
       this.log('info', 'Starting execution', { entryBlockId: ir.entryBlockId })
@@ -127,7 +134,23 @@ export class IrExecutor {
 
         this.log('debug', `Executing block ${block.id}`, { kind: block.kind })
 
-        currentBlockId = await this.executeBlock(block, ir)
+        if (this.onBlockStart) {
+          await this.onBlockStart(block.sourceNodeId)
+        }
+
+        try {
+          currentBlockId = await this.executeBlock(block, ir)
+
+          if (this.onBlockComplete) {
+            await this.onBlockComplete(block.sourceNodeId, true)
+          }
+        } catch (err) {
+          errorNodeId = block.sourceNodeId
+          if (this.onBlockComplete) {
+            await this.onBlockComplete(block.sourceNodeId, false)
+          }
+          throw err
+        }
       }
 
       this.log('info', 'Execution completed successfully')
@@ -136,7 +159,12 @@ export class IrExecutor {
       const errorMessage =
         error instanceof Error ? error.message : String(error)
       this.log('error', 'Execution failed', { error: errorMessage })
-      return { success: false, logs: this.logs, error: errorMessage }
+      return {
+        success: false,
+        logs: this.logs,
+        error: errorMessage,
+        errorNodeId,
+      }
     } finally {
       if (this.browser) {
         await this.browser.close()
@@ -194,9 +222,7 @@ export class IrExecutor {
 
       case 'waitDuration':
         this.log('info', `Waiting ${op.seconds}s`)
-        await new Promise((resolve) =>
-          setTimeout(resolve, op.seconds * 1000)
-        )
+        await new Promise((resolve) => setTimeout(resolve, op.seconds * 1000))
         break
 
       case 'waitSelector':
