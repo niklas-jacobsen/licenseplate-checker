@@ -178,12 +178,15 @@ export default function WorkflowList() {
 
   return (
     <>
-      <div className="flex justify-end mb-6">
-        <Button onClick={() => setIsCreateOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          New Workflow
-        </Button>
-      </div>
+      {workflows.length > 0 && (
+        <div className="flex justify-end mb-6">
+          <Button onClick={() => setIsCreateOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            New Workflow
+          </Button>
+        </div>
+      )}
+
       {workflows.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
@@ -197,61 +200,61 @@ export default function WorkflowList() {
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {workflows.map((workflow) => (
-            <Card key={workflow.id}>
-              <CardContent className="py-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-3">
-                      <h3 className="text-base font-medium truncate">
-                        {workflow.name}
-                      </h3>
-                      <span
-                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${
-                          workflow.isPublished
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-gray-100 text-gray-600'
-                        }`}
-                      >
-                        {workflow.isPublished ? (
-                          <Globe className="h-3 w-3" />
-                        ) : (
-                          <GlobeLock className="h-3 w-3" />
-                        )}
-                        {workflow.isPublished ? 'Published' : 'Draft'}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
-                      <span>{workflow.city.name}</span>
-                      <span>
-                        Updated {format(new Date(workflow.updatedAt), 'PP')}
-                      </span>
-                    </div>
-                    {workflow.description && (
-                      <p className="text-sm text-muted-foreground mt-1 truncate">
-                        {workflow.description}
-                      </p>
+            <Card key={workflow.id} className="flex flex-col h-[180px] py-0">
+              <CardContent className="py-4 flex-1 flex flex-col">
+                <div className="flex items-center justify-between mb-2">
+                  <span
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border ${
+                      workflow.isPublished
+                        ? 'bg-teal-50 text-teal-700 border-teal-200'
+                        : 'bg-gray-100 text-gray-600 border-gray-200'
+                    }`}
+                  >
+                    {workflow.isPublished ? (
+                      <Globe className="h-3 w-3" />
+                    ) : (
+                      <GlobeLock className="h-3 w-3" />
                     )}
-                  </div>
-
-                  <div className="flex items-center gap-2 ml-4">
+                    {workflow.isPublished ? 'Published' : 'Draft'}
+                  </span>
+                  <div className="flex items-center gap-1">
                     <Button
-                      variant="outline"
+                      variant="ghost"
                       size="sm"
-                      onClick={() => router.push(`/builder?id=${workflow.id}`)}
+                      className="h-8 px-2"
+                      onClick={() => router.push(`/workflows/${workflow.id}`)}
                     >
-                      Edit
+                      View
                     </Button>
                     <button
                       type="button"
-                      className="text-muted-foreground hover:text-destructive transition-colors p-1"
+                      className="text-muted-foreground hover:text-destructive transition-colors p-1.5 rounded-md hover:bg-destructive/10"
                       onClick={() => setDeleteTargetId(workflow.id)}
                       aria-label="Delete workflow"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
+                </div>
+
+                <div className="flex-1">
+                  <h3 className="text-base font-medium truncate mb-1">
+                    {workflow.name}
+                  </h3>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                    <span>{workflow.city.name}</span>
+                    <span>•</span>
+                    <span>{format(new Date(workflow.updatedAt), 'PP')}</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground line-clamp-2">
+                    {workflow.description || (
+                      <span className="italic opacity-50">
+                        No description provided
+                      </span>
+                    )}
+                  </p>
                 </div>
               </CardContent>
             </Card>

@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import { checkService } from '../services/check.service'
 import { format } from 'date-fns'
 import type { LicensePlateCheck } from '@licenseplate-checker/shared/types'
-import { Trash2, Search, Loader2 } from 'lucide-react'
+import { Trash2, Search, Loader2, Check, X, Clock } from 'lucide-react'
 import { Badge } from './ui/badge'
 import {
   AlertDialog,
@@ -18,6 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from './ui/alert-dialog'
+import { toTitleCase } from '@/lib/utils'
 
 const LicensePlateCheckDashboard = () => {
   const router = useRouter()
@@ -66,33 +67,27 @@ const LicensePlateCheckDashboard = () => {
     switch (status) {
       case 'SUCCESS':
         return (
-          <Badge
-            variant="outline"
-            className="bg-green-50 text-green-700 border-green-200 hover:bg-green-50 hover:text-green-700"
-          >
-            Success
-          </Badge>
+          <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-green-100 text-green-600">
+            <Check className="h-3 w-3" />
+          </span>
         )
       case 'FAILED':
-        return <Badge variant="destructive">Failed</Badge>
+        return (
+          <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-red-100 text-red-600">
+            <X className="h-3 w-3" />
+          </span>
+        )
       case 'RUNNING':
         return (
-          <Badge
-            variant="outline"
-            className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-          >
-            <Loader2 className="h-3 w-3 animate-spin mr-1" />
-            Running
-          </Badge>
+          <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-blue-100 text-blue-600">
+            <Loader2 className="h-3 w-3 animate-spin" />
+          </span>
         )
       default:
         return (
-          <Badge
-            variant="secondary"
-            className="bg-gray-100 text-gray-600 hover:bg-gray-100 hover:text-gray-600"
-          >
-            {status}
-          </Badge>
+          <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-gray-100 text-gray-500">
+            <Clock className="h-3 w-3" />
+          </span>
         )
     }
   }
@@ -125,7 +120,7 @@ const LicensePlateCheckDashboard = () => {
             variant="secondary"
             className="bg-gray-100 text-gray-600 hover:bg-gray-100 hover:text-gray-600"
           >
-            {status}
+            {toTitleCase(status)}
           </Badge>
         )
     }
@@ -171,17 +166,18 @@ const LicensePlateCheckDashboard = () => {
         {checks.map((check) => (
           <Card
             key={check.id}
-            className="overflow-hidden flex flex-col h-full hover:border-primary/50 transition-colors"
+            className="overflow-hidden flex flex-col h-full hover:border-primary/50 transition-colors py-0"
           >
             <div className="p-6 flex-1">
               <div className="flex justify-between items-start mb-4">
                 <div className="flex flex-col">
                   <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
-                    {check.cityId}
+                    {check.city.name}
                   </span>
-                  <h3 className="text-2xl font-bold tracking-tight">
-                    {check.letters}-{check.numbers}
-                  </h3>
+                  <span className="font-europlate text-xl tracking-wider">
+                    {check.cityId.toUpperCase()} - {check.letters} -{' '}
+                    {check.numbers}
+                  </span>
                 </div>
                 {getStatusBadge(check.status)}
               </div>
@@ -189,19 +185,24 @@ const LicensePlateCheckDashboard = () => {
               <div className="space-y-2 mt-4 pt-4 border-t text-sm">
                 {check.workflow && (
                   <div className="flex justify-between items-center text-muted-foreground">
-                    <span>Automation</span>
-                    <div className="flex items-center gap-2">
+                    <span>Workflow</span>
+                    <div
+                      className="flex items-center gap-2 cursor-pointer hover:underline"
+                      onClick={() =>
+                        router.push(`/workflows/${check.workflow!.id}`)
+                      }
+                    >
                       <span className="font-medium text-foreground text-xs">
                         {check.workflow.name}
                       </span>
-                      {check.executions && check.executions.length > 0 ? (
-                        getExecutionBadge(check.executions[0].status)
-                      ) : (
-                        <span className="text-xs text-muted-foreground">
-                          No runs
-                        </span>
-                      )}
                     </div>
+                    {check.executions && check.executions.length > 0 ? (
+                      getExecutionBadge(check.executions[0].status)
+                    ) : (
+                      <span className="text-xs text-muted-foreground">
+                        No runs
+                      </span>
+                    )}
                   </div>
                 )}
                 <div className="flex justify-between text-muted-foreground">
