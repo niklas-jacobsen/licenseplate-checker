@@ -121,10 +121,6 @@ licensePlateCheckRouter.get('/me', async (c: Context) => {
   try {
     const checks = await checkController.getByUserId(userId)
 
-    if (checks.length === 0) {
-      return c.json({ message: 'No checks found for this user' }, 404)
-    }
-
     return c.json({ checks }, 200)
   } catch (error) {
     console.error('Error fetching license plate checks:', error)
