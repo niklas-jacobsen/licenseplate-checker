@@ -9,6 +9,23 @@ import { cn } from '@shared/lib/utils'
 function Dialog({
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Root>) {
+  const { open } = props
+
+  React.useEffect(() => {
+    if (open === false) {
+      // hack to fix issue where closing modal caused nothing to be clickable anymore
+      const timer = setTimeout(() => {
+        const hasOpenOverlay = document.querySelector(
+          '[data-slot="dialog-overlay"], [data-slot="alert-dialog-overlay"]'
+        )
+        if (!hasOpenOverlay) {
+          document.body.style.pointerEvents = ''
+        }
+      }, 250)
+      return () => clearTimeout(timer)
+    }
+  }, [open])
+
   return <DialogPrimitive.Root data-slot="dialog" {...props} />
 }
 
