@@ -110,7 +110,8 @@ const DEFAULT_EDGES: Edge[] = [
     target: 'end',
     sourceHandle: 'next',
     targetHandle: 'in',
-    type: 'smoothstep',
+    type: 'workflow',
+    animated: true,
   },
 ]
 
@@ -183,7 +184,10 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
         set({ edges: applyEdgeChanges(changes, get().edges) as Edge[] }),
       onConnect: (connection) =>
         set({
-          edges: rfAddEdge({ ...connection, type: 'smoothstep' }, get().edges),
+          edges: rfAddEdge(
+            { ...connection, type: 'workflow', animated: true },
+            get().edges
+          ),
         }),
 
       // node ops
@@ -233,7 +237,14 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
               edges?: Edge[]
             }
             if (def?.nodes) set({ nodes: def.nodes })
-            if (def?.edges) set({ edges: def.edges })
+            if (def?.edges)
+              set({
+                edges: def.edges.map((e) => ({
+                  ...e,
+                  type: 'workflow',
+                  animated: true,
+                })),
+              })
           }
         } catch (err) {
           console.error('Failed to load workflow', err)
