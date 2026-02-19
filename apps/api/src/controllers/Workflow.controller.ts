@@ -142,6 +142,8 @@ class WorkflowController {
       triggerRunId?: string
       duration?: number
       finishedAt?: Date
+      currentNodeId?: string | null
+      completedNodes?: Prisma.InputJsonValue
     }
   ) {
     return prisma.workflowExecution.update({
