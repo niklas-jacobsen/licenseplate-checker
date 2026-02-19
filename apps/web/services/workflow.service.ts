@@ -32,8 +32,8 @@ export const workflowService = {
     )
   },
 
-  async getMyWorkflows() {
-    return apiClient.get<{ workflows: Workflow[] }>('/builder/my-workflows')
+  async getMyWorkflows(signal?: AbortSignal) {
+    return apiClient.get<{ workflows: Workflow[] }>('/builder/my-workflows', undefined, { signal })
   },
 
   async publish(id: string, isPublished: boolean) {

@@ -29,24 +29,30 @@ const LicensePlateCheckDashboard = () => {
   const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
+    const controller = new AbortController()
+
     const fetchRequests = async () => {
       try {
-        const response = await checkService.getChecks()
+        const response = await checkService.getChecks(controller.signal)
 
-        if (response.status === 200 && response.data?.checks) {
-          setChecks(response.data.checks || [])
-        } else {
-          setError('No requests found for this user')
+        if (controller.signal.aborted) return
+        if (response.data?.checks) {
+          setChecks(response.data.checks)
+        } else if (response.error) {
+          setError('An error occurred while fetching requests')
         }
       } catch (err) {
-        setError('An error occurred while fetching the requests')
-        console.error(err)
+        if (!controller.signal.aborted) {
+          setError('An error occurred while fetching the requests')
+          console.error(err)
+        }
       } finally {
-        setLoading(false)
+        if (!controller.signal.aborted) setLoading(false)
       }
     }
 
     fetchRequests()
+    return () => controller.abort()
   }, [])
 
   const handleDelete = async () => {

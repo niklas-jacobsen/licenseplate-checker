@@ -67,6 +67,11 @@ class ApiClient {
       } catch (error) {
         lastError = error as AxiosError
 
+        // never retry or log cancelled requests
+        if (axios.isCancel(lastError) || lastError.code === 'ERR_CANCELED') {
+          return { error: 'Request cancelled', status: 0 }
+        }
+
         // only retry when no response received
         const shouldRetry =
           attempt < API_CALL_MAX_RETRIES && this.isNetworkError(lastError)
@@ -82,7 +87,9 @@ class ApiClient {
     }
 
     const error = lastError!
-    if (error.response?.status !== 401) {
+    if (this.isNetworkError(error)) {
+      console.warn('API unreachable:', endpoint)
+    } else if (error.response?.status !== 401) {
       console.error('API request failed:', error.message)
     }
 
@@ -112,37 +119,51 @@ class ApiClient {
     }
   }
 
-  async get<T>(endpoint: string, token?: string): Promise<ApiResponse<T>> {
+  async get<T>(
+    endpoint: string,
+    token?: string,
+    options?: { signal?: AbortSignal }
+  ): Promise<ApiResponse<T>> {
     return this.requestWithRetry<T>('GET', endpoint, {
       headers: this.authHeader(token),
+      signal: options?.signal,
     })
   }
 
   async post<T>(
     endpoint: string,
-    body: any,
-    token?: string
+    body: unknown,
+    token?: string,
+    options?: { signal?: AbortSignal }
   ): Promise<ApiResponse<T>> {
     return this.requestWithRetry<T>('POST', endpoint, {
       data: body,
       headers: this.authHeader(token),
+      signal: options?.signal,
     })
   }
 
   async put<T>(
     endpoint: string,
-    body: any,
-    token?: string
+    body: unknown,
+    token?: string,
+    options?: { signal?: AbortSignal }
   ): Promise<ApiResponse<T>> {
     return this.requestWithRetry<T>('PUT', endpoint, {
       data: body,
       headers: this.authHeader(token),
+      signal: options?.signal,
     })
   }
 
-  async delete<T>(endpoint: string, token?: string): Promise<ApiResponse<T>> {
+  async delete<T>(
+    endpoint: string,
+    token?: string,
+    options?: { signal?: AbortSignal }
+  ): Promise<ApiResponse<T>> {
     return this.requestWithRetry<T>('DELETE', endpoint, {
       headers: this.authHeader(token),
+      signal: options?.signal,
     })
   }
 

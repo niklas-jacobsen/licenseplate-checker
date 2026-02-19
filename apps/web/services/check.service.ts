@@ -9,8 +9,8 @@ export const checkService = {
     return apiClient.post('/request/new', data)
   },
 
-  async getChecks() {
-    return apiClient.get<{ checks: any[] }>('/request/me')
+  async getChecks(signal?: AbortSignal) {
+    return apiClient.get<{ checks: any[] }>('/request/me', undefined, { signal })
   },
 
   async deleteCheck(id: string) {

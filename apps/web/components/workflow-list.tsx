@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { Card, CardContent } from './ui/card'
 import { Button } from './ui/button'
 import { format } from 'date-fns'
-import { Plus, Trash2, Globe, GlobeLock, Loader2 } from 'lucide-react'
+import { Plus, Trash2, Globe, GlobeLock, Loader2, Workflow as WorkflowIcon } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { workflowService } from '../services/workflow.service'
 import { cityService } from '../services/city.service'
@@ -87,13 +87,16 @@ export default function WorkflowList() {
   const [createError, setCreateError] = useState('')
 
   useEffect(() => {
+    const controller = new AbortController()
+
     const fetchData = async () => {
       try {
         const [workflowsRes, citiesRes] = await Promise.all([
-          workflowService.getMyWorkflows(),
-          cityService.getCities(),
+          workflowService.getMyWorkflows(controller.signal),
+          cityService.getCities(controller.signal),
         ])
 
+        if (controller.signal.aborted) return
         if (workflowsRes.data?.workflows) {
           setWorkflows(workflowsRes.data.workflows)
         }
@@ -101,14 +104,17 @@ export default function WorkflowList() {
           setCities(citiesRes.data.cities)
         }
       } catch (err) {
-        setError('Failed to load data')
-        console.error(err)
+        if (!controller.signal.aborted) {
+          setError('Failed to load data')
+          console.error(err)
+        }
       } finally {
-        setLoading(false)
+        if (!controller.signal.aborted) setLoading(false)
       }
     }
 
     fetchData()
+    return () => controller.abort()
   }, [])
 
   const handleDelete = async () => {
@@ -188,10 +194,15 @@ export default function WorkflowList() {
       )}
 
       {workflows.length === 0 ? (
-        <Card>
-          <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground mb-4">
-              You haven't created any workflows yet.
+        <Card className="w-full">
+          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+            <div className="bg-muted/50 p-4 rounded-full mb-4">
+              <WorkflowIcon className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <h3 className="text-lg font-semibold mb-2">No Workflows Yet</h3>
+            <p className="text-muted-foreground mb-6 max-w-sm">
+              You haven't created any workflows yet. Create your first workflow
+              to get started.
             </p>
             <Button onClick={() => setIsCreateOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
