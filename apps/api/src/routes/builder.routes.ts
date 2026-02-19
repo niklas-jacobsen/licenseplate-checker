@@ -123,6 +123,12 @@ export const createBuilderRouter = (workflowController: WorkflowController) => {
     return c.json({ workflows })
   })
 
+  router.get('/my-workflows', auth, async (c) => {
+    const user = c.get('user' as any) as { id: string }
+    const workflows = await workflowController.getByAuthor(user.id)
+    return c.json({ workflows })
+  })
+
   router.post('/workflow', auth, async (c) => {
     const user = c.get('user' as any) as { id: string }
     let body: {

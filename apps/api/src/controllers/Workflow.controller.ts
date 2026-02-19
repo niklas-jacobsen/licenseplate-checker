@@ -57,6 +57,16 @@ class WorkflowController {
     })
   }
 
+  async getByAuthor(authorId: string) {
+    return prisma.workflow.findMany({
+      where: { authorId },
+      include: {
+        city: { select: { name: true } },
+      },
+      orderBy: { updatedAt: 'desc' },
+    })
+  }
+
   async countByAuthor(authorId: string) {
     return prisma.workflow.count({
       where: { authorId },
@@ -86,10 +96,7 @@ class WorkflowController {
     })
   }
 
-  async createExecution(
-    workflowId: string,
-    checkId?: string,
-  ) {
+  async createExecution(workflowId: string, checkId?: string) {
     return prisma.workflowExecution.create({
       data: {
         workflowId,
