@@ -43,7 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (response.data) {
         setUser(response.data)
-      } else {
+      } else if (response.status === 401) {
         setUser(null)
       }
 
