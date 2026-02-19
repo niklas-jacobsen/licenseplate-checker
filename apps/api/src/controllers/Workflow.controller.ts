@@ -33,6 +33,10 @@ class WorkflowController {
             lastname: true,
           },
         },
+        executions: {
+          take: 20,
+          orderBy: { startedAt: 'desc' },
+        },
       },
     })
   }
@@ -70,6 +74,25 @@ class WorkflowController {
   async countByAuthor(authorId: string) {
     return prisma.workflow.count({
       where: { authorId },
+    })
+  }
+
+  async update(
+    id: string,
+    data: {
+      name?: string
+      description?: string | null
+      definition?: Prisma.InputJsonValue
+      cityId?: string
+      isPublished?: boolean
+    }
+  ) {
+    return prisma.workflow.update({
+      where: { id },
+      data: {
+        ...data,
+        updatedAt: new Date(),
+      },
     })
   }
 

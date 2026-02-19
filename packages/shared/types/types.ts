@@ -16,6 +16,10 @@ export interface LicensePlateCheck {
   updatedAt: string
   lastCheckedAt?: string
   workflowId?: string
+  city: {
+    name: string
+    region?: string
+  }
   workflow?: {
     id: string
     name: string

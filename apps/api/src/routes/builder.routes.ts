@@ -1,4 +1,5 @@
 import { Hono } from 'hono'
+import { Prisma } from '@prisma/client'
 import {
   BUILDER_REGISTRY_VERSION,
   nodeRegistry,
@@ -194,7 +195,11 @@ export const createBuilderRouter = (workflowController: WorkflowController) => {
 
   router.put('/workflow/:id', auth, async (c) => {
     const id = c.req.param('id')
-    let body: { definition: unknown }
+    let body: {
+      definition?: unknown
+      name?: string
+      description?: string
+    }
 
     try {
       body = await c.req.json()
@@ -205,25 +210,29 @@ export const createBuilderRouter = (workflowController: WorkflowController) => {
       )
     }
 
-    if (!body.definition) {
-      throw new BadRequestError('definition is required', 'MISSING_DEFINITION')
-    }
-
     const existing = await workflowController.getById(id)
     if (!existing) {
       throw new BadRequestError('Workflow not found', 'WORKFLOW_NOT_FOUND')
     }
 
-    const workflow = await workflowController.updateDefinition(
-      id,
-      body.definition
-    )
+    let validation: { ok: boolean; issues: any[] } = { ok: true, issues: [] }
 
-    const validation = validateGraph(body.definition)
+    if (body.definition) {
+      const result = validateGraph(body.definition)
+      if (!result.ok) {
+        validation = { ok: false, issues: result.issues as any[] }
+      }
+    }
+
+    const workflow = await workflowController.update(id, {
+      name: body.name,
+      description: body.description,
+      definition: body.definition as Prisma.InputJsonValue,
+    })
 
     return c.json({
       workflow,
-      validation: { ok: validation.ok, issues: validation.issues },
+      validation,
     })
   })
 

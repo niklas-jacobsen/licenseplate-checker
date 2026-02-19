@@ -16,6 +16,13 @@ interface Workflow {
   createdAt: string
   updatedAt: string
   city: { name: string }
+  executions: {
+    id: string
+    status: 'PENDING' | 'RUNNING' | 'SUCCESS' | 'FAILED'
+    startedAt: string
+    finishedAt?: string | null
+    duration?: number
+  }[]
 }
 
 export const workflowService = {
@@ -62,5 +69,19 @@ export const workflowService = {
     return apiClient.put<{ workflow: Workflow }>(`/builder/workflow/${id}`, {
       definition,
     })
+  },
+
+  async update(
+    id: string,
+    data: {
+      name?: string
+      description?: string
+      definition?: unknown
+    }
+  ) {
+    return apiClient.put<{ workflow: Workflow }>(
+      `/builder/workflow/${id}`,
+      data
+    )
   },
 }
