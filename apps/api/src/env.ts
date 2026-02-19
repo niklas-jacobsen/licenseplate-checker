@@ -19,7 +19,7 @@ export const zEnvScheme = z.object({
   JWT_SECRET: z.string().min(1, { message: 'JWT_SECRET is required' }),
   FORCE_SEED: z.coerce.boolean().default(false),
   RATE_LIMIT_WINDOW: z.coerce.number().int().positive().default(900000),
-  RATE_LIMIT_MAX_REQUESTS: z.coerce.number().int().positive().default(100),
+  RATE_LIMIT_MAX_REQUESTS: z.coerce.number().int().positive().default(1000),
   TRIGGER_SECRET_KEY: z.string().optional(),
   TRIGGER_WEBHOOK_SECRET: z.string().default('dev-webhook-secret'),
   API_BASE_URL: z.string().default('http://localhost:8080'),
