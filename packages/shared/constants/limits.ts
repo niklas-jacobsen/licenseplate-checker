@@ -14,6 +14,7 @@ export const BUILDER_MAX_WORKFLOWS_PER_USER = 10
 
 // Executor
 export const EXECUTOR_ACTION_DELAY_MS = 800
+export const BUILDER_TEST_EXECUTIONS_PER_DAY = 10
 
 // Trigger Workers
 export const TRIGGER_WORKER_CONCURRENCY_LIMIT = 5

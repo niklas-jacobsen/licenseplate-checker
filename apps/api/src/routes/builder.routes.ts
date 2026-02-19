@@ -4,7 +4,10 @@ import {
   BUILDER_REGISTRY_VERSION,
   nodeRegistry,
 } from '@licenseplate-checker/shared/node-registry'
-import { BUILDER_MAX_WORKFLOWS_PER_USER } from '@licenseplate-checker/shared/constants/limits'
+import {
+  BUILDER_MAX_WORKFLOWS_PER_USER,
+  BUILDER_TEST_EXECUTIONS_PER_DAY,
+} from '@licenseplate-checker/shared/constants/limits'
 import {
   zWorkflowNameSchema,
   zWorkflowDescriptionSchema,
@@ -131,9 +134,56 @@ export const createBuilderRouter = (workflowController: WorkflowController) => {
     const { workflowId } = body as { workflowId: string }
 
     if (!workflowId) {
+      throw new BadRequestError('workflowId is required', 'MISSING_WORKFLOW_ID')
+    }
+
+    // validate graph before execution
+    const workflow = await workflowController.getById(workflowId)
+    if (!workflow) {
+      throw new BadRequestError('Workflow not found', 'WORKFLOW_NOT_FOUND')
+    }
+
+    const validation = validateGraph(workflow.definition)
+    if (!validation.ok) {
       throw new BadRequestError(
-        'workflowId is required',
-        'MISSING_WORKFLOW_ID'
+        'Workflow definition is invalid',
+        'VALIDATION_ERROR',
+        { issues: validation.issues }
+      )
+    }
+
+    if (validation.issues.length > 0) {
+      throw new BadRequestError(
+        validation.issues[0].message,
+        'VALIDATION_ERROR',
+        { issues: validation.issues }
+      )
+    }
+
+    // compile to catch dead ends, missing connections, etc.
+    try {
+      compileGraphToIr(workflow.definition)
+    } catch (err) {
+      if (err instanceof CompileError) {
+        throw new BadRequestError(
+          'Workflow does not compile: ' + err.message,
+          'COMPILE_ERROR',
+          { issues: err.issues }
+        )
+      }
+      throw err
+    }
+
+    // daily limit for test executions so this feature is not abused
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
+    const recentCount = await workflowController.countRecentExecutions(
+      workflowId,
+      oneDayAgo
+    )
+    if (recentCount >= BUILDER_TEST_EXECUTIONS_PER_DAY) {
+      throw new BadRequestError(
+        `Test limit reached (${BUILDER_TEST_EXECUTIONS_PER_DAY} per day). Try again later.`,
+        'TEST_LIMIT_REACHED'
       )
     }
 
@@ -144,7 +194,13 @@ export const createBuilderRouter = (workflowController: WorkflowController) => {
       { skipPublishCheck: true }
     )
 
-    return c.json(result, 202)
+    return c.json(
+      {
+        ...result,
+        testsRemaining: BUILDER_TEST_EXECUTIONS_PER_DAY - recentCount - 1,
+      },
+      202
+    )
   })
 
   router.get('/workflows', async (c) => {
