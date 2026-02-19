@@ -149,6 +149,7 @@ function createNode(
       }
 
     default:
+      //should never be reached
       throw new Error(`Unknown node type: ${type}`)
   }
 }

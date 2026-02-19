@@ -6,7 +6,8 @@ import { useRouter } from 'next/navigation'
 import { checkService } from '../services/check.service'
 import { format } from 'date-fns'
 import type { LicensePlateCheck } from '@licenseplate-checker/shared/types'
-import { Trash2 } from 'lucide-react'
+import { Trash2, Search, Loader2 } from 'lucide-react'
+import { Badge } from './ui/badge'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -61,81 +62,181 @@ const LicensePlateCheckDashboard = () => {
     }
   }
 
+  const getExecutionBadge = (status: string) => {
+    switch (status) {
+      case 'SUCCESS':
+        return (
+          <Badge
+            variant="outline"
+            className="bg-green-50 text-green-700 border-green-200 hover:bg-green-50 hover:text-green-700"
+          >
+            Success
+          </Badge>
+        )
+      case 'FAILED':
+        return <Badge variant="destructive">Failed</Badge>
+      case 'RUNNING':
+        return (
+          <Badge
+            variant="outline"
+            className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+          >
+            <Loader2 className="h-3 w-3 animate-spin mr-1" />
+            Running
+          </Badge>
+        )
+      default:
+        return (
+          <Badge
+            variant="secondary"
+            className="bg-gray-100 text-gray-600 hover:bg-gray-100 hover:text-gray-600"
+          >
+            {status}
+          </Badge>
+        )
+    }
+  }
+
   const deleteTarget = checks.find((c) => c.id === deleteTargetId)
 
-  if (loading) return <div className="p-4 text-center">Loading checks...</div>
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'AVAILABLE':
+        return (
+          <Badge
+            variant="outline"
+            className="bg-green-50 text-green-700 border-green-200 hover:bg-green-50 hover:text-green-700"
+          >
+            Available
+          </Badge>
+        )
+      case 'RESERVED':
+        return (
+          <Badge
+            variant="outline"
+            className="bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+          >
+            Reserved
+          </Badge>
+        )
+      default:
+        return (
+          <Badge
+            variant="secondary"
+            className="bg-gray-100 text-gray-600 hover:bg-gray-100 hover:text-gray-600"
+          >
+            {status}
+          </Badge>
+        )
+    }
+  }
 
-  if (error) return <div className="p-4 text-center text-red-500">{error}</div>
+  if (loading)
+    return (
+      <div className="flex justify-center p-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    )
+
+  if (error)
+    return (
+      <div className="text-center p-8 text-destructive bg-destructive/10 rounded-lg mx-auto max-w-lg">
+        <p>{error}</p>
+      </div>
+    )
+
+  if (checks.length === 0) {
+    return (
+      <Card className="w-full">
+        <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+          <div className="bg-muted/50 p-4 rounded-full mb-4">
+            <Search className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <h3 className="text-lg font-semibold mb-2">No Requests Yet</h3>
+          <p className="text-muted-foreground mb-6 max-w-sm">
+            You haven't submitted any license plate checks yet. Create your
+            first request to get started.
+          </p>
+          <Button onClick={() => router.push('/')}>
+            Make Your First Request
+          </Button>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <>
-      <Card className="w-full">
-        <CardContent className="space-y-4 pt-6">
-          {checks.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-gray-500">You don't have any requests yet.</p>
-              <Button className="mt-4" onClick={() => router.push('/')}>
-                Make Your First Request
-              </Button>
-            </div>
-          ) : (
-            checks.map((check) => (
-              <Card key={check.id} className="overflow-hidden mb-4">
-                <div className="flex flex-col md:flex-row">
-                  <div className="p-4 md:w-1/3 flex items-center justify-center bg-gray-50">
-                    <LicensePlatePreview
-                      city={check.cityId}
-                      letters={check.letters}
-                      numbers={String(check.numbers)}
-                    />
-                  </div>
-                  <div className="p-4 md:w-2/3 flex flex-col justify-between">
-                    <div>
-                      <div className="flex justify-between items-start mb-2">
-                        <h3 className="text-lg font-medium">
-                          {check.cityId}-{check.letters}-{check.numbers}
-                        </h3>
-                        <span
-                          className={`px-2 py-1 rounded-full text-xs font-semibold \${
-                          check.status === 'AVAILABLE' ? 'bg-green-100 text-green-800' : 
-                          check.status === 'RESERVED' ? 'bg-blue-100 text-blue-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}
-                        >
-                          {check.status}
-                        </span>
-                      </div>
-
-                      <div className="text-sm text-gray-500 space-y-1">
-                        <p>
-                          Created: {format(new Date(check.createdAt), 'PPp')}
-                        </p>
-                        {check.lastCheckedAt && (
-                          <p>
-                            Last Checked:{' '}
-                            {format(new Date(check.lastCheckedAt), 'PPp')}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="mt-4 flex justify-end">
-                      <button
-                        type="button"
-                        className="text-muted-foreground hover:text-destructive transition-colors p-1"
-                        onClick={() => setDeleteTargetId(check.id)}
-                        aria-label="Delete request"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {checks.map((check) => (
+          <Card
+            key={check.id}
+            className="overflow-hidden flex flex-col h-full hover:border-primary/50 transition-colors"
+          >
+            <div className="p-6 flex-1">
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex flex-col">
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
+                    {check.cityId}
+                  </span>
+                  <h3 className="text-2xl font-bold tracking-tight">
+                    {check.letters}-{check.numbers}
+                  </h3>
                 </div>
-              </Card>
-            ))
-          )}
-        </CardContent>
-      </Card>
+                {getStatusBadge(check.status)}
+              </div>
+
+              <div className="space-y-2 mt-4 pt-4 border-t text-sm">
+                {check.workflow && (
+                  <div className="flex justify-between items-center text-muted-foreground">
+                    <span>Automation</span>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-foreground text-xs">
+                        {check.workflow.name}
+                      </span>
+                      {check.executions && check.executions.length > 0 ? (
+                        getExecutionBadge(check.executions[0].status)
+                      ) : (
+                        <span className="text-xs text-muted-foreground">
+                          No runs
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+                <div className="flex justify-between text-muted-foreground">
+                  <span>Created</span>
+                  <span className="font-medium text-foreground">
+                    {format(new Date(check.createdAt), 'PP')}
+                  </span>
+                </div>
+                {check.lastCheckedAt && (
+                  <div className="flex justify-between text-muted-foreground">
+                    <span>Last Checked</span>
+                    <span className="font-medium text-foreground">
+                      {format(new Date(check.lastCheckedAt), 'PP p')}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="bg-muted/30 px-6 py-3 border-t flex justify-between items-center">
+              <span className="text-xs text-muted-foreground font-mono">
+                ID: {check.id}
+              </span>
+              <button
+                type="button"
+                className="text-muted-foreground hover:text-destructive transition-colors p-1.5 rounded-md hover:bg-destructive/10"
+                onClick={() => setDeleteTargetId(check.id)}
+                aria-label="Delete request"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+          </Card>
+        ))}
+      </div>
 
       <AlertDialog
         open={!!deleteTargetId}
@@ -160,7 +261,7 @@ const LicensePlateCheckDashboard = () => {
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              variant="destructive"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={handleDelete}
               disabled={isDeleting}
             >

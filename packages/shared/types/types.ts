@@ -16,4 +16,14 @@ export interface LicensePlateCheck {
   updatedAt: string
   lastCheckedAt?: string
   workflowId?: string
+  workflow?: {
+    id: string
+    name: string
+  }
+  executions?: {
+    id: string
+    status: 'PENDING' | 'RUNNING' | 'SUCCESS' | 'FAILED'
+    startedAt: string
+    finishedAt?: string | null
+  }[]
 }
