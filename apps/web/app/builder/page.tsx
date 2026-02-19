@@ -6,27 +6,19 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import {
   ReactFlow,
   Background as BackgroundComponent,
-  addEdge,
-  applyEdgeChanges,
-  applyNodeChanges,
   ReactFlowProvider,
   useReactFlow,
-  type Connection,
-  type Edge,
   type Node,
-  type NodeChange,
-  type EdgeChange,
+  type Edge,
 } from '@xyflow/react'
 
 import type {
   WorkflowNode,
   CoreNodeType,
 } from '@licenseplate-checker/shared/workflow-dsl/types'
-import { nodeRegistry } from '@licenseplate-checker/shared/node-registry'
-import { BUILDER_REGISTRY_VERSION } from '@licenseplate-checker/shared/node-registry'
 import { WORKFLOW_NAME_MAX_LENGTH } from '@licenseplate-checker/shared/constants/limits'
 import { PALETTE_NODES } from './config'
-import { workflowService } from '@/services/workflow.service'
+import { BuilderStoreProvider, useBuilderStore, useShallow } from './store'
 
 import '@xyflow/react/dist/style.css'
 
@@ -44,117 +36,6 @@ import { Input } from '@/components/ui/input'
 import { Save, ArrowLeft, Loader2, Pencil, Check } from 'lucide-react'
 
 const Background = BackgroundComponent as any
-
-const defaultNodes: WorkflowNode[] = [
-  {
-    id: 'start',
-    type: 'core.start',
-    position: { x: 120, y: 140 },
-    data: { label: 'Start', config: {} },
-  },
-  {
-    id: 'end',
-    type: 'core.end',
-    position: { x: 560, y: 140 },
-    data: { label: 'End', config: {} },
-  },
-]
-
-const defaultEdges: Edge[] = [
-  {
-    id: 'start-end',
-    source: 'start',
-    target: 'end',
-    sourceHandle: 'next',
-    targetHandle: 'in',
-    type: 'smoothstep',
-  },
-]
-
-function createNode(
-  type: CoreNodeType,
-  position: { x: number; y: number }
-): WorkflowNode {
-  const id = `${type}-${crypto.randomUUID()}`
-  const label = nodeRegistry[type]?.label ?? 'Node'
-
-  switch (type) {
-    case 'core.click':
-      return {
-        id,
-        type: 'core.click',
-        position,
-        data: {
-          label,
-          config: { selector: '' },
-        },
-      }
-
-    case 'core.typeText':
-      return {
-        id,
-        type: 'core.typeText',
-        position,
-        data: {
-          label,
-          config: { selector: '', text: '' },
-        },
-      }
-
-    case 'core.openPage':
-      return {
-        id,
-        type: 'core.openPage',
-        position,
-        data: {
-          label,
-          config: { url: '' },
-        },
-      }
-
-    case 'core.conditional':
-      return {
-        id,
-        type: 'core.conditional',
-        position,
-        data: {
-          label,
-          config: { operator: 'exists', selector: '' },
-        },
-      }
-
-    case 'core.wait':
-      return {
-        id,
-        type: 'core.wait',
-        position,
-        data: {
-          label,
-          config: { mode: 'duration', seconds: 1 },
-        },
-      }
-
-    case 'core.start':
-      return {
-        id,
-        type: 'core.start',
-        position,
-        data: { label, config: {} },
-      }
-
-    case 'core.end':
-      return {
-        id,
-        type: 'core.end',
-        position,
-        data: { label, config: {} },
-      }
-
-    default:
-      //should never be reached
-      throw new Error(`Unknown node type: ${type}`)
-  }
-}
 
 function BottomPalette({ onAdd }: { onAdd: (type: CoreNodeType) => void }) {
   return (
@@ -267,48 +148,36 @@ function OptionsSidebar({
   )
 }
 
-function FlowCanvas({
-  nodes,
-  edges,
-  setNodes,
-  setEdges,
-  onSelectNode,
-}: {
-  nodes: WorkflowNode[]
-  edges: Edge[]
-  setNodes: React.Dispatch<React.SetStateAction<WorkflowNode[]>>
-  setEdges: React.Dispatch<React.SetStateAction<Edge[]>>
-  onSelectNode: (node: WorkflowNode | null) => void
-}) {
+function FlowCanvas() {
   const { screenToFlowPosition, getViewport } = useReactFlow()
 
-  const onNodesChange = useCallback(
-    (changes: NodeChange[]) =>
-      setNodes(
-        (snapshot) => applyNodeChanges(changes, snapshot) as WorkflowNode[]
-      ),
-    [setNodes]
-  )
-
-  const onEdgesChange = useCallback(
-    (changes: EdgeChange[]) =>
-      setEdges((snapshot) => applyEdgeChanges(changes, snapshot) as Edge[]),
-    [setEdges]
-  )
-
-  const onConnect = useCallback(
-    (params: Connection) =>
-      setEdges((snapshot) =>
-        addEdge({ ...params, type: 'smoothstep' }, snapshot)
-      ),
-    [setEdges]
+  const {
+    nodes,
+    edges,
+    onNodesChange,
+    onEdgesChange,
+    onConnect,
+    addNodeByType,
+    setSelectedNodeId,
+  } = useBuilderStore(
+    useShallow((s) => ({
+      nodes: s.nodes,
+      edges: s.edges,
+      onNodesChange: s.onNodesChange,
+      onEdgesChange: s.onEdgesChange,
+      onConnect: s.onConnect,
+      addNodeByType: s.addNodeByType,
+      setSelectedNodeId: s.setSelectedNodeId,
+    }))
   )
 
   const onSelectionChange = useCallback(
     (payload: { nodes: Node[]; edges: Edge[] }) => {
-      onSelectNode(payload.nodes[0] ? (payload.nodes[0] as WorkflowNode) : null)
+      setSelectedNodeId(
+        payload.nodes[0] ? (payload.nodes[0] as WorkflowNode).id : null
+      )
     },
-    [onSelectNode]
+    [setSelectedNodeId]
   )
 
   const addNodeFromPalette = useCallback(
@@ -325,10 +194,9 @@ function FlowCanvas({
       }
 
       const pos = screenToFlowPosition(adjusted)
-      const newNode = createNode(type, pos)
-      setNodes((prev) => [...prev, newNode])
+      addNodeByType(type, pos)
     },
-    [getViewport, screenToFlowPosition, setNodes]
+    [getViewport, screenToFlowPosition, addNodeByType]
   )
 
   return (
@@ -350,88 +218,27 @@ function FlowCanvas({
   )
 }
 
-function FlowWithProvider(props: {
-  nodes: WorkflowNode[]
-  edges: Edge[]
-  setNodes: React.Dispatch<React.SetStateAction<WorkflowNode[]>>
-  setEdges: React.Dispatch<React.SetStateAction<Edge[]>>
-  onSelectNode: (node: WorkflowNode | null) => void
-}) {
-  return (
-    <ReactFlowProvider>
-      <FlowCanvas {...props} />
-    </ReactFlowProvider>
-  )
-}
-
-function BuilderContent() {
-  const searchParams = useSearchParams()
+function BuilderToolbar() {
   const router = useRouter()
-  const workflowId = searchParams.get('id')
 
-  const [nodes, setNodes] = useState<WorkflowNode[]>(defaultNodes)
-  const [edges, setEdges] = useState<Edge[]>(defaultEdges)
-  const [selectedNode, setSelectedNode] = useState<WorkflowNode | null>(null)
-  const [workflowName, setWorkflowName] = useState('New Workflow')
-  const [isLoading, setIsLoading] = useState(!!workflowId)
-  const [isSaving, setIsSaving] = useState(false)
-  const [saveError, setSaveError] = useState('')
+  const { workflowId, workflowName, isSaving, saveError, saveWorkflow, renameWorkflow } =
+    useBuilderStore(
+      useShallow((s) => ({
+        workflowId: s.workflowId,
+        workflowName: s.workflowName,
+        isSaving: s.isSaving,
+        saveError: s.saveError,
+        saveWorkflow: s.saveWorkflow,
+        renameWorkflow: s.renameWorkflow,
+      }))
+    )
 
-  // Renaming state
   const [isEditingName, setIsEditingName] = useState(false)
   const [newName, setNewName] = useState('')
   const [renameError, setRenameError] = useState('')
 
-  useEffect(() => {
-    if (!workflowId) return
-
-    const loadWorkflow = async () => {
-      try {
-        const response = await workflowService.getById(workflowId)
-        const workflow = response.data?.workflow
-        if (!workflow) return
-
-        setWorkflowName(workflow.name)
-
-        const definition = workflow.definition as {
-          nodes?: WorkflowNode[]
-          edges?: Edge[]
-        }
-        if (definition?.nodes) setNodes(definition.nodes)
-        if (definition?.edges) setEdges(definition.edges)
-      } catch (err) {
-        console.error('Failed to load workflow', err)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    loadWorkflow()
-  }, [workflowId])
-
-  const handleSave = async () => {
-    if (!workflowId) return
-    setIsSaving(true)
-    setSaveError('')
-
-    try {
-      const definition = {
-        id: workflowId,
-        registryVersion: BUILDER_REGISTRY_VERSION,
-        nodes,
-        edges,
-      }
-      await workflowService.updateDefinition(workflowId, definition)
-    } catch (err) {
-      console.error('Failed to save workflow', err)
-      setSaveError('Failed to save')
-    } finally {
-      setIsSaving(false)
-    }
-  }
-
   const handleRename = async () => {
-    if (!workflowId || !newName.trim() || newName === workflowName) {
+    if (!newName.trim() || newName === workflowName) {
       setIsEditingName(false)
       setNewName(workflowName)
       setRenameError('')
@@ -439,16 +246,148 @@ function BuilderContent() {
     }
 
     setRenameError('')
-    const response = await workflowService.update(workflowId, { name: newName })
+    const result = await renameWorkflow(newName)
 
-    if (response.data?.workflow) {
-      setWorkflowName(newName)
+    if (result.success) {
       setIsEditingName(false)
     } else {
-      setRenameError(response.error || 'Failed to rename')
+      setRenameError(result.error || 'Failed to rename')
       setNewName(workflowName)
     }
   }
+
+  return (
+    <div className="flex items-center justify-between border-b bg-white px-4 py-2">
+      <div className="flex items-center gap-3">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => router.push(`/workflows/${workflowId}`)}
+        >
+          <ArrowLeft className="h-4 w-4 mr-1" />
+          Back
+        </Button>
+        <div className="h-5 w-px bg-border" />
+
+        {isEditingName ? (
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Input
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                maxLength={WORKFLOW_NAME_MAX_LENGTH}
+                className={`h-7 w-48 pr-7 text-sm ${renameError ? 'border-destructive' : ''}`}
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleRename()
+                  if (e.key === 'Escape') {
+                    setNewName(workflowName)
+                    setIsEditingName(false)
+                    setRenameError('')
+                  }
+                }}
+                onBlur={handleRename}
+              />
+              <button
+                type="button"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-5 w-5 flex items-center justify-center rounded-sm bg-primary text-primary-foreground hover:bg-primary/90"
+                onMouseDown={(e) => {
+                  e.preventDefault()
+                  handleRename()
+                }}
+              >
+                <Check className="h-3 w-3" strokeWidth={3} />
+              </button>
+            </div>
+            {renameError && (
+              <span className="text-xs text-destructive whitespace-nowrap">
+                {renameError}
+              </span>
+            )}
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 group">
+            <span className="text-sm font-medium">{workflowName}</span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground"
+              onClick={() => {
+                setNewName(workflowName)
+                setIsEditingName(true)
+              }}
+            >
+              <Pencil className="h-3 w-3" />
+            </Button>
+          </div>
+        )}
+      </div>
+
+      <div className="flex items-center gap-2">
+        {saveError && (
+          <span className="text-xs text-destructive">{saveError}</span>
+        )}
+        {workflowId && (
+          <Button size="sm" onClick={saveWorkflow} disabled={isSaving}>
+            {isSaving ? (
+              <Loader2 className="h-4 w-4 animate-spin mr-1" />
+            ) : (
+              <Save className="h-4 w-4 mr-1" />
+            )}
+            Save
+          </Button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function BuilderSidebar() {
+  const { selectedNodeId, nodes, setSelectedNodeId } = useBuilderStore(
+    useShallow((s) => ({
+      selectedNodeId: s.selectedNodeId,
+      nodes: s.nodes,
+      setSelectedNodeId: s.setSelectedNodeId,
+    }))
+  )
+
+  const selectedNode = selectedNodeId
+    ? nodes.find((n) => n.id === selectedNodeId) ?? null
+    : null
+
+  return (
+    <OptionsSidebar
+      selectedNode={selectedNode}
+      onClose={() => setSelectedNodeId(null)}
+    />
+  )
+}
+
+function BuilderContent() {
+  const searchParams = useSearchParams()
+  const workflowId = searchParams.get('id')
+
+  return (
+    <BuilderStoreProvider workflowId={workflowId}>
+      <BuilderInner />
+    </BuilderStoreProvider>
+  )
+}
+
+function BuilderInner() {
+  const { workflowId, isLoading, loadWorkflow } = useBuilderStore(
+    useShallow((s) => ({
+      workflowId: s.workflowId,
+      isLoading: s.isLoading,
+      loadWorkflow: s.loadWorkflow,
+    }))
+  )
+
+  useEffect(() => {
+    if (workflowId) {
+      loadWorkflow(workflowId)
+    }
+  }, [workflowId, loadWorkflow])
 
   if (isLoading) {
     return (
@@ -461,103 +400,14 @@ function BuilderContent() {
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden">
       <NavBar />
-
-      <div className="flex items-center justify-between border-b bg-white px-4 py-2">
-        <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => router.push(`/workflows/${workflowId}`)}
-          >
-            <ArrowLeft className="h-4 w-4 mr-1" />
-            Back
-          </Button>
-          <div className="h-5 w-px bg-border" />
-
-          {isEditingName ? (
-            <div className="flex items-center gap-2">
-              <div className="relative">
-                <Input
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  maxLength={WORKFLOW_NAME_MAX_LENGTH}
-                  className={`h-7 w-48 pr-7 text-sm ${renameError ? 'border-destructive' : ''}`}
-                  autoFocus
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') handleRename()
-                    if (e.key === 'Escape') {
-                      setNewName(workflowName)
-                      setIsEditingName(false)
-                      setRenameError('')
-                    }
-                  }}
-                  onBlur={handleRename}
-                />
-                <button
-                  type="button"
-                  className="absolute right-1 top-1/2 -translate-y-1/2 h-5 w-5 flex items-center justify-center rounded-sm bg-primary text-primary-foreground hover:bg-primary/90"
-                  onMouseDown={(e) => {
-                    e.preventDefault()
-                    handleRename()
-                  }}
-                >
-                  <Check className="h-3 w-3" strokeWidth={3} />
-                </button>
-              </div>
-              {renameError && (
-                <span className="text-xs text-destructive whitespace-nowrap">
-                  {renameError}
-                </span>
-              )}
-            </div>
-          ) : (
-            <div className="flex items-center gap-2 group">
-              <span className="text-sm font-medium">{workflowName}</span>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground"
-                onClick={() => {
-                  setNewName(workflowName)
-                  setIsEditingName(true)
-                }}
-              >
-                <Pencil className="h-3 w-3" />
-              </Button>
-            </div>
-          )}
-        </div>
-
-        <div className="flex items-center gap-2">
-          {saveError && (
-            <span className="text-xs text-destructive">{saveError}</span>
-          )}
-          {workflowId && (
-            <Button size="sm" onClick={handleSave} disabled={isSaving}>
-              {isSaving ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-1" />
-              ) : (
-                <Save className="h-4 w-4 mr-1" />
-              )}
-              Save
-            </Button>
-          )}
-        </div>
-      </div>
+      <BuilderToolbar />
 
       <div className="relative h-full w-full flex-1">
-        <FlowWithProvider
-          nodes={nodes}
-          edges={edges}
-          setNodes={setNodes}
-          setEdges={setEdges}
-          onSelectNode={setSelectedNode}
-        />
+        <ReactFlowProvider>
+          <FlowCanvas />
+        </ReactFlowProvider>
 
-        <OptionsSidebar
-          selectedNode={selectedNode}
-          onClose={() => setSelectedNode(null)}
-        />
+        <BuilderSidebar />
       </div>
     </div>
   )
