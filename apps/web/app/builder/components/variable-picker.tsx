@@ -9,6 +9,18 @@ import {
 import { Button } from '@/components/ui/button'
 import { TEMPLATE_VARIABLES } from '@licenseplate-checker/shared/template-variables'
 import { useState } from 'react'
+import { useAuth } from '@/lib/auth-context'
+
+const USER_KEY_TO_FIELD: Record<string, string> = {
+  'user.salutation': 'salutation',
+  'user.firstname': 'firstname',
+  'user.lastname': 'lastname',
+  'user.birthdate': 'birthdate',
+  'user.street': 'street',
+  'user.streetNumber': 'streetNumber',
+  'user.zipcode': 'zipcode',
+  'user.city': 'city',
+}
 
 export function VariablePicker({
   onInsert,
@@ -20,6 +32,7 @@ export function VariablePicker({
   disabled?: boolean
 }) {
   const [open, setOpen] = useState(false)
+  const { user } = useAuth()
 
   const groups = TEMPLATE_VARIABLES.reduce(
     (acc, v) => {
@@ -29,6 +42,15 @@ export function VariablePicker({
     {} as Record<string, typeof TEMPLATE_VARIABLES>
   )
 
+  function previewFor(v: (typeof TEMPLATE_VARIABLES)[number]): string {
+    const field = USER_KEY_TO_FIELD[v.key]
+    if (field && user) {
+      const val = (user as unknown as Record<string, unknown>)[field]
+      if (val != null && val !== '') return String(val)
+    }
+    return v.example
+  }
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -36,11 +58,11 @@ export function VariablePicker({
           type="button"
           variant="ghost"
           size="icon"
-          className="nodrag h-7 w-7 shrink-0"
+          className="nodrag h-6 w-6 shrink-0"
           title="Insert variable"
           disabled={disabled}
         >
-          <Braces className="h-3.5 w-3.5" />
+          <Braces className="h-3 w-3" />
         </Button>
       </PopoverTrigger>
       <PopoverContent
