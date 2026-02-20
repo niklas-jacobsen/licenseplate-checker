@@ -15,7 +15,7 @@ interface Workflow {
   isPublished: boolean
   createdAt: string
   updatedAt: string
-  city: { name: string }
+  city: { name: string; websiteUrl?: string | null }
   executions: {
     id: string
     status: 'PENDING' | 'RUNNING' | 'SUCCESS' | 'FAILED'
