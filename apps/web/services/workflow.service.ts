@@ -85,12 +85,12 @@ export const workflowService = {
     )
   },
 
-  async testExecute(workflowId: string) {
+  async testExecute(workflowId: string, variables?: Record<string, string>) {
     return apiClient.post<{
       executionId: string
       triggerRunId: string
       testsRemaining: number
-    }>('/builder/test-execute', { workflowId })
+    }>('/builder/test-execute', { workflowId, variables })
   },
 
   async getExecution(executionId: string) {

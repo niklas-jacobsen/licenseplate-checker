@@ -122,6 +122,7 @@ export type BuilderState = {
   selectedNodeId: string | null
   workflowId: string | null
   workflowName: string
+  cityId: string | null
   isSaving: boolean
   isLoading: boolean
   saveError: string
@@ -185,6 +186,7 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
       selectedNodeId: null,
       workflowId: null,
       workflowName: 'New Workflow',
+      cityId: null,
       isSaving: false,
       isLoading: false,
       saveError: '',
@@ -251,7 +253,7 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
           const res = await workflowService.getById(id)
           const wf = res.data?.workflow
           if (wf) {
-            set({ workflowName: wf.name })
+            set({ workflowName: wf.name, cityId: wf.cityId })
             const def = wf.definition as {
               nodes?: WorkflowNode[]
               edges?: Edge[]
@@ -339,7 +341,7 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
 
       // execution
       testExecute: async () => {
-        const { workflowId, nodes, edges, isExecuting } = get()
+        const { workflowId, cityId, nodes, edges, isExecuting } = get()
         if (!workflowId || isExecuting) return
 
         // save first so the backend compiles the latest definition
@@ -370,7 +372,13 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
         })
 
         try {
-          const res = await workflowService.testExecute(workflowId)
+          const mockVariables = {
+            'plate.letters': 'AB',
+            'plate.numbers': '1234',
+            'plate.cityId': cityId ?? 'XX',
+            'plate.fullPlate': `${cityId ?? 'XX'} AB 1234`,
+          }
+          const res = await workflowService.testExecute(workflowId, mockVariables)
           if (!res.data) {
             const details = res.errorDetails as
               | { issues?: { message: string }[] }
