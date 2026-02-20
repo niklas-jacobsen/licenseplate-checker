@@ -154,7 +154,7 @@ function BuilderToolbar() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => router.push(`/workflows/${workflowId}`)}
+          onClick={() => router.push('/workflows')}
         >
           <ArrowLeft className="h-4 w-4 mr-1" />
           Back
