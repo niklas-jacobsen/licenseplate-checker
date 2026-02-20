@@ -5,6 +5,7 @@ import { TypeTextNode } from './type-text-node'
 import { OpenPageNode } from './open-page-node'
 import { ConditionalNode } from './conditional-node'
 import { WaitNode } from './wait-node'
+import { SelectOptionNode } from './select-option-node'
 
 export const nodeTypes = {
   'core.start': StartNode,
@@ -14,4 +15,5 @@ export const nodeTypes = {
   'core.openPage': OpenPageNode,
   'core.conditional': ConditionalNode,
   'core.wait': WaitNode,
+  'core.selectOption': SelectOptionNode,
 }

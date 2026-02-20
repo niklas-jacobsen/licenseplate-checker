@@ -68,6 +68,14 @@ function createNode(
         data: { label, config: { mode: 'duration', seconds: 1 } },
       }
 
+    case 'core.selectOption':
+      return {
+        id,
+        type: 'core.selectOption',
+        position,
+        data: { label, config: { mode: 'text', selector: '', text: '' } },
+      }
+
     case 'core.start':
       return {
         id,
