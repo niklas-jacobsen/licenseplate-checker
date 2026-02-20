@@ -12,8 +12,12 @@ import { useState } from 'react'
 
 export function VariablePicker({
   onInsert,
+  disabledKeys,
+  disabled,
 }: {
   onInsert: (template: string) => void
+  disabledKeys?: Set<string>
+  disabled?: boolean
 }) {
   const [open, setOpen] = useState(false)
 
@@ -34,6 +38,7 @@ export function VariablePicker({
           size="icon"
           className="nodrag h-7 w-7 shrink-0"
           title="Insert variable"
+          disabled={disabled}
         >
           <Braces className="h-3.5 w-3.5" />
         </Button>
@@ -49,20 +54,27 @@ export function VariablePicker({
             <p className="px-2 py-1 text-xs font-medium text-muted-foreground">
               {group}
             </p>
-            {vars.map((v) => (
-              <button
-                key={v.key}
-                type="button"
-                className="flex w-full items-center justify-between rounded-sm px-2 py-1 text-xs hover:bg-accent"
-                onClick={() => {
-                  onInsert(`{{ ${v.key} }}`)
-                  setOpen(false)
-                }}
-              >
-                <span className="font-mono text-foreground">{v.label}</span>
-                <span className="text-muted-foreground">{v.example}</span>
-              </button>
-            ))}
+            {vars.map((v) => {
+              const isDisabled = disabledKeys?.has(v.key) ?? false
+              const preview = previewFor(v)
+              return (
+                <button
+                  key={v.key}
+                  type="button"
+                  className="flex w-full items-center justify-between rounded-sm px-2 py-1 text-xs hover:bg-accent disabled:opacity-40 disabled:pointer-events-none"
+                  disabled={isDisabled}
+                  onClick={() => {
+                    onInsert(`{{ ${v.key} }}`)
+                    setOpen(false)
+                  }}
+                >
+                  <span className="font-mono text-foreground">{v.label}</span>
+                  <span className="text-muted-foreground">
+                    {isDisabled ? 'In use' : preview}
+                  </span>
+                </button>
+              )
+            })}
           </div>
         ))}
       </PopoverContent>
