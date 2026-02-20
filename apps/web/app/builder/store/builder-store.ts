@@ -208,17 +208,31 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
           return true
         })
         set({
-          nodes: applyNodeChanges(changes, get().nodes) as WorkflowNode[],
-        }),
+          nodes: applyNodeChanges(filtered, get().nodes) as WorkflowNode[],
+        })
+      },
       onEdgesChange: (changes) =>
         set({ edges: applyEdgeChanges(changes, get().edges) as Edge[] }),
-      onConnect: (connection) =>
+      onConnect: (connection) => {
+        // only one connection per handle -> replace existing
+        const edges = get().edges.filter(
+          (e) =>
+            !(
+              e.source === connection.source &&
+              e.sourceHandle === (connection.sourceHandle ?? null)
+            ) &&
+            !(
+              e.target === connection.target &&
+              e.targetHandle === (connection.targetHandle ?? null)
+            )
+        )
         set({
           edges: rfAddEdge(
-            { ...connection, type: 'workflow', animated: true },
-            get().edges
+            { ...connection, type: 'smoothstep', animated: true },
+            edges
           ),
-        }),
+        })
+      },
 
       // node ops
       addNode: (node) => set({ nodes: [...get().nodes, node] }),
@@ -236,7 +250,8 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
           ),
           selectedNodeId:
             get().selectedNodeId === nodeId ? null : get().selectedNodeId,
-        }),
+        })
+      },
       updateNodeConfig: (nodeId, config) =>
         set({
           nodes: get().nodes.map((n) =>
