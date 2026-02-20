@@ -275,6 +275,26 @@ export class IrExecutor {
         break
       }
 
+      case 'selectByText': {
+        const text = resolveVariables(op.text, this.variables)
+        this.log('info', `Selecting option by text "${text}" in ${op.selector}`)
+        await this.page.selectOption(op.selector, { label: text })
+        break
+      }
+
+      case 'selectByValue': {
+        const value = resolveVariables(op.value, this.variables)
+        this.log('info', `Selecting option by value "${value}" in ${op.selector}`)
+        await this.page.selectOption(op.selector, value)
+        break
+      }
+
+      case 'selectByIndex': {
+        this.log('info', `Selecting option by index ${op.index} in ${op.selector}`)
+        await this.page.selectOption(op.selector, { index: op.index })
+        break
+      }
+
       default:
         throw new UnknownActionTypeError((op as any).type)
     }
