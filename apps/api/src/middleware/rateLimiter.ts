@@ -8,6 +8,7 @@ const limiter = rateLimiter({
   keyGenerator: (c) =>
     c.req.header('x-forwarded-for') || c.req.header('x-real-ip') || 'unknown',
   skip: (c) => {
+    if (c.req.path.startsWith('/webhooks/')) return true
     const ua = c.req.header('User-Agent') || ''
     return ua.includes('Trigger')
   },
