@@ -21,7 +21,9 @@ import {
   InternalServerError,
 } from '@licenseplate-checker/shared/types'
 import WorkflowController from '../controllers/Workflow.controller'
-import { executeWorkflowForCheck } from '../services/executeWorkflowForCheck'
+import { executeWorkflowForCheck, buildVariableContext } from '../services/executeWorkflowForCheck'
+import { prisma } from '../../prisma/data-source'
+import type { VariableContext } from '@licenseplate-checker/shared/template-variables'
 import auth from '../middleware/auth'
 
 export const createBuilderRouter = (workflowController: WorkflowController) => {
@@ -110,10 +112,22 @@ export const createBuilderRouter = (workflowController: WorkflowController) => {
       throw new BadRequestError('workflowId is required', 'MISSING_WORKFLOW_ID')
     }
 
+    let variables: VariableContext | undefined
+    if (checkId) {
+      const check = await prisma.licenseplateCheck.findUnique({
+        where: { id: checkId },
+        select: { cityId: true, letters: true, numbers: true },
+      })
+      if (check) {
+        variables = buildVariableContext(check)
+      }
+    }
+
     const result = await executeWorkflowForCheck(
       workflowController,
       workflowId,
-      checkId
+      checkId,
+      { variables }
     )
 
     return c.json(result, 202)
@@ -131,7 +145,10 @@ export const createBuilderRouter = (workflowController: WorkflowController) => {
       )
     }
 
-    const { workflowId } = body as { workflowId: string }
+    const { workflowId, variables } = body as {
+      workflowId: string
+      variables?: VariableContext
+    }
 
     if (!workflowId) {
       throw new BadRequestError('workflowId is required', 'MISSING_WORKFLOW_ID')
@@ -191,7 +208,7 @@ export const createBuilderRouter = (workflowController: WorkflowController) => {
       workflowController,
       workflowId,
       undefined,
-      { skipPublishCheck: true }
+      { skipPublishCheck: true, variables }
     )
 
     return c.json(

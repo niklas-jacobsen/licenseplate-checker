@@ -8,6 +8,7 @@ import {
 } from '@licenseplate-checker/shared/constants/limits'
 import { IrExecutor } from '../builder/executor/IrExecutor'
 import type { BuilderIr } from '@shared/builder-ir'
+import type { VariableContext } from '@licenseplate-checker/shared/template-variables'
 
 interface ExecuteWorkflowPayload {
   ir: BuilderIr
@@ -15,6 +16,7 @@ interface ExecuteWorkflowPayload {
   callbackUrl: string
   callbackSecret: string
   allowedDomains: string[]
+  variables?: VariableContext
 }
 
 async function reportProgress(
@@ -70,6 +72,7 @@ export const executeWorkflow = task({
 
     const executor = new IrExecutor({
       allowedDomains,
+      variables: payload.variables,
       onBlockStart: async (sourceNodeId: string) => {
         await reportProgress(callbackUrl, callbackSecret, executionId, sourceNodeId, completedNodes)
       },
