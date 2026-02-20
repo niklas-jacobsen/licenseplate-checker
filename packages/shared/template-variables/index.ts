@@ -8,6 +8,13 @@ export interface TemplateVariable {
 
 export const TEMPLATE_VARIABLES: TemplateVariable[] = [
   {
+    key: 'plate.cityId',
+    label: 'City Code',
+    description: 'City abbreviation',
+    example: 'XY',
+    group: 'License Plate',
+  },
+  {
     key: 'plate.letters',
     label: 'Letters',
     description: 'Letter combination',
@@ -22,18 +29,67 @@ export const TEMPLATE_VARIABLES: TemplateVariable[] = [
     group: 'License Plate',
   },
   {
-    key: 'plate.cityId',
-    label: 'City Code',
-    description: 'City abbreviation',
-    example: 'MS',
-    group: 'License Plate',
-  },
-  {
     key: 'plate.fullPlate',
     label: 'Full Plate',
     description: 'Complete plate string',
-    example: 'MS AB 1234',
+    example: 'XY AB 1234',
     group: 'License Plate',
+  },
+  {
+    key: 'user.salutation',
+    label: 'Salutation',
+    description: 'User salutation',
+    example: 'Herr',
+    group: 'User Profile',
+  },
+  {
+    key: 'user.firstname',
+    label: 'First Name',
+    description: 'User first name',
+    example: 'Max',
+    group: 'User Profile',
+  },
+  {
+    key: 'user.lastname',
+    label: 'Last Name',
+    description: 'User last name',
+    example: 'Mustermann',
+    group: 'User Profile',
+  },
+  {
+    key: 'user.birthdate',
+    label: 'Birthdate',
+    description: 'User date of birth',
+    example: '01.01.1990',
+    group: 'User Profile',
+  },
+  {
+    key: 'user.street',
+    label: 'Street',
+    description: 'User street name',
+    example: 'Musterstraße',
+    group: 'User Profile',
+  },
+  {
+    key: 'user.streetNumber',
+    label: 'Street Number',
+    description: 'User street number',
+    example: '42',
+    group: 'User Profile',
+  },
+  {
+    key: 'user.zipcode',
+    label: 'Zipcode',
+    description: 'User postal code',
+    example: '12345',
+    group: 'User Profile',
+  },
+  {
+    key: 'user.city',
+    label: 'City',
+    description: 'User city of residence',
+    example: 'Musterstadt',
+    group: 'User Profile',
   },
 ]
 
