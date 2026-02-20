@@ -111,7 +111,7 @@ const DEFAULT_EDGES: Edge[] = [
     target: 'end',
     sourceHandle: 'next',
     targetHandle: 'in',
-    type: 'workflow',
+    type: 'smoothstep',
     animated: true,
   },
 ]
@@ -123,6 +123,7 @@ export type BuilderState = {
   workflowId: string | null
   workflowName: string
   cityId: string | null
+  websiteUrl: string | null
   isSaving: boolean
   isLoading: boolean
   saveError: string
@@ -187,6 +188,7 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
       workflowId: null,
       workflowName: 'New Workflow',
       cityId: null,
+      websiteUrl: null,
       isSaving: false,
       isLoading: false,
       saveError: '',
@@ -278,53 +280,21 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
           const res = await workflowService.getById(id)
           const wf = res.data?.workflow
           if (wf) {
-            set({ workflowName: wf.name, cityId: wf.cityId })
+            set({
+              workflowName: wf.name,
+              cityId: wf.cityId,
+              websiteUrl:
+                (wf.city as { websiteUrl?: string | null }).websiteUrl ?? null,
+            })
             const def = wf.definition as {
               nodes?: WorkflowNode[]
               edges?: Edge[]
             }
-            if (def?.nodes) set({ nodes: def.nodes })
-            if (def?.edges) {
-              const nodeMap = new Map((def.nodes ?? []).map((n) => [n.id, n]))
-              const normalized = def.edges.map((e) => {
-                let { sourceHandle, targetHandle } = e
-                // infer missing handle id´s from node registry
-                if (!sourceHandle) {
-                  const sourceNode = nodeMap.get(e.source)
-                  if (sourceNode) {
-                    const spec = nodeRegistry[sourceNode.type]
-                    if (spec?.outputs.length === 1) {
-                      sourceHandle = spec.outputs[0].id
-                    }
-                  }
-                }
-                if (!targetHandle) {
-                  const targetNode = nodeMap.get(e.target)
-                  if (targetNode) {
-                    const spec = nodeRegistry[targetNode.type]
-                    if (spec?.inputs.length === 1) {
-                      targetHandle = spec.inputs[0].id
-                    }
-                  }
-                }
-                return {
-                  ...e,
-                  sourceHandle,
-                  targetHandle,
-                  type: 'workflow',
-                  animated: true,
-                }
-              })
-              // deduplicate edges with same connection. !might need to refactor this!
-              const seen = new Set<string>()
-              const deduped = normalized.filter((e) => {
-                const key = `${e.source}:${e.sourceHandle}→${e.target}:${e.targetHandle}`
-                if (seen.has(key)) return false
-                seen.add(key)
-                return true
-              })
-              set({ edges: deduped })
-            }
+
+            const nodes = def?.nodes ?? get().nodes
+            const edges = def?.edges ?? get().edges
+
+            set({ nodes, edges })
           }
         } catch (err) {
           console.error('Failed to load workflow', err)
@@ -403,7 +373,10 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
             'plate.cityId': cityId ?? 'XX',
             'plate.fullPlate': `${cityId ?? 'XX'} AB 1234`,
           }
-          const res = await workflowService.testExecute(workflowId, mockVariables)
+          const res = await workflowService.testExecute(
+            workflowId,
+            mockVariables
+          )
           if (!res.data) {
             const details = res.errorDetails as
               | { issues?: { message: string }[] }
