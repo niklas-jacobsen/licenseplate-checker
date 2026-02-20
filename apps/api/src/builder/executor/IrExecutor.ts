@@ -28,6 +28,7 @@ import {
 export interface ExecutorOptions {
   allowedDomains?: string[]
   variables?: VariableContext
+  websiteUrl?: string
   onBlockStart?: (sourceNodeId: string) => Promise<void>
   onBlockComplete?: (sourceNodeId: string, success: boolean) => Promise<void>
 }
@@ -38,12 +39,14 @@ export class IrExecutor {
   private page: Page | null = null
   private allowedDomains: string[]
   private variables: VariableContext
+  private websiteUrl?: string
   private onBlockStart?: ExecutorOptions['onBlockStart']
   private onBlockComplete?: ExecutorOptions['onBlockComplete']
 
   constructor(options: ExecutorOptions = {}) {
     this.allowedDomains = options.allowedDomains ?? []
     this.variables = options.variables ?? {}
+    this.websiteUrl = options.websiteUrl
     this.onBlockStart = options.onBlockStart
     this.onBlockComplete = options.onBlockComplete
   }
@@ -185,6 +188,13 @@ export class IrExecutor {
   ): Promise<string | null> {
     switch (block.kind) {
       case 'start':
+        if (this.websiteUrl) {
+          this.validateUrl(this.websiteUrl)
+          this.log('info', `Opening website URL: ${this.websiteUrl}`)
+          await this.page!.goto(this.websiteUrl)
+          await this.page!.waitForLoadState('domcontentloaded')
+          await this.delay()
+        }
         return block.next
 
       case 'end':

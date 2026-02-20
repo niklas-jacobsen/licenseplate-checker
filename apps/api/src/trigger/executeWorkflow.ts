@@ -17,6 +17,7 @@ interface ExecuteWorkflowPayload {
   callbackSecret: string
   allowedDomains: string[]
   variables?: VariableContext
+  websiteUrl?: string
 }
 
 async function reportProgress(
@@ -73,6 +74,7 @@ export const executeWorkflow = task({
     const executor = new IrExecutor({
       allowedDomains,
       variables: payload.variables,
+      websiteUrl: payload.websiteUrl,
       onBlockStart: async (sourceNodeId: string) => {
         await reportProgress(callbackUrl, callbackSecret, executionId, sourceNodeId, completedNodes)
       },

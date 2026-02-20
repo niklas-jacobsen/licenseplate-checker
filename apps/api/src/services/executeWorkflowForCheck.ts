@@ -49,6 +49,7 @@ export async function executeWorkflowForCheck(
       callbackSecret: ENV.TRIGGER_WEBHOOK_SECRET,
       allowedDomains: workflow.city.allowedDomains,
       variables: options?.variables,
+      websiteUrl: workflow.city.websiteUrl ?? undefined,
     }, {
       idempotencyKey: execution.id,
     })
