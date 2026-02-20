@@ -119,7 +119,7 @@ const DEFAULT_EDGES: Edge[] = [
     target: 'end',
     sourceHandle: 'next',
     targetHandle: 'in',
-    type: 'smoothstep',
+    type: 'workflow',
     animated: true,
   },
 ]
@@ -238,7 +238,7 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
         )
         set({
           edges: rfAddEdge(
-            { ...connection, type: 'smoothstep', animated: true },
+            { ...connection, type: 'workflow', animated: true },
             edges
           ),
         })
