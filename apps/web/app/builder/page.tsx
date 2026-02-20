@@ -86,7 +86,7 @@ function FlowCanvas() {
         edges={edges}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
-        defaultEdgeOptions={{ type: 'workflow', animated: true }}
+        defaultEdgeOptions={{ type: 'smoothstep', animated: true }}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
