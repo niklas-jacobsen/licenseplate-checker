@@ -198,7 +198,15 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
       ...initialState,
 
       // reactflow handlers
-      onNodesChange: (changes) =>
+      onNodesChange: (changes) => {
+        // prevent deletion of start/end nodes
+        const filtered = changes.filter((c) => {
+          if (c.type === 'remove') {
+            const node = get().nodes.find((n) => n.id === c.id)
+            return node?.type !== 'core.start' && node?.type !== 'core.end'
+          }
+          return true
+        })
         set({
           nodes: applyNodeChanges(changes, get().nodes) as WorkflowNode[],
         }),
@@ -218,7 +226,9 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
         const node = createNode(type, position)
         set({ nodes: [...get().nodes, node] })
       },
-      removeNode: (nodeId) =>
+      removeNode: (nodeId) => {
+        const node = get().nodes.find((n) => n.id === nodeId)
+        if (node?.type === 'core.start' || node?.type === 'core.end') return
         set({
           nodes: get().nodes.filter((n) => n.id !== nodeId),
           edges: get().edges.filter(
