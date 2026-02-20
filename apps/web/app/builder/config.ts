@@ -7,4 +7,5 @@ export const PALETTE_NODES = [
   nodes.selectOptionNode,
   nodes.conditionalNode,
   nodes.waitNode,
+  nodes.endNode,
 ]
