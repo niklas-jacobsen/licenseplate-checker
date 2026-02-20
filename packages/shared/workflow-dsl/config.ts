@@ -4,7 +4,7 @@ import { z } from 'zod'
 
 //Open Page
 export const OpenPageNodeConfig = z.object({
-  url: z.string().url(),
+  url: z.string().min(1),
 })
 
 //Click

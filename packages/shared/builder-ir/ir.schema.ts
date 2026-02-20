@@ -3,7 +3,7 @@ import { z } from 'zod'
 export const IrVersionSchema = z.literal('v1')
 
 export const ActionOpSchema = z.discriminatedUnion('type', [
-  z.object({ type: z.literal('openPage'), url: z.string().url() }),
+  z.object({ type: z.literal('openPage'), url: z.string().min(1) }),
   z.object({ type: z.literal('click'), selector: z.string().min(1) }),
   z.object({
     type: z.literal('typeText'),
