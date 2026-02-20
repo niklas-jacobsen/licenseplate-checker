@@ -20,9 +20,14 @@ import {
   PRIVATE_IP_RANGES,
   PRIVATE_HOSTNAMES,
 } from '@licenseplate-checker/shared/constants/schemes'
+import {
+  resolveVariables,
+  type VariableContext,
+} from '@licenseplate-checker/shared/template-variables'
 
 export interface ExecutorOptions {
   allowedDomains?: string[]
+  variables?: VariableContext
   onBlockStart?: (sourceNodeId: string) => Promise<void>
   onBlockComplete?: (sourceNodeId: string, success: boolean) => Promise<void>
 }
@@ -32,11 +37,13 @@ export class IrExecutor {
   private browser: Browser | null = null
   private page: Page | null = null
   private allowedDomains: string[]
+  private variables: VariableContext
   private onBlockStart?: ExecutorOptions['onBlockStart']
   private onBlockComplete?: ExecutorOptions['onBlockComplete']
 
   constructor(options: ExecutorOptions = {}) {
     this.allowedDomains = options.allowedDomains ?? []
+    this.variables = options.variables ?? {}
     this.onBlockStart = options.onBlockStart
     this.onBlockComplete = options.onBlockComplete
   }
@@ -203,22 +210,26 @@ export class IrExecutor {
     if (!this.page) throw new BrowserInitializationError()
 
     switch (op.type) {
-      case 'openPage':
-        this.validateUrl(op.url)
-        this.log('info', `Opening page: ${op.url}`)
-        await this.page.goto(op.url)
+      case 'openPage': {
+        const url = resolveVariables(op.url, this.variables)
+        this.validateUrl(url)
+        this.log('info', `Opening page: ${url}`)
+        await this.page.goto(url)
         await this.page.waitForLoadState('domcontentloaded')
         break
+      }
 
       case 'click':
         this.log('info', `Clicking selector: ${op.selector}`)
         await this.page.click(op.selector)
         break
 
-      case 'typeText':
+      case 'typeText': {
+        const text = resolveVariables(op.text, this.variables)
         this.log('info', `Typing text into ${op.selector}`)
-        await this.page.fill(op.selector, op.text)
+        await this.page.fill(op.selector, text)
         break
+      }
 
       case 'waitDuration':
         this.log('info', `Waiting ${op.seconds}s`)
@@ -272,12 +283,13 @@ export class IrExecutor {
       }
 
       case 'textIncludes': {
+        const value = resolveVariables(condition.value, this.variables)
         this.log(
           'debug',
-          `Checking text in ${condition.selector} includes "${condition.value}"`
+          `Checking text in ${condition.selector} includes "${value}"`
         )
         const text = await this.page.textContent(condition.selector)
-        return text ? text.includes(condition.value) : false
+        return text ? text.includes(value) : false
       }
 
       default:
