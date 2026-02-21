@@ -100,7 +100,7 @@ export const workflowService = {
         status: 'PENDING' | 'RUNNING' | 'SUCCESS' | 'FAILED'
         logs: unknown[] | null
         errorNodeId: string | null
-        result: { error?: string; success?: boolean } | null
+        result: { error?: string; success?: boolean; outcome?: string } | null
         currentNodeId: string | null
         completedNodes:
           | { nodeId: string; status: string }[]

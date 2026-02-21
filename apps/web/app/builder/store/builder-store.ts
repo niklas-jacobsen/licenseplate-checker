@@ -134,6 +134,7 @@ export type BuilderState = {
   websiteUrl: string | null
   isSaving: boolean
   isLoading: boolean
+  notFound: boolean
   saveError: string
 
   // execution
@@ -142,6 +143,17 @@ export type BuilderState = {
   executionId: string | null
   executionError: { message: string; issues?: string[] } | null
   testsRemaining: number | null
+
+  // test variables
+  testVariables: { letters: string; numbers: string }
+
+  // outcome feedback
+  lastOutcome: { outcome: string; status: 'SUCCESS' | 'FAILED' } | null
+
+  // publishing
+  canPublish: boolean
+  isPublished: boolean
+  isPublishing: boolean
 }
 
 export type BuilderActions = {
@@ -173,9 +185,18 @@ export type BuilderActions = {
   ) => Promise<{ success: boolean; error?: string }>
 
   // execution
-  testExecute: () => Promise<void>
+  testExecute: (variables: {
+    letters: string
+    numbers: string
+  }) => Promise<void>
   stopPolling: () => void
   resetExecution: () => void
+  setTestVariables: (variables: { letters: string; numbers: string }) => void
+  dismissOutcome: () => void
+  confirmOutcome: () => void
+  rejectOutcome: () => void
+  publishWorkflow: () => Promise<void>
+  unpublishWorkflow: () => Promise<void>
 
   // getters
   getNodes: () => WorkflowNode[]
@@ -199,12 +220,18 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
       websiteUrl: null,
       isSaving: false,
       isLoading: false,
+      notFound: false,
       saveError: '',
       nodeStatuses: {},
       isExecuting: false,
       executionId: null,
       executionError: null,
       testsRemaining: null,
+      testVariables: { letters: '', numbers: '' },
+      lastOutcome: null,
+      canPublish: false,
+      isPublished: false,
+      isPublishing: false,
       ...initialState,
 
       // reactflow handlers
@@ -217,12 +244,20 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
           }
           return true
         })
+        const hasStructuralChange = filtered.some(
+          (c) => c.type !== 'select' && c.type !== 'dimensions'
+        )
         set({
           nodes: applyNodeChanges(filtered, get().nodes) as WorkflowNode[],
+          ...(hasStructuralChange && { canPublish: false, isPublished: false }),
         })
       },
       onEdgesChange: (changes) =>
-        set({ edges: applyEdgeChanges(changes, get().edges) as Edge[] }),
+        set({
+          edges: applyEdgeChanges(changes, get().edges) as Edge[],
+          canPublish: false,
+          isPublished: false,
+        }),
       onConnect: (connection) => {
         // only one connection per handle -> replace existing
         const edges = get().edges.filter(
@@ -241,14 +276,25 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
             { ...connection, type: 'workflow', animated: true },
             edges
           ),
+          canPublish: false,
+          isPublished: false,
         })
       },
 
       // node ops
-      addNode: (node) => set({ nodes: [...get().nodes, node] }),
+      addNode: (node) =>
+        set({
+          nodes: [...get().nodes, node],
+          canPublish: false,
+          isPublished: false,
+        }),
       addNodeByType: (type, position) => {
         const node = createNode(type, position)
-        set({ nodes: [...get().nodes, node] })
+        set({
+          nodes: [...get().nodes, node],
+          canPublish: false,
+          isPublished: false,
+        })
       },
       removeNode: (nodeId) => {
         const node = get().nodes.find((n) => n.id === nodeId)
@@ -260,6 +306,8 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
           ),
           selectedNodeId:
             get().selectedNodeId === nodeId ? null : get().selectedNodeId,
+          canPublish: false,
+          isPublished: false,
         })
       },
       updateNodeConfig: (nodeId, config) =>
@@ -272,11 +320,17 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
                 } as WorkflowNode)
               : n
           ),
+          canPublish: false,
+          isPublished: false,
         }),
 
       // edge ops
       removeEdge: (edgeId) =>
-        set({ edges: get().edges.filter((e) => e.id !== edgeId) }),
+        set({
+          edges: get().edges.filter((e) => e.id !== edgeId),
+          canPublish: false,
+          isPublished: false,
+        }),
 
       // selection
       setSelectedNodeId: (id) => set({ selectedNodeId: id }),
@@ -287,25 +341,29 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
         try {
           const res = await workflowService.getById(id)
           const wf = res.data?.workflow
-          if (wf) {
-            set({
-              workflowName: wf.name,
-              cityId: wf.cityId,
-              websiteUrl:
-                (wf.city as { websiteUrl?: string | null }).websiteUrl ?? null,
-            })
-            const def = wf.definition as {
-              nodes?: WorkflowNode[]
-              edges?: Edge[]
-            }
-
-            const nodes = def?.nodes ?? get().nodes
-            const edges = def?.edges ?? get().edges
-
-            set({ nodes, edges })
+          if (!wf) {
+            set({ notFound: true })
+            return
           }
+          set({
+            workflowName: wf.name,
+            cityId: wf.cityId,
+            websiteUrl:
+              (wf.city as { websiteUrl?: string | null }).websiteUrl ?? null,
+            isPublished: wf.isPublished,
+          })
+          const def = wf.definition as {
+            nodes?: WorkflowNode[]
+            edges?: Edge[]
+          }
+
+          const nodes = def?.nodes ?? get().nodes
+          const edges = def?.edges ?? get().edges
+
+          set({ nodes, edges })
         } catch (err) {
           console.error('Failed to load workflow', err)
+          set({ notFound: true })
         } finally {
           set({ isLoading: false })
         }
@@ -343,9 +401,46 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
       },
 
       // execution
-      testExecute: async () => {
+      setTestVariables: (variables) => set({ testVariables: variables }),
+      dismissOutcome: () => set({ lastOutcome: null }),
+      confirmOutcome: () => set({ lastOutcome: null, canPublish: true }),
+      rejectOutcome: () => set({ lastOutcome: null, canPublish: false }),
+      publishWorkflow: async () => {
+        const { workflowId, canPublish } = get()
+        if (!workflowId || !canPublish) return
+        set({ isPublishing: true })
+        try {
+          const res = await workflowService.publish(workflowId, true)
+          if (res.data?.workflow) {
+            set({ isPublished: true, canPublish: false })
+          }
+        } catch {
+          // silently fail, user can retry
+        } finally {
+          set({ isPublishing: false })
+        }
+      },
+      unpublishWorkflow: async () => {
+        const { workflowId } = get()
+        if (!workflowId) return
+        set({ isPublishing: true })
+        try {
+          const res = await workflowService.publish(workflowId, false)
+          if (res.data?.workflow) {
+            set({ isPublished: false })
+          }
+        } catch {
+          // silently fail, user can retry
+        } finally {
+          set({ isPublishing: false })
+        }
+      },
+
+      testExecute: async (variables) => {
         const { workflowId, cityId, nodes, edges, isExecuting } = get()
         if (!workflowId || isExecuting) return
+
+        set({ testVariables: variables })
 
         // save first so the backend compiles the latest definition
         set({ isSaving: true, saveError: '' })
@@ -375,15 +470,15 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
         })
 
         try {
-          const mockVariables = {
-            'plate.letters': 'AB',
-            'plate.numbers': '1234',
+          const plateVariables = {
+            'plate.letters': variables.letters,
+            'plate.numbers': variables.numbers,
             'plate.cityId': cityId ?? 'XX',
-            'plate.fullPlate': `${cityId ?? 'XX'} AB 1234`,
+            'plate.fullPlate': `${cityId ?? 'XX'} ${variables.letters} ${variables.numbers}`,
           }
           const res = await workflowService.testExecute(
             workflowId,
-            mockVariables
+            plateVariables
           )
           if (!res.data) {
             const details = res.errorDetails as
@@ -392,6 +487,7 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
             const issues = details?.issues?.map((i) => i.message)
             set({
               isExecuting: false,
+              canPublish: false,
               executionError: {
                 message: res.error || 'Failed to start execution',
                 issues,
@@ -446,6 +542,10 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
                           message: exec.result?.error || 'Execution failed',
                         }
                       : null,
+                  lastOutcome: {
+                    outcome: exec.result?.outcome ?? 'unknown',
+                    status: exec.status,
+                  },
                 })
                 return
               }

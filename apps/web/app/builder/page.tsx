@@ -1,8 +1,9 @@
 'use client'
 
 import NavBar from '@/components/nav-bar'
-import { useCallback, useState, useEffect, Suspense } from 'react'
+import { useCallback, useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
+import { useAuth } from '@/lib/auth-context'
 import {
   ReactFlow,
   Background as BackgroundComponent,
@@ -19,13 +20,23 @@ import { nodeTypes } from './components/nodes'
 import { edgeTypes } from './components/edges'
 import { BottomPalette } from './components/bottom-palette'
 import { ExecutionErrorBanner } from './components/execution-error-banner'
+import { OutcomeToast } from './components/outcome-toast'
 import { useDragAndDrop } from './hooks/useDragAndDrop'
 
 import '@xyflow/react/dist/style.css'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Save, ArrowLeft, Loader2, Pencil, Check } from 'lucide-react'
+import {
+  Save,
+  ArrowLeft,
+  Loader2,
+  Pencil,
+  Check,
+  Upload,
+  CheckCircle,
+  XCircle,
+} from 'lucide-react'
 
 // biome-ignore lint/suspicious/noExplicitAny:
 const Background = BackgroundComponent as any
@@ -115,6 +126,11 @@ function BuilderToolbar() {
     saveError,
     saveWorkflow,
     renameWorkflow,
+    canPublish,
+    isPublished,
+    isPublishing,
+    publishWorkflow,
+    unpublishWorkflow,
   } = useBuilderStore(
     useShallow((s) => ({
       workflowId: s.workflowId,
@@ -123,8 +139,25 @@ function BuilderToolbar() {
       saveError: s.saveError,
       saveWorkflow: s.saveWorkflow,
       renameWorkflow: s.renameWorkflow,
+      canPublish: s.canPublish,
+      isPublished: s.isPublished,
+      isPublishing: s.isPublishing,
+      publishWorkflow: s.publishWorkflow,
+      unpublishWorkflow: s.unpublishWorkflow,
     }))
   )
+
+  const [justSaved, setJustSaved] = useState(false)
+  const prevSavingRef = useRef(false)
+
+  useEffect(() => {
+    if (prevSavingRef.current && !isSaving && !saveError) {
+      setJustSaved(true)
+      const timer = setTimeout(() => setJustSaved(false), 2000)
+      return () => clearTimeout(timer)
+    }
+    prevSavingRef.current = isSaving
+  }, [isSaving, saveError])
 
   const [isEditingName, setIsEditingName] = useState(false)
   const [newName, setNewName] = useState('')
@@ -155,7 +188,7 @@ function BuilderToolbar() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => router.push('/workflows')}
+          onClick={() => router.push(`/workflows/${workflowId}`)}
         >
           <ArrowLeft className="h-4 w-4 mr-1" />
           Back
@@ -221,14 +254,51 @@ function BuilderToolbar() {
           <span className="text-xs text-destructive">{saveError}</span>
         )}
         {workflowId && (
-          <Button size="sm" onClick={saveWorkflow} disabled={isSaving}>
-            {isSaving ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-1" />
+          <>
+            <Button size="sm" onClick={saveWorkflow} disabled={isSaving}>
+              {isSaving ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-1" />
+              ) : justSaved ? (
+                <Check className="h-4 w-4 mr-1" />
+              ) : (
+                <Save className="h-4 w-4 mr-1" />
+              )}
+              {justSaved ? 'Saved' : 'Save'}
+            </Button>
+            {isPublished ? (
+              <Button
+                size="sm"
+                variant="outline"
+                className="group/pub bg-teal-100 text-teal-800 border-teal-300 hover:bg-red-50 hover:text-red-700 hover:border-red-200"
+                onClick={unpublishWorkflow}
+                disabled={isPublishing}
+              >
+                {isPublishing ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                ) : (
+                  <>
+                    <CheckCircle className="h-4 w-4 mr-1 group-hover/pub:hidden" />
+                    <XCircle className="h-4 w-4 mr-1 hidden group-hover/pub:block" />
+                  </>
+                )}
+                <span className="group-hover/pub:hidden">Published</span>
+                <span className="hidden group-hover/pub:inline">Unpublish</span>
+              </Button>
             ) : (
-              <Save className="h-4 w-4 mr-1" />
+              <Button
+                size="sm"
+                onClick={publishWorkflow}
+                disabled={!canPublish || isPublishing}
+              >
+                {isPublishing ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                ) : (
+                  <Upload className="h-4 w-4 mr-1" />
+                )}
+                Publish
+              </Button>
             )}
-            Save
-          </Button>
+          </>
         )}
       </div>
     </div>
@@ -236,8 +306,24 @@ function BuilderToolbar() {
 }
 
 function BuilderContent() {
+  const { user, isLoading: authLoading } = useAuth()
+  const router = useRouter()
   const searchParams = useSearchParams()
   const workflowId = searchParams.get('id')
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push(`/auth/login?redirect=/builder${workflowId ? `?id=${workflowId}` : ''}`)
+    }
+  }, [user, authLoading, router, workflowId])
+
+  if (authLoading || !user) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
 
   return (
     <BuilderStoreProvider workflowId={workflowId}>
@@ -247,10 +333,12 @@ function BuilderContent() {
 }
 
 function BuilderInner() {
-  const { workflowId, isLoading, loadWorkflow } = useBuilderStore(
+  const router = useRouter()
+  const { workflowId, isLoading, notFound, loadWorkflow } = useBuilderStore(
     useShallow((s) => ({
       workflowId: s.workflowId,
       isLoading: s.isLoading,
+      notFound: s.notFound,
       loadWorkflow: s.loadWorkflow,
     }))
   )
@@ -261,7 +349,13 @@ function BuilderInner() {
     }
   }, [workflowId, loadWorkflow])
 
-  if (isLoading) {
+  useEffect(() => {
+    if (notFound) {
+      router.replace('/workflows')
+    }
+  }, [notFound, router])
+
+  if (isLoading || notFound) {
     return (
       <div className="flex h-screen w-screen items-center justify-center">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -279,6 +373,7 @@ function BuilderInner() {
           <FlowCanvas />
         </ReactFlowProvider>
       </div>
+      <OutcomeToast />
     </div>
   )
 }
