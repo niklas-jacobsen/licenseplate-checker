@@ -7,6 +7,8 @@ import {
   Globe,
   GitBranch,
   Clock,
+  ListChecks,
+  FlagTriangleRight,
   Play,
   Loader2,
   RotateCcw,
@@ -18,6 +20,7 @@ import { useBuilderStore, useShallow } from '../store'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { TestDialog } from './test-dialog'
 
 const NODE_ICONS: Record<string, LucideIcon> = {
   'core.click': MousePointerClick,
@@ -25,6 +28,8 @@ const NODE_ICONS: Record<string, LucideIcon> = {
   'core.openPage': Globe,
   'core.conditional': GitBranch,
   'core.wait': Clock,
+  'core.selectOption': ListChecks,
+  'core.end': FlagTriangleRight,
 }
 
 function PaletteItem({
@@ -79,12 +84,13 @@ function PaletteItem({
 }
 
 function TestButton() {
-  const { isExecuting, executionError, testExecute, resetExecution } =
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const { isExecuting, executionError, testsRemaining, resetExecution } =
     useBuilderStore(
       useShallow((s) => ({
         isExecuting: s.isExecuting,
         executionError: s.executionError,
-        testExecute: s.testExecute,
+        testsRemaining: s.testsRemaining,
         resetExecution: s.resetExecution,
       }))
     )
@@ -118,15 +124,19 @@ function TestButton() {
   }
 
   return (
-    <Button
-      variant="ghost"
-      size="sm"
-      className="rounded-full text-muted-foreground"
-      onClick={testExecute}
-    >
-      <Play className="h-3.5 w-3.5" />
-      Test
-    </Button>
+    <>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="rounded-full text-muted-foreground"
+        onClick={() => setDialogOpen(true)}
+        disabled={testsRemaining === 0}
+      >
+        <Play className="h-3.5 w-3.5" />
+        Test{testsRemaining !== null && ` (${testsRemaining} left)`}
+      </Button>
+      <TestDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+    </>
   )
 }
 
@@ -148,7 +158,7 @@ export function BottomPalette({
         ))}
       </div>
 
-      <div className="mx-2 h-6 w-px bg-border" />
+      <div className="mx-0.5 h-8 w-px bg-border" />
 
       <TestButton />
     </Card>

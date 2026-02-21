@@ -1,5 +1,5 @@
 import { Position, type NodeProps } from '@xyflow/react'
-import { Flag } from 'lucide-react'
+import { FlagTriangleRight } from 'lucide-react'
 import type { EndConfig } from '@licenseplate-checker/shared/workflow-dsl/config'
 import { BaseNode, BaseNodeHeader, BaseNodeContent, type BuilderNode } from './base-node'
 import { BaseHandle } from './base-handle'
@@ -20,7 +20,7 @@ export function EndNode({ id, data }: NodeProps<BuilderNode>) {
   return (
     <BaseNode className="group/node">
       <BaseNodeHeader
-        icon={Flag}
+        icon={FlagTriangleRight}
         label={data.label}
         onDelete={() => removeNode(id)}
       />
