@@ -74,7 +74,7 @@ const defaultNodes: WorkflowNode[] = [
     id: 'end',
     type: 'core.end',
     position: { x: 560, y: 140 },
-    data: { label: 'End', config: {} },
+    data: { label: 'End', config: { outcome: 'available' } },
   },
 ]
 
