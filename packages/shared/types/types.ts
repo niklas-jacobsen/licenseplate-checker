@@ -19,7 +19,7 @@ export interface LicensePlateCheck {
   workflowId?: string
   city: {
     name: string
-    region?: string
+    websiteUrl?: string | null
   }
   workflow?: {
     id: string
