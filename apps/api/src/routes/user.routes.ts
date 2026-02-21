@@ -3,7 +3,6 @@ import UserController from '../controllers/User.controller'
 import auth from '../middleware/auth'
 import { zValidator } from '@hono/zod-validator'
 import { zUserUpdateScheme } from '@licenseplate-checker/shared/validators'
-import { string } from 'zod'
 
 export const userRouter = new Hono()
 
@@ -49,7 +48,6 @@ userRouter.put(
       email,
       firstname,
       lastname,
-      salutation,
       street,
       streetNumber,
       zipCode,
@@ -58,7 +56,6 @@ userRouter.put(
       email?: string
       firstname?: string
       lastname?: string
-      salutation?: string
       street?: string
       streetNumber?: string
       zipCode?: string
