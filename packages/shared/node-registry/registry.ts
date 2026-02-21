@@ -16,7 +16,7 @@ export const NodeSpecSchema = z.object({
 
   //Validates that the value is a Zod schema instance.
   propsSchema: z.custom<z.ZodTypeAny>(
-    (val) => !!val && typeof (val as any).safeParse === 'function',
+    (val) => !!val && typeof (val as z.ZodTypeAny).safeParse === 'function',
     { message: 'Must be a Zod schema' }
   ),
 })

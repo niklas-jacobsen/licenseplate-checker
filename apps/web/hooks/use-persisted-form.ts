@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { UseFormReturn } from 'react-hook-form'
 
+// biome-ignore lint/suspicious/noExplicitAny:
 export function usePersistedForm<T extends Record<string, any>>(
   form: UseFormReturn<T>,
   key: string

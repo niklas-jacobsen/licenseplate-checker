@@ -218,6 +218,7 @@ export class IrExecutor {
       }
 
       default:
+        // biome-ignore lint/suspicious/noExplicitAny:
         throw new UnknownBlockKindError((block as any).kind)
     }
   }
@@ -290,18 +291,25 @@ export class IrExecutor {
 
       case 'selectByValue': {
         const value = resolveVariables(op.value, this.variables)
-        this.log('info', `Selecting option by value "${value}" in ${op.selector}`)
+        this.log(
+          'info',
+          `Selecting option by value "${value}" in ${op.selector}`
+        )
         await this.page.selectOption(op.selector, value)
         break
       }
 
       case 'selectByIndex': {
-        this.log('info', `Selecting option by index ${op.index} in ${op.selector}`)
+        this.log(
+          'info',
+          `Selecting option by index ${op.index} in ${op.selector}`
+        )
         await this.page.selectOption(op.selector, { index: op.index })
         break
       }
 
       default:
+        // biome-ignore lint/suspicious/noExplicitAny: exhaustive switch guard
         throw new UnknownActionTypeError((op as any).type)
     }
   }
@@ -329,6 +337,7 @@ export class IrExecutor {
       }
 
       default:
+        // biome-ignore lint/suspicious/noExplicitAny: exhaustive switch guard
         throw new UnknownConditionOpError((condition as any).op)
     }
   }

@@ -54,7 +54,7 @@ export default function LogInPage() {
     try {
       await logIn(values.email, values.password)
       router.push(redirect)
-    } catch (err) {
+    } catch {
       setError('Invalid email or password. Please try again.')
     } finally {
       setIsLoading(false)

@@ -27,6 +27,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Save, ArrowLeft, Loader2, Pencil, Check } from 'lucide-react'
 
+// biome-ignore lint/suspicious/noExplicitAny:
 const Background = BackgroundComponent as any
 
 function FlowCanvas() {

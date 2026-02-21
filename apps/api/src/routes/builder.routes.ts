@@ -13,6 +13,7 @@ import {
   zWorkflowDescriptionSchema,
 } from '@licenseplate-checker/shared/validators'
 import { validateGraph } from '../builder/validate/validateGraph'
+import type { ValidationIssue } from '../types/validate.types'
 import { compileGraphToIr } from '../builder/compiler/GraphToIrCompiler'
 import { CompileError } from '../types/compiler.types'
 import {
@@ -21,7 +22,10 @@ import {
   InternalServerError,
 } from '@licenseplate-checker/shared/types'
 import WorkflowController from '../controllers/Workflow.controller'
-import { executeWorkflowForCheck, buildVariableContext } from '../services/executeWorkflowForCheck'
+import {
+  executeWorkflowForCheck,
+  buildVariableContext,
+} from '../services/executeWorkflowForCheck'
 import { prisma } from '../../prisma/data-source'
 import type { VariableContext } from '@licenseplate-checker/shared/template-variables'
 import auth from '../middleware/auth'
@@ -234,12 +238,14 @@ export const createBuilderRouter = (workflowController: WorkflowController) => {
   })
 
   router.get('/my-workflows', auth, async (c) => {
+    // biome-ignore lint/suspicious/noExplicitAny:
     const user = c.get('user' as any) as { id: string }
     const workflows = await workflowController.getByAuthor(user.id)
     return c.json({ workflows })
   })
 
   router.post('/workflow', auth, async (c) => {
+    // biome-ignore lint/suspicious/noExplicitAny:
     const user = c.get('user' as any) as { id: string }
     let body: {
       name: string
@@ -362,12 +368,15 @@ export const createBuilderRouter = (workflowController: WorkflowController) => {
       }
     }
 
-    let validation: { ok: boolean; issues: any[] } = { ok: true, issues: [] }
+    let validation: { ok: boolean; issues: ValidationIssue[] } = {
+      ok: true,
+      issues: [],
+    }
 
     if (body.definition) {
       const result = validateGraph(body.definition)
       if (!result.ok) {
-        validation = { ok: false, issues: result.issues as any[] }
+        validation = { ok: false, issues: result.issues }
       }
     }
 

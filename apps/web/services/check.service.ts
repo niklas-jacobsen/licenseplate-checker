@@ -11,7 +11,7 @@ export const checkService = {
   },
 
   async getChecks(signal?: AbortSignal) {
-    return apiClient.get<{ checks: any[] }>('/request/me', undefined, { signal })
+    return apiClient.get<{ checks: LicensePlateCheck[] }>('/request/me', undefined, { signal })
   },
 
   async assignWorkflow(checkId: string, workflowId: string) {
