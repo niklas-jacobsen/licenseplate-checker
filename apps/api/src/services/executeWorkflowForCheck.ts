@@ -48,6 +48,7 @@ export async function executeWorkflowForCheck(
       callbackUrl: `${ENV.API_BASE_URL}/webhooks/trigger`,
       callbackSecret: ENV.TRIGGER_WEBHOOK_SECRET,
       allowedDomains: workflow.city.allowedDomains,
+      cityName: workflow.city.name,
       variables: options?.variables,
       websiteUrl: workflow.city.websiteUrl ?? undefined,
     }, {
