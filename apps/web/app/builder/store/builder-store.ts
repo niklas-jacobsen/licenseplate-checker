@@ -20,6 +20,34 @@ import {
 } from '@licenseplate-checker/shared/node-registry'
 import { workflowService } from '@/services/workflow.service'
 
+// compare two graphs ignoring node positions
+function graphContentChanged(
+  nodes: WorkflowNode[],
+  edges: Edge[],
+  snapshotNodes: WorkflowNode[],
+  snapshotEdges: Edge[]
+): boolean {
+  const nodesSig = (ns: WorkflowNode[]) =>
+    [...ns]
+      .sort((a, b) => a.id.localeCompare(b.id))
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      .map(({ position: _p, ...rest }) => rest)
+  const edgesSig = (es: Edge[]) =>
+    [...es]
+      .sort((a, b) => a.id.localeCompare(b.id))
+      .map(({ source, target, sourceHandle, targetHandle }) => ({
+        source,
+        target,
+        sourceHandle,
+        targetHandle,
+      }))
+  return (
+    JSON.stringify(nodesSig(nodes)) !==
+      JSON.stringify(nodesSig(snapshotNodes)) ||
+    JSON.stringify(edgesSig(edges)) !== JSON.stringify(edgesSig(snapshotEdges))
+  )
+}
+
 function createNode(
   type: CoreNodeType,
   position: { x: number; y: number }
@@ -154,6 +182,12 @@ export type BuilderState = {
   canPublish: boolean
   isPublished: boolean
   isPublishing: boolean
+  originallyPublished: boolean
+  snapshotNodes: WorkflowNode[]
+  snapshotEdges: Edge[]
+
+  // dirty tracking
+  isDirty: boolean
 }
 
 export type BuilderActions = {
@@ -197,6 +231,8 @@ export type BuilderActions = {
   rejectOutcome: () => void
   publishWorkflow: () => Promise<void>
   unpublishWorkflow: () => Promise<void>
+  saveWorkflowAndUnpublish: () => Promise<void>
+  checkHasContentChanges: () => boolean
 
   // getters
   getNodes: () => WorkflowNode[]
@@ -232,6 +268,10 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
       canPublish: false,
       isPublished: false,
       isPublishing: false,
+      originallyPublished: false,
+      snapshotNodes: DEFAULT_NODES,
+      snapshotEdges: DEFAULT_EDGES,
+      isDirty: false,
       ...initialState,
 
       // reactflow handlers
@@ -245,19 +285,27 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
           return true
         })
         const hasStructuralChange = filtered.some(
+          (c) =>
+            c.type !== 'select' &&
+            c.type !== 'dimensions' &&
+            c.type !== 'position'
+        )
+        const hasAnyChange = filtered.some(
           (c) => c.type !== 'select' && c.type !== 'dimensions'
         )
         set({
           nodes: applyNodeChanges(filtered, get().nodes) as WorkflowNode[],
-          ...(hasStructuralChange && { canPublish: false, isPublished: false }),
+          ...(hasStructuralChange && { canPublish: false }),
+          ...(hasAnyChange && { isDirty: true }),
         })
       },
-      onEdgesChange: (changes) =>
+      onEdgesChange: (changes) => {
+        const hasActualChange = changes.some((c) => c.type !== 'select')
         set({
           edges: applyEdgeChanges(changes, get().edges) as Edge[],
-          canPublish: false,
-          isPublished: false,
-        }),
+          ...(hasActualChange && { canPublish: false, isDirty: true }),
+        })
+      },
       onConnect: (connection) => {
         // only one connection per handle -> replace existing
         const edges = get().edges.filter(
@@ -277,7 +325,7 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
             edges
           ),
           canPublish: false,
-          isPublished: false,
+          isDirty: true,
         })
       },
 
@@ -286,14 +334,14 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
         set({
           nodes: [...get().nodes, node],
           canPublish: false,
-          isPublished: false,
+          isDirty: true,
         }),
       addNodeByType: (type, position) => {
         const node = createNode(type, position)
         set({
           nodes: [...get().nodes, node],
           canPublish: false,
-          isPublished: false,
+          isDirty: true,
         })
       },
       removeNode: (nodeId) => {
@@ -307,7 +355,7 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
           selectedNodeId:
             get().selectedNodeId === nodeId ? null : get().selectedNodeId,
           canPublish: false,
-          isPublished: false,
+          isDirty: true,
         })
       },
       updateNodeConfig: (nodeId, config) =>
@@ -321,7 +369,7 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
               : n
           ),
           canPublish: false,
-          isPublished: false,
+          isDirty: true,
         }),
 
       // edge ops
@@ -329,7 +377,7 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
         set({
           edges: get().edges.filter((e) => e.id !== edgeId),
           canPublish: false,
-          isPublished: false,
+          isDirty: true,
         }),
 
       // selection
@@ -351,6 +399,7 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
             websiteUrl:
               (wf.city as { websiteUrl?: string | null }).websiteUrl ?? null,
             isPublished: wf.isPublished,
+            originallyPublished: wf.isPublished,
           })
           const def = wf.definition as {
             nodes?: WorkflowNode[]
@@ -360,7 +409,13 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
           const nodes = def?.nodes ?? get().nodes
           const edges = def?.edges ?? get().edges
 
-          set({ nodes, edges })
+          set({
+            nodes,
+            edges,
+            snapshotNodes: nodes,
+            snapshotEdges: edges,
+            isDirty: false,
+          })
         } catch (err) {
           console.error('Failed to load workflow', err)
           set({ notFound: true })
@@ -380,6 +435,7 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
             nodes,
             edges,
           })
+          set({ snapshotNodes: nodes, snapshotEdges: edges, isDirty: false })
         } catch {
           set({ saveError: 'Failed to save' })
         } finally {
@@ -412,7 +468,11 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
         try {
           const res = await workflowService.publish(workflowId, true)
           if (res.data?.workflow) {
-            set({ isPublished: true, canPublish: false })
+            set({
+              isPublished: true,
+              canPublish: false,
+              originallyPublished: true,
+            })
           }
         } catch {
           // silently fail, user can retry
@@ -427,13 +487,46 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
         try {
           const res = await workflowService.publish(workflowId, false)
           if (res.data?.workflow) {
-            set({ isPublished: false })
+            set({ isPublished: false, originallyPublished: false })
           }
         } catch {
           // silently fail, user can retry
         } finally {
           set({ isPublishing: false })
         }
+      },
+
+      saveWorkflowAndUnpublish: async () => {
+        const { workflowId, nodes, edges } = get()
+        if (!workflowId) return
+        set({ isSaving: true, saveError: '' })
+        try {
+          await workflowService.updateDefinition(workflowId, {
+            id: workflowId,
+            registryVersion: BUILDER_REGISTRY_VERSION,
+            nodes,
+            edges,
+          })
+          const publishRes = await workflowService.publish(workflowId, false)
+          if (publishRes.data?.workflow) {
+            set({
+              isPublished: false,
+              originallyPublished: false,
+              snapshotNodes: nodes,
+              snapshotEdges: edges,
+              isDirty: false,
+            })
+          }
+        } catch {
+          set({ saveError: 'Failed to save' })
+        } finally {
+          set({ isSaving: false })
+        }
+      },
+
+      checkHasContentChanges: () => {
+        const { nodes, edges, snapshotNodes, snapshotEdges } = get()
+        return graphContentChanged(nodes, edges, snapshotNodes, snapshotEdges)
       },
 
       testExecute: async (variables) => {
@@ -455,7 +548,12 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
           set({ isSaving: false, saveError: 'Failed to save before test' })
           return
         }
-        set({ isSaving: false })
+        set({
+          isSaving: false,
+          snapshotNodes: nodes,
+          snapshotEdges: edges,
+          isDirty: false,
+        })
 
         // reset statuses and start
         const initialStatuses: Record<string, NodeStatus> = {}

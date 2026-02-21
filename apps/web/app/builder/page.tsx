@@ -28,6 +28,17 @@ import '@xyflow/react/dist/style.css'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { TestDialog } from './components/test-dialog'
+import {
   Save,
   ArrowLeft,
   Loader2,
@@ -125,12 +136,17 @@ function BuilderToolbar() {
     isSaving,
     saveError,
     saveWorkflow,
+    saveWorkflowAndUnpublish,
+    checkHasContentChanges,
     renameWorkflow,
     canPublish,
     isPublished,
     isPublishing,
+    originallyPublished,
+    testsRemaining,
     publishWorkflow,
     unpublishWorkflow,
+    isDirty,
   } = useBuilderStore(
     useShallow((s) => ({
       workflowId: s.workflowId,
@@ -138,14 +154,49 @@ function BuilderToolbar() {
       isSaving: s.isSaving,
       saveError: s.saveError,
       saveWorkflow: s.saveWorkflow,
+      saveWorkflowAndUnpublish: s.saveWorkflowAndUnpublish,
+      checkHasContentChanges: s.checkHasContentChanges,
       renameWorkflow: s.renameWorkflow,
       canPublish: s.canPublish,
       isPublished: s.isPublished,
       isPublishing: s.isPublishing,
+      originallyPublished: s.originallyPublished,
+      testsRemaining: s.testsRemaining,
       publishWorkflow: s.publishWorkflow,
       unpublishWorkflow: s.unpublishWorkflow,
+      isDirty: s.isDirty,
     }))
   )
+
+  const [showSaveWarning, setShowSaveWarning] = useState(false)
+  const [showTestDialog, setShowTestDialog] = useState(false)
+  const [showLeaveWarning, setShowLeaveWarning] = useState(false)
+
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault()
+      }
+    }
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [isDirty])
+
+  const handleBack = () => {
+    if (isDirty) {
+      setShowLeaveWarning(true)
+    } else {
+      router.push(`/workflows/${workflowId}`)
+    }
+  }
+
+  const handleSaveClick = () => {
+    if (originallyPublished && checkHasContentChanges()) {
+      setShowSaveWarning(true)
+    } else {
+      saveWorkflow()
+    }
+  }
 
   const [justSaved, setJustSaved] = useState(false)
   const prevSavingRef = useRef(false)
@@ -188,7 +239,7 @@ function BuilderToolbar() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => router.push(`/workflows/${workflowId}`)}
+          onClick={handleBack}
         >
           <ArrowLeft className="h-4 w-4 mr-1" />
           Back
@@ -255,7 +306,7 @@ function BuilderToolbar() {
         )}
         {workflowId && (
           <>
-            <Button size="sm" onClick={saveWorkflow} disabled={isSaving}>
+            <Button size="sm" onClick={handleSaveClick} disabled={isSaving}>
               {isSaving ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-1" />
               ) : justSaved ? (
@@ -301,6 +352,54 @@ function BuilderToolbar() {
           </>
         )}
       </div>
+
+      <AlertDialog open={showSaveWarning} onOpenChange={setShowSaveWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Saving will unpublish this workflow</AlertDialogTitle>
+            <AlertDialogDescription>
+              This workflow is currently published. Saving your changes will unpublish it,
+              as the updated version has not been validated yet. You can run a test and
+              confirm the outcome to re-enable publishing.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col-reverse sm:flex-row gap-2">
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <Button
+              variant="outline"
+              disabled={testsRemaining === 0}
+              onClick={() => {
+                setShowSaveWarning(false)
+                setShowTestDialog(true)
+              }}
+            >
+              {testsRemaining === 0 ? 'No test executions remaining' : 'Test first'}
+            </Button>
+            <AlertDialogAction onClick={saveWorkflowAndUnpublish}>
+              Save & Unpublish
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <TestDialog open={showTestDialog} onOpenChange={setShowTestDialog} />
+
+      <AlertDialog open={showLeaveWarning} onOpenChange={setShowLeaveWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Leave without saving?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have unsaved changes. Leaving now will discard them.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Stay</AlertDialogCancel>
+            <AlertDialogAction onClick={() => router.push(`/workflows/${workflowId}`)}>
+              Leave
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
