@@ -105,7 +105,7 @@ export function resolveVariables(
 }
 
 export function containsTemplateVariables(value: string): boolean {
-  return /\{\{.*?\}\}/.test(value)
+  return /\{\{[^{}]*\}\}/.test(value)
 }
 
 // helpers
