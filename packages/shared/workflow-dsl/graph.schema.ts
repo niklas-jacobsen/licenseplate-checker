@@ -4,6 +4,7 @@ import {
   ConditionalNodeConfig,
   EndNodeConfig,
   OpenPageNodeConfig,
+  SelectOptionNodeConfig,
   StartNodeConfig,
   TypeTextNodeConfig,
   WaitNodeConfig,
@@ -70,6 +71,11 @@ const WaitNodeSchema = BaseNodeSchema.extend({
   data: z.object({ label: z.string(), config: WaitNodeConfig }),
 })
 
+const SelectOptionNodeSchema = BaseNodeSchema.extend({
+  type: z.literal('core.selectOption'),
+  data: z.object({ label: z.string(), config: SelectOptionNodeConfig }),
+})
+
 //Union of node specific types
 export const ReactFlowNodeSchema = z.discriminatedUnion('type', [
   StartNodeSchema,
@@ -79,6 +85,7 @@ export const ReactFlowNodeSchema = z.discriminatedUnion('type', [
   OpenPageNodeSchema,
   ConditionalNodeSchema,
   WaitNodeSchema,
+  SelectOptionNodeSchema,
 ])
 
 export const CoreNodeTypeSchema = z.enum([
@@ -89,6 +96,7 @@ export const CoreNodeTypeSchema = z.enum([
   'core.openPage',
   'core.conditional',
   'core.wait',
+  'core.selectOption',
 ])
 
 //Edges & Graph

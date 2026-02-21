@@ -66,7 +66,7 @@ export default function SignUpPage() {
     try {
       await signUp(values.email, values.password)
       router.push(redirect)
-    } catch (err) {
+    } catch {
       setError('Failed to create account. This email might already be in use.')
     } finally {
       setIsLoading(false)

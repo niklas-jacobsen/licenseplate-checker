@@ -26,7 +26,9 @@ describe('GET /cities', () => {
   })
 
   it('handles errors', async () => {
-    mockController.getAll.mockRejectedValue(new Error('DB Error'))
+    mockController.getAll.mockImplementation(async () => {
+      throw new Error('DB Error')
+    })
     const router = createCityRouter(mockController)
     const app = new Hono()
     app.route('/', router)

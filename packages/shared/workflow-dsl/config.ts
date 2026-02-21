@@ -4,7 +4,7 @@ import { z } from 'zod'
 
 //Open Page
 export const OpenPageNodeConfig = z.object({
-  url: z.string().url(),
+  url: z.string().min(1),
 })
 
 //Click
@@ -48,9 +48,34 @@ export const WaitNodeConfig = z.discriminatedUnion('mode', [
   }),
 ])
 
+//Select Option
+export const SelectOptionNodeConfig = z.discriminatedUnion('mode', [
+  z.object({
+    mode: z.literal('text'),
+    selector: z.string().min(1),
+    text: z.string().min(1),
+  }),
+  z.object({
+    mode: z.literal('value'),
+    selector: z.string().min(1),
+    value: z.string().min(1),
+  }),
+  z.object({
+    mode: z.literal('index'),
+    selector: z.string().min(1),
+    index: z.number().int().min(0),
+  }),
+])
+
 //Start and End
 export const StartNodeConfig = z.object({})
-export const EndNodeConfig = z.object({})
+
+export const WorkflowOutcome = z.enum(['available', 'unavailable'])
+export type WorkflowOutcome = z.infer<typeof WorkflowOutcome>
+
+export const EndNodeConfig = z.object({
+  outcome: WorkflowOutcome,
+})
 
 //Export Types
 export type OpenPageConfig = z.infer<typeof OpenPageNodeConfig>
@@ -58,3 +83,5 @@ export type ClickConfig = z.infer<typeof ClickNodeConfig>
 export type TypeTextConfig = z.infer<typeof TypeTextNodeConfig>
 export type ConditionalConfig = z.infer<typeof ConditionalNodeConfig>
 export type WaitConfig = z.infer<typeof WaitNodeConfig>
+export type SelectOptionConfig = z.infer<typeof SelectOptionNodeConfig>
+export type EndConfig = z.infer<typeof EndNodeConfig>

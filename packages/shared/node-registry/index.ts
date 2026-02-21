@@ -6,6 +6,7 @@ import { clickNode } from './nodes/core.click'
 import { typeTextNode } from './nodes/core.typeText'
 import { conditionalNode } from './nodes/core.conditional'
 import { waitNode } from './nodes/core.wait'
+import { selectOptionNode } from './nodes/core.selectOption'
 
 export const BUILDER_REGISTRY_VERSION = 'v1'
 
@@ -17,4 +18,5 @@ export const nodeRegistry: Record<string, NodeSpec> = {
   [typeTextNode.type]: typeTextNode,
   [conditionalNode.type]: conditionalNode,
   [waitNode.type]: waitNode,
+  [selectOptionNode.type]: selectOptionNode,
 }

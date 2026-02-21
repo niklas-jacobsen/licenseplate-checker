@@ -5,12 +5,27 @@ import { tasks } from '@trigger.dev/sdk/v3'
 import type { executeWorkflow } from '../trigger/executeWorkflow'
 import WorkflowController from '../controllers/Workflow.controller'
 import { ENV } from '../env'
+import type { VariableContext } from '@licenseplate-checker/shared/template-variables'
+
+export function buildVariableContext(check: {
+  cityId: string
+  letters: string
+  numbers: number
+}): VariableContext {
+  return {
+    'plate.letters': check.letters,
+    'plate.numbers': String(check.numbers),
+    'plate.cityId': check.cityId,
+    'plate.fullPlate': `${check.cityId} ${check.letters} ${check.numbers}`,
+  }
+}
 
 // shared logic for both workflow compilation and trigger.dev execution
 export async function executeWorkflowForCheck(
   workflowController: WorkflowController,
   workflowId: string,
   checkId?: string,
+  options?: { skipPublishCheck?: boolean; variables?: VariableContext },
 ) {
   const workflow = await workflowController.getById(workflowId)
 
@@ -18,7 +33,7 @@ export async function executeWorkflowForCheck(
     throw new BadRequestError('Workflow not found', 'WORKFLOW_NOT_FOUND')
   }
 
-  if (!workflow.isPublished) {
+  if (!options?.skipPublishCheck && !workflow.isPublished) {
     throw new BadRequestError('Workflow is not published', 'WORKFLOW_NOT_PUBLISHED')
   }
 
@@ -33,6 +48,9 @@ export async function executeWorkflowForCheck(
       callbackUrl: `${ENV.API_BASE_URL}/webhooks/trigger`,
       callbackSecret: ENV.TRIGGER_WEBHOOK_SECRET,
       allowedDomains: workflow.city.allowedDomains,
+      cityName: workflow.city.name,
+      variables: options?.variables,
+      websiteUrl: workflow.city.websiteUrl ?? undefined,
     }, {
       idempotencyKey: execution.id,
     })

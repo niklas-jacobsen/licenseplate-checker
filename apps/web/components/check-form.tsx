@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Combobox } from './ui/combobox'
 import {
   Form,
@@ -12,11 +12,28 @@ import {
 } from './ui/form'
 import { Button } from './ui/button'
 import { Card, CardContent } from './ui/card'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/select'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { zLicensePlateScheme } from '@licenseplate-checker/shared/validators'
+import { zCheckRequestScheme } from '@licenseplate-checker/shared/validators'
 import { useForm } from 'react-hook-form'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Workflow, AlertTriangle } from 'lucide-react'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from './ui/alert-dialog'
 import { Input } from './ui/input'
 import LicensePlatePreview from './plate-preview'
 import { useAuth } from '../lib/auth-context'
@@ -24,24 +41,31 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { checkService } from '../services/check.service'
 import { cityService } from '../services/city.service'
+import { workflowService } from '../services/workflow.service'
 import { usePersistedForm } from '../hooks/use-persisted-form'
-import { usePlateInput } from '../hooks/use-plate-input'
 
-const formSchema = zLicensePlateScheme
+const formSchema = zCheckRequestScheme
 
-// Local storage key for saved form data
 const SAVED_FORM_KEY = 'plateCheck:savedFormData'
+
+interface WorkflowOption {
+  id: string
+  name: string
+  description: string | null
+}
 
 export default function LicensePlateCheckForm() {
   const { user } = useAuth()
   const router = useRouter()
-  const { formatLetters, formatNumbers } = usePlateInput()
 
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [authError, setAuthError] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [cities, setCities] = useState<{ value: string; label: string }[]>([])
   const [isLoadingCities, setIsLoadingCities] = useState(true)
+  const [workflows, setWorkflows] = useState<WorkflowOption[]>([])
+  const [isLoadingWorkflows, setIsLoadingWorkflows] = useState(false)
+  const [showNoWorkflowWarning, setShowNoWorkflowWarning] = useState(false)
+  const pendingSubmitValues = useRef<z.infer<typeof formSchema> | null>(null)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -49,6 +73,7 @@ export default function LicensePlateCheckForm() {
       city: '',
       letters: '',
       numbers: '',
+      workflowId: undefined,
     },
     mode: 'onTouched',
   })
@@ -82,6 +107,34 @@ export default function LicensePlateCheckForm() {
   const letters = form.watch('letters')
   const numbers = form.watch('numbers')
 
+  useEffect(() => {
+    if (!city) {
+      setWorkflows([])
+      form.setValue('workflowId', undefined)
+      return
+    }
+
+    const fetchWorkflows = async () => {
+      setIsLoadingWorkflows(true)
+      try {
+        const response = await workflowService.getPublishedByCity(city)
+        if (response.data?.workflows) {
+          setWorkflows(response.data.workflows)
+        } else {
+          setWorkflows([])
+        }
+      } catch (error) {
+        console.error('Failed to fetch workflows:', error)
+        setWorkflows([])
+      } finally {
+        setIsLoadingWorkflows(false)
+      }
+    }
+
+    form.setValue('workflowId', undefined)
+    fetchWorkflows()
+  }, [city, form])
+
   function onSubmit(values: z.infer<typeof formSchema>) {
     if (!user) {
       // Save data and redirect
@@ -90,16 +143,28 @@ export default function LicensePlateCheckForm() {
       return
     }
 
-    setAuthError(false)
+    if (!values.workflowId || values.workflowId === 'none') {
+      pendingSubmitValues.current = values
+      setShowNoWorkflowWarning(true)
+      return
+    }
+
+    submitCheck(values)
+  }
+
+  function submitCheck(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true)
 
     const createLicensePlateCheck = async () => {
       try {
-        await checkService.createCheck(values)
+        const payload = { ...values }
+        if (payload.workflowId === 'none') {
+          payload.workflowId = undefined
+        }
+        await checkService.createCheck(payload)
         setIsSubmitted(true)
       } catch (error) {
         console.error('Error creating license plate check:', error)
-        setAuthError(true)
       } finally {
         setIsSubmitting(false)
       }
@@ -107,6 +172,22 @@ export default function LicensePlateCheckForm() {
 
     createLicensePlateCheck()
   }
+
+  function handleConfirmNoWorkflow() {
+    setShowNoWorkflowWarning(false)
+    if (pendingSubmitValues.current) {
+      submitCheck(pendingSubmitValues.current)
+      pendingSubmitValues.current = null
+    }
+  }
+
+  const workflowPlaceholder = !city
+    ? 'Select a city first'
+    : isLoadingWorkflows
+      ? 'Loading workflows...'
+      : workflows.length === 0
+        ? 'No workflows for this city'
+        : 'Submit without automation (No checks will be executed)'
 
   if (isSubmitted) {
     return (
@@ -255,6 +336,50 @@ export default function LicensePlateCheckForm() {
               />
             </div>
 
+            <FormField
+              control={form.control}
+              name="workflowId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="flex items-center gap-2">
+                    <Workflow className="h-4 w-4" />
+                    Automation Workflow
+                    <span className="text-xs font-normal text-muted-foreground">
+                      (optional)
+                    </span>
+                  </FormLabel>
+                  <Select
+                    value={field.value ?? ''}
+                    onValueChange={(val) =>
+                      field.onChange(val === 'none' ? undefined : val)
+                    }
+                    disabled={!city || isLoadingWorkflows}
+                  >
+                    <FormControl>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder={workflowPlaceholder} />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="none">
+                        Submit without automation (No checks will be executed)
+                      </SelectItem>
+                      {workflows.map((wf) => (
+                        <SelectItem key={wf.id} value={wf.id}>
+                          {wf.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    {city
+                      ? 'Workflows become visible after being published'
+                      : 'Choose a city to see available automation workflows.'}
+                  </p>
+                </FormItem>
+              )}
+            />
+
             <div className="pt-4">
               <LicensePlatePreview
                 city={city}
@@ -277,6 +402,41 @@ export default function LicensePlateCheckForm() {
             </div>
           </form>
         </Form>
+
+        <AlertDialog
+          open={showNoWorkflowWarning}
+          onOpenChange={setShowNoWorkflowWarning}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-amber-500" />
+                No Automation Workflow Selected
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                You are about to submit a request without an automation
+                workflow. This means no automated checks will be executed for
+                this license plate.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="bg-amber-50 p-4 rounded-md border border-amber-200">
+              <p className="text-sm text-amber-800">
+                To enable automatic reservation, go to the{' '}
+                <strong>Builder</strong> page to create and publish a workflow
+                for this city, then select it here.
+              </p>
+            </div>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Go Back</AlertDialogCancel>
+              <Link href="/workflows">
+                <Button variant="outline">Go to Builder</Button>
+              </Link>
+              <AlertDialogAction onClick={handleConfirmNoWorkflow}>
+                Submit Anyway
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </CardContent>
     </Card>
   )

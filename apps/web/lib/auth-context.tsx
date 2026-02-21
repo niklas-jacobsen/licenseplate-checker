@@ -8,19 +8,7 @@ import {
   type ReactNode,
 } from 'react'
 import apiClient from './api-client'
-
-interface User {
-  id: string
-  email: string
-  salutation?: string
-  firstname?: string
-  lastname?: string
-  birthdate?: string
-  street?: string
-  streetNumber?: string
-  zipcode?: string
-  city?: string
-}
+import { userService, type User } from '@/services/user.service'
 
 interface AuthContextType {
   user: User | null
@@ -38,47 +26,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Attempt to fetch the current authenticated user
-    try {
-      const fetchUser = async () => {
-        const token = localStorage.getItem('token')
-        if (!token) {
-          setUser(null)
-          setIsLoading(false)
-          return
-        }
+    // auto log out on 401s
+    apiClient.setAuthErrorHandler(() => setUser(null))
+  }, [])
 
-        const response = await apiClient.get<User>('/user/me', token)
-
-        if (response.data) {
-          setUser(response.data)
-        } else {
-          setUser(null)
-          
-          // clear invalid token
-          if (response.status === 401) {
-            localStorage.removeItem('token')
-          }
-        }
-
+  useEffect(() => {
+    const fetchUser = async () => {
+      const token = localStorage.getItem('token')
+      if (!token) {
+        setUser(null)
         setIsLoading(false)
+        return
       }
 
-      fetchUser()
-    } catch (err) {
-      console.error(err)
+      const response = await userService.getMe(token)
+
+      if (response.data) {
+        setUser(response.data)
+      } else if (response.status === 401) {
+        setUser(null)
+      }
+
+      setIsLoading(false)
     }
+
+    fetchUser()
   }, [])
 
   const signUp = async (email: string, password: string) => {
-    const response = await apiClient.post<{ token: string }>('/auth/register', {
-      email,
-      password,
-    })
+    const response = await userService.register(email, password)
 
     if (response.data?.token) {
       localStorage.setItem('token', response.data.token)
-      const userResponse = await apiClient.get<User>('/user/me')
+      const userResponse = await userService.getMe()
       if (userResponse.data) {
         setUser(userResponse.data)
       }
@@ -88,16 +68,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const logIn = async (email: string, password: string) => {
-    const response = await apiClient.post<{
-      token: string
-    }>('/auth/login', {
-      email,
-      password,
-    })
+    const response = await userService.login(email, password)
 
     if (response.data?.token) {
       localStorage.setItem('token', response.data.token)
-      const userResponse = await apiClient.get<User>('/user/me')
+      const userResponse = await userService.getMe()
       if (userResponse.data) {
         setUser(userResponse.data)
       }
@@ -112,7 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const updateUser = async (updatedFields: Partial<User>) => {
-    const response = await apiClient.put<User>('/user/me', updatedFields)
+    const response = await userService.updateMe(updatedFields)
 
     if (response.data) {
       setUser(response.data)

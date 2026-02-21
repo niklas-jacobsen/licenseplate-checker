@@ -1,9 +1,10 @@
 import { z } from 'zod'
+import { WorkflowOutcome } from '../workflow-dsl/config'
 
 export const IrVersionSchema = z.literal('v1')
 
 export const ActionOpSchema = z.discriminatedUnion('type', [
-  z.object({ type: z.literal('openPage'), url: z.string().url() }),
+  z.object({ type: z.literal('openPage'), url: z.string().min(1) }),
   z.object({ type: z.literal('click'), selector: z.string().min(1) }),
   z.object({
     type: z.literal('typeText'),
@@ -22,6 +23,21 @@ export const ActionOpSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('waitNewTab'),
     timeoutMs: z.number().int().positive().optional(),
+  }),
+  z.object({
+    type: z.literal('selectByText'),
+    selector: z.string().min(1),
+    text: z.string().min(1),
+  }),
+  z.object({
+    type: z.literal('selectByValue'),
+    selector: z.string().min(1),
+    value: z.string().min(1),
+  }),
+  z.object({
+    type: z.literal('selectByIndex'),
+    selector: z.string().min(1),
+    index: z.number().int().min(0),
   }),
 ])
 
@@ -45,6 +61,7 @@ export const IrEndBlockSchema = z.object({
   id: z.string().min(1),
   kind: z.literal('end'),
   sourceNodeId: z.string().min(1),
+  outcome: WorkflowOutcome,
 })
 
 export const IrActionBlockSchema = z.object({

@@ -22,17 +22,17 @@ app.use(
     },
   })
 )
-app.use('*', limiter)
 app.use('*', corsMiddleware)
+app.use('*', limiter)
 app.use('*', csrfMiddleware)
 app.use('/user/*', auth)
 app.use('/request/*', auth)
 import { AppError } from '@licenseplate-checker/shared/types'
 
 export const errorHandler: ErrorHandler = (err, c) => {
-  // AppError by instanceof or using duck typing (statusCode + code)
-  if (err instanceof AppError || ((err as any).statusCode && (err as any).code)) {
-    const appError = err as any
+  // biome-ignore lint/suspicious/noExplicitAny:
+  const appError = err as any
+  if (err instanceof AppError || (appError.statusCode && appError.code)) {
     return c.json(
       {
         ok: false,

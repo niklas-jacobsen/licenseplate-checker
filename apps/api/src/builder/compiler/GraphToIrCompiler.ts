@@ -145,6 +145,17 @@ function toActionOp(node: WorkflowNode): ActionOp | undefined {
       return undefined
     }
 
+    case 'core.selectOption': {
+      const cfg = node.data.config
+      if (cfg.mode === 'text')
+        return { type: 'selectByText', selector: cfg.selector, text: cfg.text }
+      if (cfg.mode === 'value')
+        return { type: 'selectByValue', selector: cfg.selector, value: cfg.value }
+      if (cfg.mode === 'index')
+        return { type: 'selectByIndex', selector: cfg.selector, index: cfg.index }
+      return undefined
+    }
+
     default:
       return undefined
   }
@@ -302,10 +313,12 @@ export function compileGraphToIr(input: unknown): BuilderIr {
 
     // terminal block
     if (node.type === 'core.end') {
+      const outcome = (node.data.config as { outcome: string }).outcome
       blocks[id] = {
         id,
         kind: 'end',
         sourceNodeId: node.id,
+        outcome: outcome as 'available' | 'unavailable',
       }
       continue
     }

@@ -1,11 +1,20 @@
 // This file exports constants that define limits for the application.
 
+// Frontend UI
+export const WORKFLOW_DESCRIPTION_MAX_LENGTH = 200
+export const WORKFLOW_NAME_MAX_LENGTH = 20
+
+// Frontend API Calls
+export const API_CALL_MAX_RETRIES = 2
+export const API_CALL_RETRY_DELAY_MS = 500
+
 // Builder
 export const BUILDER_MAX_NODES_PER_GRAPH = 20
 export const BUILDER_MAX_WORKFLOWS_PER_USER = 10
 
 // Executor
 export const EXECUTOR_ACTION_DELAY_MS = 800
+export const BUILDER_TEST_EXECUTIONS_PER_DAY = 50
 
 // Trigger Workers
 export const TRIGGER_WORKER_CONCURRENCY_LIMIT = 5

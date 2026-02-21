@@ -33,7 +33,10 @@ describe('IrExecutor', () => {
   beforeEach(async () => {
     const mod = await import('./IrExecutor')
     IrExecutor = mod.IrExecutor
-    executor = new IrExecutor()
+    executor = new IrExecutor({
+      allowedDomains: ['niklas.to'],
+      cityName: 'Test',
+    })
 
     pageMock.goto.mockClear()
     pageMock.click.mockClear()
@@ -64,6 +67,7 @@ describe('IrExecutor', () => {
           id: 'end',
           kind: 'end',
           sourceNodeId: 'n3',
+          outcome: 'available',
         },
       },
     }
@@ -109,7 +113,7 @@ describe('IrExecutor', () => {
           op: { type: 'click', selector: '#btn-false' },
           next: 'end',
         },
-        end: { id: 'end', kind: 'end', sourceNodeId: 'n5' },
+        end: { id: 'end', kind: 'end', sourceNodeId: 'n5', outcome: 'available' },
       },
     }
 
@@ -154,7 +158,7 @@ describe('IrExecutor', () => {
          op: { type: 'click', selector: '#btn-false' },
          next: 'end',
        },
-       end: { id: 'end', kind: 'end', sourceNodeId: 'n5' },
+       end: { id: 'end', kind: 'end', sourceNodeId: 'n5', outcome: 'available' },
      },
    }
 
@@ -179,7 +183,7 @@ describe('IrExecutor', () => {
           op: { type: 'typeText', selector: '#input', text: 'hello' },
           next: 'end',
         },
-        end: { id: 'end', kind: 'end', sourceNodeId: 'n3' },
+        end: { id: 'end', kind: 'end', sourceNodeId: 'n3', outcome: 'available' },
       },
     }
 
@@ -219,7 +223,7 @@ describe('IrExecutor', () => {
           op: { type: 'unknown' as any },
           next: 'end',
         },
-        end: { id: 'end', kind: 'end', sourceNodeId: 'n3' },
+        end: { id: 'end', kind: 'end', sourceNodeId: 'n3', outcome: 'available' },
       },
     }
 

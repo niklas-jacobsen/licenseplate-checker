@@ -3,6 +3,8 @@ import zLicensePlateCitySchema from './licensePlateValidators/cityRequest.valida
 import zLicensePlateLettersSchema from './licensePlateValidators/lettersRequest.validator'
 import zLicensePlateNumbersSchema from './licensePlateValidators/numbersRequest.validator'
 import zPasswordSchema from './userValidators/password.validator'
+import zWorkflowNameSchema from './workflowValidators/name.validator'
+import zWorkflowDescriptionSchema from './workflowValidators/description.validator'
 
 export const zLicensePlateScheme = z.object({
   city: zLicensePlateCitySchema,
@@ -24,6 +26,14 @@ export const zResponseScheme = z.object({
   city: z.string(),
   letters: z.string(),
   numbers: z.number(),
+})
+
+export { default as zWorkflowNameSchema } from './workflowValidators/name.validator'
+export { default as zWorkflowDescriptionSchema } from './workflowValidators/description.validator'
+
+export const zWorkflowMetaScheme = z.object({
+  name: zWorkflowNameSchema,
+  description: zWorkflowDescriptionSchema.optional(),
 })
 
 export const zUserScheme = z

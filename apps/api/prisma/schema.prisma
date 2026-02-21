@@ -106,9 +106,11 @@ model WorkflowExecution {
   logs   Json?
   result Json?
 
-  duration     Int? // in ms
-  errorNodeId  String?
-  triggerRunId String?
+  duration       Int? // in ms
+  errorNodeId    String?
+  triggerRunId   String?
+  currentNodeId  String?
+  completedNodes Json?
 
   startedAt  DateTime  @default(now())
   finishedAt DateTime?

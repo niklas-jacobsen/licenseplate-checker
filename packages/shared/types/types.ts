@@ -1,32 +1,34 @@
-// User types
-export interface User {
-  id: string
-  name: string
-  email: string
-}
-
-// API response types
 export interface ApiResponse<T> {
   data?: T
   error?: string
   message?: string
   status: number
+  errorDetails?: unknown
 }
 
-// Authentication types
-export interface LoginRequest {
-  email: string
-  password: string
-}
-
-export interface LoginResponse {
-  user: User
-  token: string
-}
-
-// Error types
-export interface Error<T = Record<string, unknown>> {
-  code: string
-  message: string
-  details?: T
+export interface LicensePlateCheck {
+  id: string
+  cityId: string
+  letters: string
+  numbers: number
+  userId: string
+  status: string
+  createdAt: string
+  updatedAt: string
+  lastCheckedAt?: string
+  workflowId?: string
+  city: {
+    name: string
+    websiteUrl?: string | null
+  }
+  workflow?: {
+    id: string
+    name: string
+  }
+  executions?: {
+    id: string
+    status: 'PENDING' | 'RUNNING' | 'SUCCESS' | 'FAILED'
+    startedAt: string
+    finishedAt?: string | null
+  }[]
 }

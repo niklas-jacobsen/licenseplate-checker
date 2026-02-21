@@ -4,7 +4,8 @@ import * as nodes from '@licenseplate-checker/shared/node-registry/nodes'
 export const PALETTE_NODES = [
   nodes.clickNode,
   nodes.typeTextNode,
-  nodes.openPageNode,
+  nodes.selectOptionNode,
   nodes.conditionalNode,
   nodes.waitNode,
+  nodes.endNode,
 ]

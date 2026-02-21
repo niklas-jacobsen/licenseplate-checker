@@ -1,22 +1,46 @@
 import { Hono } from 'hono'
+import { Prisma } from '@prisma/client'
 import {
   BUILDER_REGISTRY_VERSION,
   nodeRegistry,
 } from '@licenseplate-checker/shared/node-registry'
-import { BUILDER_MAX_WORKFLOWS_PER_USER } from '@licenseplate-checker/shared/constants/limits'
+import {
+  BUILDER_MAX_WORKFLOWS_PER_USER,
+  BUILDER_TEST_EXECUTIONS_PER_DAY,
+} from '@licenseplate-checker/shared/constants/limits'
+import {
+  zWorkflowNameSchema,
+  zWorkflowDescriptionSchema,
+} from '@licenseplate-checker/shared/validators'
 import { validateGraph } from '../builder/validate/validateGraph'
+import type { ValidationIssue } from '../types/validate.types'
 import { compileGraphToIr } from '../builder/compiler/GraphToIrCompiler'
 import { CompileError } from '../types/compiler.types'
 import {
   BadRequestError,
+  ConflictError,
   InternalServerError,
+  NotFoundError,
 } from '@licenseplate-checker/shared/types'
 import WorkflowController from '../controllers/Workflow.controller'
-import { executeWorkflowForCheck } from '../services/executeWorkflowForCheck'
+import {
+  executeWorkflowForCheck,
+  buildVariableContext,
+} from '../services/executeWorkflowForCheck'
+import { prisma } from '../../prisma/data-source'
+import type { VariableContext } from '@licenseplate-checker/shared/template-variables'
 import auth from '../middleware/auth'
 
 export const createBuilderRouter = (workflowController: WorkflowController) => {
   const router = new Hono()
+
+  async function getOwnedWorkflow(id: string, userId: string) {
+    const workflow = await workflowController.getById(id)
+    if (!workflow || workflow.authorId !== userId) {
+      throw new NotFoundError('Workflow not found', 'WORKFLOW_NOT_FOUND')
+    }
+    return workflow
+  }
 
   router.get('/registry', (c) =>
     c.json({
@@ -81,6 +105,8 @@ export const createBuilderRouter = (workflowController: WorkflowController) => {
   })
 
   router.post('/execute', auth, async (c) => {
+    // biome-ignore lint/suspicious/noExplicitAny:
+    const user = c.get('user' as any) as { id: string }
     let body: unknown
 
     try {
@@ -101,13 +127,113 @@ export const createBuilderRouter = (workflowController: WorkflowController) => {
       throw new BadRequestError('workflowId is required', 'MISSING_WORKFLOW_ID')
     }
 
+    await getOwnedWorkflow(workflowId, user.id)
+
+    let variables: VariableContext | undefined
+    if (checkId) {
+      const check = await prisma.licenseplateCheck.findUnique({
+        where: { id: checkId },
+        select: { cityId: true, letters: true, numbers: true },
+      })
+      if (check) {
+        variables = buildVariableContext(check)
+      }
+    }
+
     const result = await executeWorkflowForCheck(
       workflowController,
       workflowId,
-      checkId
+      checkId,
+      { variables }
     )
 
     return c.json(result, 202)
+  })
+
+  router.post('/test-execute', auth, async (c) => {
+    let body: unknown
+
+    try {
+      body = await c.req.json()
+    } catch {
+      throw new BadRequestError(
+        'Request body must be valid JSON',
+        'INVALID_JSON'
+      )
+    }
+
+    const { workflowId, variables } = body as {
+      workflowId: string
+      variables?: VariableContext
+    }
+
+    if (!workflowId) {
+      throw new BadRequestError('workflowId is required', 'MISSING_WORKFLOW_ID')
+    }
+
+    // validate graph before execution
+    // biome-ignore lint/suspicious/noExplicitAny:
+    const user = c.get('user' as any) as { id: string }
+    const workflow = await getOwnedWorkflow(workflowId, user.id)
+
+    const validation = validateGraph(workflow.definition)
+    if (!validation.ok) {
+      throw new BadRequestError(
+        'Workflow definition is invalid',
+        'VALIDATION_ERROR',
+        { issues: validation.issues }
+      )
+    }
+
+    if (validation.issues.length > 0) {
+      throw new BadRequestError(
+        validation.issues[0].message,
+        'VALIDATION_ERROR',
+        { issues: validation.issues }
+      )
+    }
+
+    // compile to catch dead ends, missing connections, etc.
+    try {
+      compileGraphToIr(workflow.definition)
+    } catch (err) {
+      if (err instanceof CompileError) {
+        throw new BadRequestError(
+          'Workflow does not compile: ' + err.message,
+          'COMPILE_ERROR',
+          { issues: err.issues }
+        )
+      }
+      throw err
+    }
+
+    // daily limit for test executions so this feature is not abused
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
+    const recentCount = await workflowController.countRecentExecutions(
+      workflowId,
+      oneDayAgo
+    )
+    if (recentCount >= BUILDER_TEST_EXECUTIONS_PER_DAY) {
+      throw new BadRequestError(
+        `Test limit reached (${BUILDER_TEST_EXECUTIONS_PER_DAY} per day). Try again later.`,
+        'TEST_LIMIT_REACHED'
+      )
+    }
+
+    const result = await executeWorkflowForCheck(
+      workflowController,
+      workflowId,
+      undefined,
+      { skipPublishCheck: true, variables }
+    )
+
+    return c.json(
+      {
+        ...result,
+        testsRemaining: BUILDER_TEST_EXECUTIONS_PER_DAY - recentCount - 1,
+      },
+      202
+    )
   })
 
   router.get('/workflows', async (c) => {
@@ -123,7 +249,15 @@ export const createBuilderRouter = (workflowController: WorkflowController) => {
     return c.json({ workflows })
   })
 
+  router.get('/my-workflows', auth, async (c) => {
+    // biome-ignore lint/suspicious/noExplicitAny:
+    const user = c.get('user' as any) as { id: string }
+    const workflows = await workflowController.getByAuthor(user.id)
+    return c.json({ workflows })
+  })
+
   router.post('/workflow', auth, async (c) => {
+    // biome-ignore lint/suspicious/noExplicitAny:
     const user = c.get('user' as any) as { id: string }
     let body: {
       name: string
@@ -146,6 +280,24 @@ export const createBuilderRouter = (workflowController: WorkflowController) => {
         'name, cityId, and definition are required',
         'MISSING_FIELDS'
       )
+    }
+
+    const nameResult = zWorkflowNameSchema.safeParse(body.name)
+    if (!nameResult.success) {
+      throw new BadRequestError(
+        nameResult.error.issues[0].message,
+        'INVALID_NAME'
+      )
+    }
+
+    if (body.description !== undefined) {
+      const descResult = zWorkflowDescriptionSchema.safeParse(body.description)
+      if (!descResult.success) {
+        throw new BadRequestError(
+          descResult.error.issues[0].message,
+          'INVALID_DESCRIPTION'
+        )
+      }
     }
 
     const existingCount = await workflowController.countByAuthor(user.id)
@@ -175,20 +327,24 @@ export const createBuilderRouter = (workflowController: WorkflowController) => {
     )
   })
 
-  router.get('/workflow/:id', async (c) => {
+  router.get('/workflow/:id', auth, async (c) => {
+    // biome-ignore lint/suspicious/noExplicitAny:
+    const user = c.get('user' as any) as { id: string }
     const id = c.req.param('id')
-    const workflow = await workflowController.getById(id)
-
-    if (!workflow) {
-      throw new BadRequestError('Workflow not found', 'WORKFLOW_NOT_FOUND')
-    }
+    const workflow = await getOwnedWorkflow(id, user.id)
 
     return c.json({ workflow })
   })
 
   router.put('/workflow/:id', auth, async (c) => {
+    // biome-ignore lint/suspicious/noExplicitAny:
+    const user = c.get('user' as any) as { id: string }
     const id = c.req.param('id')
-    let body: { definition: unknown }
+    let body: {
+      definition?: unknown
+      name?: string
+      description?: string
+    }
 
     try {
       body = await c.req.json()
@@ -199,29 +355,74 @@ export const createBuilderRouter = (workflowController: WorkflowController) => {
       )
     }
 
-    if (!body.definition) {
-      throw new BadRequestError('definition is required', 'MISSING_DEFINITION')
+    const existing = await getOwnedWorkflow(id, user.id)
+
+    if (body.name !== undefined) {
+      const nameResult = zWorkflowNameSchema.safeParse(body.name)
+      if (!nameResult.success) {
+        throw new BadRequestError(
+          nameResult.error.issues[0].message,
+          'INVALID_NAME'
+        )
+      }
     }
 
-    const existing = await workflowController.getById(id)
-    if (!existing) {
-      throw new BadRequestError('Workflow not found', 'WORKFLOW_NOT_FOUND')
+    if (body.description !== undefined) {
+      const descResult = zWorkflowDescriptionSchema.safeParse(body.description)
+      if (!descResult.success) {
+        throw new BadRequestError(
+          descResult.error.issues[0].message,
+          'INVALID_DESCRIPTION'
+        )
+      }
     }
 
-    const workflow = await workflowController.updateDefinition(
-      id,
-      body.definition
-    )
+    let validation: { ok: boolean; issues: ValidationIssue[] } = {
+      ok: true,
+      issues: [],
+    }
 
-    const validation = validateGraph(body.definition)
+    if (body.definition) {
+      const result = validateGraph(body.definition)
+      if (!result.ok) {
+        validation = { ok: false, issues: result.issues }
+      }
+    }
+
+    let workflow
+    try {
+      const updateName =
+        body.name !== undefined && body.name !== existing.name
+          ? body.name
+          : undefined
+
+      workflow = await workflowController.update(id, {
+        name: updateName,
+        description: body.description,
+        definition: body.definition as Prisma.InputJsonValue,
+      })
+    } catch (err) {
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === 'P2002'
+      ) {
+        throw new ConflictError(
+          'A workflow with this name already exists for this city',
+          'DUPLICATE_WORKFLOW_NAME'
+        )
+      }
+      throw err
+    }
 
     return c.json({
       workflow,
-      validation: { ok: validation.ok, issues: validation.issues },
+      validation,
     })
   })
 
   router.put('/workflow/:id/publish', auth, async (c) => {
+    // biome-ignore lint/suspicious/noExplicitAny:
+    const user = c.get('user' as any) as { id: string }
     const id = c.req.param('id')
     let body: { isPublished: boolean }
 
@@ -241,10 +442,7 @@ export const createBuilderRouter = (workflowController: WorkflowController) => {
       )
     }
 
-    const existing = await workflowController.getById(id)
-    if (!existing) {
-      throw new BadRequestError('Workflow not found', 'WORKFLOW_NOT_FOUND')
-    }
+    const existing = await getOwnedWorkflow(id, user.id)
 
     if (body.isPublished) {
       const validation = validateGraph(existing.definition)
@@ -275,23 +473,23 @@ export const createBuilderRouter = (workflowController: WorkflowController) => {
   })
 
   router.delete('/workflow/:id', auth, async (c) => {
+    // biome-ignore lint/suspicious/noExplicitAny:
+    const user = c.get('user' as any) as { id: string }
     const id = c.req.param('id')
 
-    const existing = await workflowController.getById(id)
-    if (!existing) {
-      throw new BadRequestError('Workflow not found', 'WORKFLOW_NOT_FOUND')
-    }
-
+    await getOwnedWorkflow(id, user.id)
     await workflowController.delete(id)
     return c.json({ message: 'Workflow deleted' })
   })
 
-  router.get('/execution/:id', async (c) => {
+  router.get('/execution/:id', auth, async (c) => {
+    // biome-ignore lint/suspicious/noExplicitAny:
+    const user = c.get('user' as any) as { id: string }
     const id = c.req.param('id')
     const execution = await workflowController.getExecution(id)
 
-    if (!execution) {
-      throw new BadRequestError('Execution not found', 'EXECUTION_NOT_FOUND')
+    if (!execution || execution.workflow.authorId !== user.id) {
+      throw new NotFoundError('Execution not found', 'EXECUTION_NOT_FOUND')
     }
 
     return c.json({ execution })

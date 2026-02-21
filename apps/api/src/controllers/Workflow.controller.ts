@@ -33,6 +33,13 @@ class WorkflowController {
             lastname: true,
           },
         },
+        executions: {
+          take: 20,
+          orderBy: { startedAt: 'desc' },
+          include: {
+            check: { select: { cityId: true, letters: true, numbers: true } },
+          },
+        },
       },
     })
   }
@@ -57,9 +64,38 @@ class WorkflowController {
     })
   }
 
+  async getByAuthor(authorId: string) {
+    return prisma.workflow.findMany({
+      where: { authorId },
+      include: {
+        city: { select: { name: true } },
+      },
+      orderBy: { updatedAt: 'desc' },
+    })
+  }
+
   async countByAuthor(authorId: string) {
     return prisma.workflow.count({
       where: { authorId },
+    })
+  }
+
+  async update(
+    id: string,
+    data: {
+      name?: string
+      description?: string | null
+      definition?: Prisma.InputJsonValue
+      cityId?: string
+      isPublished?: boolean
+    }
+  ) {
+    return prisma.workflow.update({
+      where: { id },
+      data: {
+        ...data,
+        updatedAt: new Date(),
+      },
     })
   }
 
@@ -86,10 +122,7 @@ class WorkflowController {
     })
   }
 
-  async createExecution(
-    workflowId: string,
-    checkId?: string,
-  ) {
+  async createExecution(workflowId: string, checkId?: string) {
     return prisma.workflowExecution.create({
       data: {
         workflowId,
@@ -109,11 +142,22 @@ class WorkflowController {
       triggerRunId?: string
       duration?: number
       finishedAt?: Date
+      currentNodeId?: string | null
+      completedNodes?: Prisma.InputJsonValue
     }
   ) {
     return prisma.workflowExecution.update({
       where: { id: executionId },
       data,
+    })
+  }
+
+  async countRecentExecutions(workflowId: string, since: Date) {
+    return prisma.workflowExecution.count({
+      where: {
+        workflowId,
+        startedAt: { gte: since },
+      },
     })
   }
 

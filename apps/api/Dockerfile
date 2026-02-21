@@ -1,6 +1,6 @@
 
 # Use Bun image as base
-FROM oven/bun:1.2 AS base
+FROM oven/bun:1.3 AS base
 WORKDIR /usr/src/app
 
 RUN apt-get update && apt-get install -y openssl

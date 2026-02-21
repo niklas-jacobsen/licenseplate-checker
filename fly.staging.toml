@@ -1,0 +1,27 @@
+# fly.staging.toml
+
+app = "licenseplate-checker-staging"
+primary_region = "fra"
+
+[build]
+dockerfile = "apps/api/Dockerfile"
+
+[build.args]
+PROJECT="api"
+
+[env]
+NODE_ENV = "production"
+
+[http_service]
+internal_port = 8080
+force_https = true
+min_machines_running = 0
+processes = ["app"]
+
+[[vm]]
+size = "shared-cpu-1x"
+memory = "512mb"
+processes = ["fly_app_release_command"]
+
+[deploy]
+release_command = "/bin/bash release.sh"

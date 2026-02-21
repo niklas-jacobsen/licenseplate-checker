@@ -1,315 +1,86 @@
 'use client'
 
 import NavBar from '@/components/nav-bar'
-import { useCallback, useState } from 'react'
+import { useCallback, useState, useEffect, useRef, Suspense } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
+import { useAuth } from '@/lib/auth-context'
 import {
   ReactFlow,
   Background as BackgroundComponent,
-  addEdge,
-  applyEdgeChanges,
-  applyNodeChanges,
   ReactFlowProvider,
   useReactFlow,
-  type Connection,
-  type Edge,
   type Node,
-  type NodeChange,
-  type EdgeChange,
+  type Edge,
 } from '@xyflow/react'
 
-import type {
-  WorkflowNode,
-  CoreNodeType,
-} from '@licenseplate-checker/shared/workflow-dsl/types'
-import { nodeRegistry } from '@licenseplate-checker/shared/node-registry'
-import { PALETTE_NODES } from './config'
+import type { CoreNodeType } from '@licenseplate-checker/shared/workflow-dsl/types'
+import { WORKFLOW_NAME_MAX_LENGTH } from '@licenseplate-checker/shared/constants/limits'
+import { BuilderStoreProvider, useBuilderStore, useShallow } from './store'
+import { nodeTypes } from './components/nodes'
+import { edgeTypes } from './components/edges'
+import { BottomPalette } from './components/bottom-palette'
+import { ExecutionErrorBanner } from './components/execution-error-banner'
+import { OutcomeToast } from './components/outcome-toast'
+import { useDragAndDrop } from './hooks/useDragAndDrop'
 
 import '@xyflow/react/dist/style.css'
 
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-  CardAction,
-} from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { TestDialog } from './components/test-dialog'
+import {
+  Save,
+  ArrowLeft,
+  Loader2,
+  Pencil,
+  Check,
+  Upload,
+  CheckCircle,
+  XCircle,
+} from 'lucide-react'
 
+// biome-ignore lint/suspicious/noExplicitAny:
 const Background = BackgroundComponent as any
 
-const initialNodes: WorkflowNode[] = [
-  {
-    id: 'start',
-    type: 'core.start',
-    position: { x: 120, y: 140 },
-    data: { label: 'Start', config: {} },
-  },
-  {
-    id: 'end',
-    type: 'core.end',
-    position: { x: 560, y: 140 },
-    data: { label: 'End', config: {} },
-  },
-]
-
-const initialEdges: Edge[] = [
-  {
-    id: 'start-end',
-    source: 'start',
-    target: 'end',
-    sourceHandle: 'next',
-    targetHandle: 'in',
-    type: 'smoothstep',
-  },
-]
-
-function createNode(
-  type: CoreNodeType,
-  position: { x: number; y: number }
-): WorkflowNode {
-  const id = `${type}-${crypto.randomUUID()}`
-  const label = nodeRegistry[type]?.label ?? 'Node'
-
-  switch (type) {
-    case 'core.click':
-      return {
-        id,
-        type: 'core.click',
-        position,
-        data: {
-          label,
-          config: { selector: '' },
-        },
-      }
-
-    case 'core.typeText':
-      return {
-        id,
-        type: 'core.typeText',
-        position,
-        data: {
-          label,
-          config: { selector: '', text: '' },
-        },
-      }
-
-    case 'core.openPage':
-      return {
-        id,
-        type: 'core.openPage',
-        position,
-        data: {
-          label,
-          config: { url: '' },
-        },
-      }
-
-    case 'core.conditional':
-      return {
-        id,
-        type: 'core.conditional',
-        position,
-        data: {
-          label,
-          config: { operator: 'exists', selector: '' },
-        },
-      }
-
-    case 'core.wait':
-      return {
-        id,
-        type: 'core.wait',
-        position,
-        data: {
-          label,
-          config: { mode: 'duration', seconds: 1 },
-        },
-      }
-
-    case 'core.start':
-      return {
-        id,
-        type: 'core.start',
-        position,
-        data: { label, config: {} },
-      }
-
-    case 'core.end':
-      return {
-        id,
-        type: 'core.end',
-        position,
-        data: { label, config: {} },
-      }
-
-    default:
-      //should never be reached
-      throw new Error(`Unknown node type: ${type}`)
-  }
-}
-
-function BottomPalette({ onAdd }: { onAdd: (type: CoreNodeType) => void }) {
-  return (
-    <Card className="nopan absolute bottom-6 left-1/2 z-20 flex w-fit -translate-x-1/2 flex-row items-center gap-2 rounded-full border bg-background/90 p-2 shadow-xl backdrop-blur-sm">
-      <div className="flex items-center gap-1">
-        {PALETTE_NODES.map((node) => (
-          <Button
-            key={node.type}
-            variant="ghost"
-            size="sm"
-            className="rounded-full"
-            onClick={() => onAdd(node.type)}
-          >
-            {node.label}
-          </Button>
-        ))}
-      </div>
-
-      <div className="mx-2 h-6 w-px bg-border" />
-
-      <div className="flex items-center gap-1">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="rounded-full text-muted-foreground"
-        >
-          Test
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="rounded-full text-muted-foreground"
-        >
-          Exit
-        </Button>
-      </div>
-    </Card>
-  )
-}
-
-function OptionsSidebar({
-  selectedNode,
-  onClose,
-}: {
-  selectedNode: WorkflowNode | null
-  onClose: () => void
-}) {
-  const isOpen = !!selectedNode
-
-  return (
-    <Card
-      className={[
-        'absolute bottom-4 right-4 top-4 z-20 w-80',
-        'flex flex-col shadow-2xl transition-transform duration-300 ease-in-out',
-        'border bg-background/95 backdrop-blur-sm',
-        isOpen ? 'translate-x-0' : 'translate-x-[120%]',
-      ].join(' ')}
-    >
-      <CardHeader>
-        <CardTitle>Node Options</CardTitle>
-        <CardDescription>
-          {selectedNode ? selectedNode.data.label : 'Select a node'}
-        </CardDescription>
-
-        <CardAction>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 rounded-full"
-            onClick={onClose}
-          >
-            ✕
-          </Button>
-        </CardAction>
-      </CardHeader>
-
-      <CardContent className="flex-1 overflow-y-auto">
-        {selectedNode ? (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-xs font-medium uppercase text-muted-foreground">
-                Type
-              </label>
-              <div className="rounded-md border bg-muted/30 p-2 text-sm font-medium">
-                {selectedNode.type}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs font-medium uppercase text-muted-foreground">
-                Config
-              </label>
-              <div className="rounded-md border border-dashed p-4 text-xs text-muted-foreground">
-                Form fields for <strong>{selectedNode.type}</strong> will be
-                rendered here.
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
-            No node selected
-          </div>
-        )}
-      </CardContent>
-
-      {selectedNode && (
-        <CardFooter className="flex gap-2">
-          <Button variant="outline" className="flex-1">
-            Duplicate
-          </Button>
-          <Button variant="destructive" className="flex-1 text-white">
-            Delete
-          </Button>
-        </CardFooter>
-      )}
-    </Card>
-  )
-}
-
-function FlowCanvas({
-  nodes,
-  edges,
-  setNodes,
-  setEdges,
-  onSelectNode,
-}: {
-  nodes: WorkflowNode[]
-  edges: Edge[]
-  setNodes: React.Dispatch<React.SetStateAction<WorkflowNode[]>>
-  setEdges: React.Dispatch<React.SetStateAction<Edge[]>>
-  onSelectNode: (node: WorkflowNode | null) => void
-}) {
+function FlowCanvas() {
   const { screenToFlowPosition, getViewport } = useReactFlow()
+  const { onDrop, onDragOver } = useDragAndDrop()
 
-  const onNodesChange = useCallback(
-    (changes: NodeChange[]) =>
-      setNodes(
-        (snapshot) => applyNodeChanges(changes, snapshot) as WorkflowNode[]
-      ),
-    [setNodes]
-  )
-
-  const onEdgesChange = useCallback(
-    (changes: EdgeChange[]) =>
-      setEdges((snapshot) => applyEdgeChanges(changes, snapshot) as Edge[]),
-    [setEdges]
-  )
-
-  const onConnect = useCallback(
-    (params: Connection) =>
-      setEdges((snapshot) =>
-        addEdge({ ...params, type: 'smoothstep' }, snapshot)
-      ),
-    [setEdges]
+  const {
+    nodes,
+    edges,
+    onNodesChange,
+    onEdgesChange,
+    onConnect,
+    addNodeByType,
+    setSelectedNodeId,
+  } = useBuilderStore(
+    useShallow((s) => ({
+      nodes: s.nodes,
+      edges: s.edges,
+      onNodesChange: s.onNodesChange,
+      onEdgesChange: s.onEdgesChange,
+      onConnect: s.onConnect,
+      addNodeByType: s.addNodeByType,
+      setSelectedNodeId: s.setSelectedNodeId,
+    }))
   )
 
   const onSelectionChange = useCallback(
     (payload: { nodes: Node[]; edges: Edge[] }) => {
-      onSelectNode(payload.nodes[0] ? (payload.nodes[0] as WorkflowNode) : null)
+      setSelectedNodeId(payload.nodes[0]?.id ?? null)
     },
-    [onSelectNode]
+    [setSelectedNodeId]
   )
 
   const addNodeFromPalette = useCallback(
@@ -326,10 +97,9 @@ function FlowCanvas({
       }
 
       const pos = screenToFlowPosition(adjusted)
-      const newNode = createNode(type, pos)
-      setNodes((prev) => [...prev, newNode])
+      addNodeByType(type, pos)
     },
-    [getViewport, screenToFlowPosition, setNodes]
+    [getViewport, screenToFlowPosition, addNodeByType]
   )
 
   return (
@@ -337,57 +107,386 @@ function FlowCanvas({
       <ReactFlow
         nodes={nodes}
         edges={edges}
+        nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
+        defaultEdgeOptions={{ type: 'workflow', animated: true }}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         onSelectionChange={onSelectionChange}
+        onDrop={onDrop}
+        onDragOver={onDragOver}
         fitView
         attributionPosition="bottom-right"
       >
         <Background gap={18} />
+        <ExecutionErrorBanner />
         <BottomPalette onAdd={addNodeFromPalette} />
       </ReactFlow>
     </div>
   )
 }
 
-function FlowWithProvider(props: {
-  nodes: WorkflowNode[]
-  edges: Edge[]
-  setNodes: React.Dispatch<React.SetStateAction<WorkflowNode[]>>
-  setEdges: React.Dispatch<React.SetStateAction<Edge[]>>
-  onSelectNode: (node: WorkflowNode | null) => void
-}) {
+function BuilderToolbar() {
+  const router = useRouter()
+
+  const {
+    workflowId,
+    workflowName,
+    isSaving,
+    saveError,
+    saveWorkflow,
+    saveWorkflowAndUnpublish,
+    checkHasContentChanges,
+    renameWorkflow,
+    canPublish,
+    isPublished,
+    isPublishing,
+    originallyPublished,
+    testsRemaining,
+    publishWorkflow,
+    unpublishWorkflow,
+    isDirty,
+  } = useBuilderStore(
+    useShallow((s) => ({
+      workflowId: s.workflowId,
+      workflowName: s.workflowName,
+      isSaving: s.isSaving,
+      saveError: s.saveError,
+      saveWorkflow: s.saveWorkflow,
+      saveWorkflowAndUnpublish: s.saveWorkflowAndUnpublish,
+      checkHasContentChanges: s.checkHasContentChanges,
+      renameWorkflow: s.renameWorkflow,
+      canPublish: s.canPublish,
+      isPublished: s.isPublished,
+      isPublishing: s.isPublishing,
+      originallyPublished: s.originallyPublished,
+      testsRemaining: s.testsRemaining,
+      publishWorkflow: s.publishWorkflow,
+      unpublishWorkflow: s.unpublishWorkflow,
+      isDirty: s.isDirty,
+    }))
+  )
+
+  const [showSaveWarning, setShowSaveWarning] = useState(false)
+  const [showTestDialog, setShowTestDialog] = useState(false)
+  const [showLeaveWarning, setShowLeaveWarning] = useState(false)
+
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault()
+      }
+    }
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [isDirty])
+
+  const handleBack = () => {
+    if (isDirty) {
+      setShowLeaveWarning(true)
+    } else {
+      router.push(`/workflows/${workflowId}`)
+    }
+  }
+
+  const handleSaveClick = () => {
+    if (originallyPublished && checkHasContentChanges()) {
+      setShowSaveWarning(true)
+    } else {
+      saveWorkflow()
+    }
+  }
+
+  const [justSaved, setJustSaved] = useState(false)
+  const prevSavingRef = useRef(false)
+
+  useEffect(() => {
+    if (prevSavingRef.current && !isSaving && !saveError) {
+      setJustSaved(true)
+      const timer = setTimeout(() => setJustSaved(false), 2000)
+      return () => clearTimeout(timer)
+    }
+    prevSavingRef.current = isSaving
+  }, [isSaving, saveError])
+
+  const [isEditingName, setIsEditingName] = useState(false)
+  const [newName, setNewName] = useState('')
+  const [renameError, setRenameError] = useState('')
+
+  const handleRename = async () => {
+    if (!newName.trim() || newName === workflowName) {
+      setIsEditingName(false)
+      setNewName(workflowName)
+      setRenameError('')
+      return
+    }
+
+    setRenameError('')
+    const result = await renameWorkflow(newName)
+
+    if (result.success) {
+      setIsEditingName(false)
+    } else {
+      setRenameError(result.error || 'Failed to rename')
+      setNewName(workflowName)
+    }
+  }
+
   return (
-    <ReactFlowProvider>
-      <FlowCanvas {...props} />
-    </ReactFlowProvider>
+    <div className="flex items-center justify-between border-b bg-white px-4 py-2">
+      <div className="flex items-center gap-3">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleBack}
+        >
+          <ArrowLeft className="h-4 w-4 mr-1" />
+          Back
+        </Button>
+        <div className="h-5 w-px bg-border" />
+
+        {isEditingName ? (
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Input
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                maxLength={WORKFLOW_NAME_MAX_LENGTH}
+                className={`h-7 w-48 pr-7 text-sm ${renameError ? 'border-destructive' : ''}`}
+                autoFocus
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleRename()
+                  if (e.key === 'Escape') {
+                    setNewName(workflowName)
+                    setIsEditingName(false)
+                    setRenameError('')
+                  }
+                }}
+                onBlur={handleRename}
+              />
+              <button
+                type="button"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-5 w-5 flex items-center justify-center rounded-sm bg-primary text-primary-foreground hover:bg-primary/90"
+                onMouseDown={(e) => {
+                  e.preventDefault()
+                  handleRename()
+                }}
+              >
+                <Check className="h-3 w-3" strokeWidth={3} />
+              </button>
+            </div>
+            {renameError && (
+              <span className="text-xs text-destructive whitespace-nowrap">
+                {renameError}
+              </span>
+            )}
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 group">
+            <span className="text-sm font-medium">{workflowName}</span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground"
+              onClick={() => {
+                setNewName(workflowName)
+                setIsEditingName(true)
+              }}
+            >
+              <Pencil className="h-3 w-3" />
+            </Button>
+          </div>
+        )}
+      </div>
+
+      <div className="flex items-center gap-2">
+        {saveError && (
+          <span className="text-xs text-destructive">{saveError}</span>
+        )}
+        {workflowId && (
+          <>
+            <Button size="sm" onClick={handleSaveClick} disabled={isSaving}>
+              {isSaving ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-1" />
+              ) : justSaved ? (
+                <Check className="h-4 w-4 mr-1" />
+              ) : (
+                <Save className="h-4 w-4 mr-1" />
+              )}
+              {justSaved ? 'Saved' : 'Save'}
+            </Button>
+            {isPublished ? (
+              <Button
+                size="sm"
+                variant="outline"
+                className="group/pub bg-teal-100 text-teal-800 border-teal-300 hover:bg-red-50 hover:text-red-700 hover:border-red-200"
+                onClick={unpublishWorkflow}
+                disabled={isPublishing}
+              >
+                {isPublishing ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                ) : (
+                  <>
+                    <CheckCircle className="h-4 w-4 mr-1 group-hover/pub:hidden" />
+                    <XCircle className="h-4 w-4 mr-1 hidden group-hover/pub:block" />
+                  </>
+                )}
+                <span className="group-hover/pub:hidden">Published</span>
+                <span className="hidden group-hover/pub:inline">Unpublish</span>
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                onClick={publishWorkflow}
+                disabled={!canPublish || isPublishing}
+              >
+                {isPublishing ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                ) : (
+                  <Upload className="h-4 w-4 mr-1" />
+                )}
+                Publish
+              </Button>
+            )}
+          </>
+        )}
+      </div>
+
+      <AlertDialog open={showSaveWarning} onOpenChange={setShowSaveWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Saving will unpublish this workflow</AlertDialogTitle>
+            <AlertDialogDescription>
+              This workflow is currently published. Saving your changes will unpublish it,
+              as the updated version has not been validated yet. You can run a test and
+              confirm the outcome to re-enable publishing.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col-reverse sm:flex-row gap-2">
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <Button
+              variant="outline"
+              disabled={testsRemaining === 0}
+              onClick={() => {
+                setShowSaveWarning(false)
+                setShowTestDialog(true)
+              }}
+            >
+              {testsRemaining === 0 ? 'No test executions remaining' : 'Test first'}
+            </Button>
+            <AlertDialogAction onClick={saveWorkflowAndUnpublish}>
+              Save & Unpublish
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <TestDialog open={showTestDialog} onOpenChange={setShowTestDialog} />
+
+      <AlertDialog open={showLeaveWarning} onOpenChange={setShowLeaveWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Leave without saving?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have unsaved changes. Leaving now will discard them.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Stay</AlertDialogCancel>
+            <AlertDialogAction onClick={() => router.push(`/workflows/${workflowId}`)}>
+              Leave
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
   )
 }
 
-export default function BuilderPage() {
-  const [nodes, setNodes] = useState<WorkflowNode[]>(initialNodes)
-  const [edges, setEdges] = useState<Edge[]>(initialEdges)
-  const [selectedNode, setSelectedNode] = useState<WorkflowNode | null>(null)
+function BuilderContent() {
+  const { user, isLoading: authLoading } = useAuth()
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const workflowId = searchParams.get('id')
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push(`/auth/login?redirect=/builder${workflowId ? `?id=${workflowId}` : ''}`)
+    }
+  }, [user, authLoading, router, workflowId])
+
+  if (authLoading || !user) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
+  return (
+    <BuilderStoreProvider workflowId={workflowId}>
+      <BuilderInner />
+    </BuilderStoreProvider>
+  )
+}
+
+function BuilderInner() {
+  const router = useRouter()
+  const { workflowId, isLoading, notFound, loadWorkflow } = useBuilderStore(
+    useShallow((s) => ({
+      workflowId: s.workflowId,
+      isLoading: s.isLoading,
+      notFound: s.notFound,
+      loadWorkflow: s.loadWorkflow,
+    }))
+  )
+
+  useEffect(() => {
+    if (workflowId) {
+      loadWorkflow(workflowId)
+    }
+  }, [workflowId, loadWorkflow])
+
+  useEffect(() => {
+    if (notFound) {
+      router.replace('/workflows')
+    }
+  }, [notFound, router])
+
+  if (isLoading || notFound) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
 
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden">
       <NavBar />
+      <BuilderToolbar />
 
       <div className="relative h-full w-full flex-1">
-        <FlowWithProvider
-          nodes={nodes}
-          edges={edges}
-          setNodes={setNodes}
-          setEdges={setEdges}
-          onSelectNode={setSelectedNode}
-        />
-
-        <OptionsSidebar
-          selectedNode={selectedNode}
-          onClose={() => setSelectedNode(null)}
-        />
+        <ReactFlowProvider>
+          <FlowCanvas />
+        </ReactFlowProvider>
       </div>
+      <OutcomeToast />
     </div>
+  )
+}
+
+export default function BuilderPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex h-screen w-screen items-center justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      }
+    >
+      <BuilderContent />
+    </Suspense>
   )
 }

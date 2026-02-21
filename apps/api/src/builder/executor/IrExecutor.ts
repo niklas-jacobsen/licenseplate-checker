@@ -20,9 +20,18 @@ import {
   PRIVATE_IP_RANGES,
   PRIVATE_HOSTNAMES,
 } from '@licenseplate-checker/shared/constants/schemes'
+import {
+  resolveVariables,
+  type VariableContext,
+} from '@licenseplate-checker/shared/template-variables'
 
 export interface ExecutorOptions {
   allowedDomains?: string[]
+  cityName?: string
+  variables?: VariableContext
+  websiteUrl?: string
+  onBlockStart?: (sourceNodeId: string) => Promise<void>
+  onBlockComplete?: (sourceNodeId: string, success: boolean) => Promise<void>
 }
 
 export class IrExecutor {
@@ -30,9 +39,19 @@ export class IrExecutor {
   private browser: Browser | null = null
   private page: Page | null = null
   private allowedDomains: string[]
+  private cityName: string
+  private variables: VariableContext
+  private websiteUrl?: string
+  private onBlockStart?: ExecutorOptions['onBlockStart']
+  private onBlockComplete?: ExecutorOptions['onBlockComplete']
 
   constructor(options: ExecutorOptions = {}) {
     this.allowedDomains = options.allowedDomains ?? []
+    this.cityName = options.cityName ?? 'unknown'
+    this.variables = options.variables ?? {}
+    this.websiteUrl = options.websiteUrl
+    this.onBlockStart = options.onBlockStart
+    this.onBlockComplete = options.onBlockComplete
   }
 
   private log(
@@ -78,15 +97,19 @@ export class IrExecutor {
       throw new Error(`Access to private host is blocked: ${hostname}`)
     }
 
-    if (this.allowedDomains.length > 0) {
-      const isAllowed = this.allowedDomains.some(
-        (domain) => hostname === domain || hostname.endsWith(`.${domain}`)
+    if (this.allowedDomains.length === 0) {
+      throw new Error(
+        `No allowed domains configured for ${this.cityName}. Cannot make external requests.`
       )
-      if (!isAllowed) {
-        throw new Error(
-          `Domain '${hostname}' is not in the allowed list: [${this.allowedDomains.join(', ')}]`
-        )
-      }
+    }
+
+    const isAllowed = this.allowedDomains.some(
+      (domain) => hostname === domain || hostname.endsWith(`.${domain}`)
+    )
+    if (!isAllowed) {
+      throw new Error(
+        `The address '${hostname}' is not allowed for ${this.cityName}`
+      )
     }
   }
 
@@ -98,6 +121,8 @@ export class IrExecutor {
 
   async execute(ir: BuilderIr): Promise<ExecutionResult> {
     this.logs = []
+    let errorNodeId: string | undefined
+    let outcome: string | undefined
 
     try {
       this.log('info', 'Starting execution', { entryBlockId: ir.entryBlockId })
@@ -127,16 +152,42 @@ export class IrExecutor {
 
         this.log('debug', `Executing block ${block.id}`, { kind: block.kind })
 
-        currentBlockId = await this.executeBlock(block, ir)
+        if (this.onBlockStart) {
+          await this.onBlockStart(block.sourceNodeId)
+        }
+
+        try {
+          if (block.kind === 'end') {
+            outcome = block.outcome
+            this.log('info', `Workflow outcome: ${outcome}`)
+          }
+
+          currentBlockId = await this.executeBlock(block, ir)
+
+          if (this.onBlockComplete) {
+            await this.onBlockComplete(block.sourceNodeId, true)
+          }
+        } catch (err) {
+          errorNodeId = block.sourceNodeId
+          if (this.onBlockComplete) {
+            await this.onBlockComplete(block.sourceNodeId, false)
+          }
+          throw err
+        }
       }
 
       this.log('info', 'Execution completed successfully')
-      return { success: true, logs: this.logs }
+      return { success: true, logs: this.logs, outcome }
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error)
       this.log('error', 'Execution failed', { error: errorMessage })
-      return { success: false, logs: this.logs, error: errorMessage }
+      return {
+        success: false,
+        logs: this.logs,
+        error: errorMessage,
+        errorNodeId,
+      }
     } finally {
       if (this.browser) {
         await this.browser.close()
@@ -150,6 +201,13 @@ export class IrExecutor {
   ): Promise<string | null> {
     switch (block.kind) {
       case 'start':
+        if (this.websiteUrl) {
+          this.validateUrl(this.websiteUrl)
+          this.log('info', `Opening website URL: ${this.websiteUrl}`)
+          await this.page!.goto(this.websiteUrl)
+          await this.page!.waitForLoadState('domcontentloaded')
+          await this.delay()
+        }
         return block.next
 
       case 'end':
@@ -167,6 +225,7 @@ export class IrExecutor {
       }
 
       default:
+        // biome-ignore lint/suspicious/noExplicitAny:
         throw new UnknownBlockKindError((block as any).kind)
     }
   }
@@ -175,28 +234,31 @@ export class IrExecutor {
     if (!this.page) throw new BrowserInitializationError()
 
     switch (op.type) {
-      case 'openPage':
-        this.validateUrl(op.url)
-        this.log('info', `Opening page: ${op.url}`)
-        await this.page.goto(op.url)
+      case 'openPage': {
+        const url = resolveVariables(op.url, this.variables)
+        this.validateUrl(url)
+        this.log('info', `Opening page: ${url}`)
+        await this.page.goto(url)
         await this.page.waitForLoadState('domcontentloaded')
         break
+      }
 
       case 'click':
         this.log('info', `Clicking selector: ${op.selector}`)
         await this.page.click(op.selector)
+        await this.page.waitForLoadState('networkidle')
         break
 
-      case 'typeText':
+      case 'typeText': {
+        const text = resolveVariables(op.text, this.variables)
         this.log('info', `Typing text into ${op.selector}`)
-        await this.page.fill(op.selector, op.text)
+        await this.page.fill(op.selector, text)
         break
+      }
 
       case 'waitDuration':
         this.log('info', `Waiting ${op.seconds}s`)
-        await new Promise((resolve) =>
-          setTimeout(resolve, op.seconds * 1000)
-        )
+        await new Promise((resolve) => setTimeout(resolve, op.seconds * 1000))
         break
 
       case 'waitSelector':
@@ -228,7 +290,34 @@ export class IrExecutor {
         break
       }
 
+      case 'selectByText': {
+        const text = resolveVariables(op.text, this.variables)
+        this.log('info', `Selecting option by text "${text}" in ${op.selector}`)
+        await this.page.selectOption(op.selector, { label: text })
+        break
+      }
+
+      case 'selectByValue': {
+        const value = resolveVariables(op.value, this.variables)
+        this.log(
+          'info',
+          `Selecting option by value "${value}" in ${op.selector}`
+        )
+        await this.page.selectOption(op.selector, value)
+        break
+      }
+
+      case 'selectByIndex': {
+        this.log(
+          'info',
+          `Selecting option by index ${op.index} in ${op.selector}`
+        )
+        await this.page.selectOption(op.selector, { index: op.index })
+        break
+      }
+
       default:
+        // biome-ignore lint/suspicious/noExplicitAny: exhaustive switch guard
         throw new UnknownActionTypeError((op as any).type)
     }
   }
@@ -246,15 +335,17 @@ export class IrExecutor {
       }
 
       case 'textIncludes': {
+        const value = resolveVariables(condition.value, this.variables)
         this.log(
           'debug',
-          `Checking text in ${condition.selector} includes "${condition.value}"`
+          `Checking text in ${condition.selector} includes "${value}"`
         )
         const text = await this.page.textContent(condition.selector)
-        return text ? text.includes(condition.value) : false
+        return text ? text.includes(value) : false
       }
 
       default:
+        // biome-ignore lint/suspicious/noExplicitAny: exhaustive switch guard
         throw new UnknownConditionOpError((condition as any).op)
     }
   }
