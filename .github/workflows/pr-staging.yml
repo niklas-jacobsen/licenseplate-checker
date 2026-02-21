@@ -28,3 +28,7 @@ jobs:
       - name: 'Run Tests'
         run: 'bun test'
         continue-on-error: false
+        env:
+          DATABASE_URL: 'postgresql://test:test@localhost:5432/test'
+          ALLOWED_ORIGINS: 'http://localhost:3000'
+          JWT_SECRET: 'ci-test-secret'
