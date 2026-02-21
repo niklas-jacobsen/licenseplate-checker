@@ -1,9 +1,23 @@
 'use client'
 
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import NavBar from '@/components/nav-bar'
+import { useAuth } from '@/lib/auth-context'
 import WorkflowList from '@/components/workflow-list'
 
 export default function WorkflowsPage() {
+  const { user, isLoading } = useAuth()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push('/auth/login?redirect=/workflows')
+    }
+  }, [user, isLoading, router])
+
+  if (isLoading || !user) return null
+
   return (
     <main className="min-h-screen bg-gray-50">
       <NavBar />

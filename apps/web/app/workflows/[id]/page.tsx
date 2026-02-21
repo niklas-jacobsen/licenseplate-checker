@@ -2,6 +2,7 @@
 
 import { useEffect, useState, use } from 'react'
 import { useRouter } from 'next/navigation'
+import { useAuth } from '@/lib/auth-context'
 import { workflowService } from '@/services/workflow.service'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -83,6 +84,7 @@ export default function WorkflowDetailPage({
   params: Promise<{ id: string }>
 }) {
   const { id } = use(params)
+  const { user, isLoading: authLoading } = useAuth()
   const router = useRouter()
   const [workflow, setWorkflow] = useState<Workflow | null>(null)
   const [loading, setLoading] = useState(true)
@@ -97,8 +99,14 @@ export default function WorkflowDetailPage({
   const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
-    fetchWorkflow()
-  }, [id])
+    if (!authLoading && !user) {
+      router.push(`/auth/login?redirect=/workflows/${id}`)
+    }
+  }, [user, authLoading, router, id])
+
+  useEffect(() => {
+    if (user) fetchWorkflow()
+  }, [id, user])
 
   const fetchWorkflow = async () => {
     try {
@@ -108,6 +116,9 @@ export default function WorkflowDetailPage({
         setWorkflow(res.data.workflow)
         setEditName(res.data.workflow.name)
         setEditDescription(res.data.workflow.description || '')
+      } else if (res.status === 404) {
+        router.replace('/workflows')
+        return
       }
     } catch (err) {
       console.error(err)
@@ -191,7 +202,7 @@ export default function WorkflowDetailPage({
     }
   }
 
-  if (loading) {
+  if (authLoading || !user || loading) {
     return (
       <div className="flex justify-center items-center h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -220,7 +231,7 @@ export default function WorkflowDetailPage({
           <div className="space-y-4">
             <Button
               variant="ghost"
-              onClick={() => router.back()}
+              onClick={() => router.push('/workflows')}
               className="pl-0 hover:bg-transparent hover:text-primary"
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
@@ -237,7 +248,7 @@ export default function WorkflowDetailPage({
                     variant="outline"
                     className={`gap-1 ${
                       workflow.isPublished
-                        ? 'bg-teal-50 text-teal-700 border-teal-200'
+                        ? 'bg-teal-100 text-teal-800 border-teal-300'
                         : 'bg-gray-100 text-gray-600 border-gray-200'
                     }`}
                   >

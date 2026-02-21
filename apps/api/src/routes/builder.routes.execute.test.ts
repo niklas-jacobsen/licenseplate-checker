@@ -77,7 +77,7 @@ describe('POST /builder/execute', () => {
     expect(body.error.code).toBe('MISSING_WORKFLOW_ID')
   })
 
-  it('returns 400 when workflow not found', async () => {
+  it('returns 404 when workflow not found', async () => {
     const app = makeApp()
     mockWorkflowController.getById.mockResolvedValueOnce(null)
 
@@ -86,19 +86,23 @@ describe('POST /builder/execute', () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ workflowId: 'nonexistent' }),
     })
-    expect(res.status).toBe(400)
+    expect(res.status).toBe(404)
     const body = await res.json()
     expect(body.error.code).toBe('WORKFLOW_NOT_FOUND')
   })
 
   it('returns 400 when workflow is not published', async () => {
     const app = makeApp()
-    mockWorkflowController.getById.mockResolvedValueOnce({
+    const wf = {
       id: 'wf-1',
+      authorId: 'test-user-id',
       definition: { nodes: [], edges: [] },
       isPublished: false,
       city: { allowedDomains: ['example.com'] },
-    })
+    }
+    // called once in ownership check, once in execute workflow for check
+    mockWorkflowController.getById.mockResolvedValueOnce(wf)
+    mockWorkflowController.getById.mockResolvedValueOnce(wf)
 
     const res = await app.request('/builder/execute', {
       method: 'POST',
@@ -113,12 +117,16 @@ describe('POST /builder/execute', () => {
   it('triggers execution and returns 202', async () => {
     const app = makeApp()
 
-    mockWorkflowController.getById.mockResolvedValueOnce({
+    const wf = {
       id: 'wf-1',
+      authorId: 'test-user-id',
       definition: { nodes: [], edges: [] },
       isPublished: true,
       city: { allowedDomains: ['example.com'] },
-    })
+    }
+    // called once in ownership check, once in execute workflow for check
+    mockWorkflowController.getById.mockResolvedValueOnce(wf)
+    mockWorkflowController.getById.mockResolvedValueOnce(wf)
     mockWorkflowController.createExecution.mockResolvedValueOnce({
       id: 'exec-1',
     })

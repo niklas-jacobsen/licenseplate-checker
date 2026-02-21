@@ -60,7 +60,9 @@ export const createWebhookRouter = (
       status: body.status as ExecutionStatus,
       // biome-ignore lint/suspicious/noExplicitAny:
       logs: body.logs as any,
-      result: body.error ? { error: body.error } : { success: true },
+      result: body.error
+        ? { error: body.error, outcome: body.outcome }
+        : { success: true, outcome: body.outcome },
       errorNodeId: body.errorNodeId,
       duration: body.duration,
       finishedAt: new Date(),

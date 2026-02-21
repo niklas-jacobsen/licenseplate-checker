@@ -15,6 +15,7 @@ import {
   X,
   Clock,
   AlertTriangle,
+  ArrowUpRight,
 } from 'lucide-react'
 import { Badge } from './ui/badge'
 import {
@@ -241,7 +242,20 @@ const LicensePlateCheckDashboard = () => {
                     {check.numbers}
                   </span>
                 </div>
-                {getStatusBadge(check.status)}
+                <div className="flex flex-col items-end gap-1.5">
+                  {getStatusBadge(check.status)}
+                  {check.status === 'AVAILABLE' && check.city.websiteUrl && (
+                    <a
+                      href={check.city.websiteUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-xs font-medium text-green-700 hover:text-green-900 transition-colors"
+                    >
+                      Reserve
+                      <ArrowUpRight className="h-3 w-3" />
+                    </a>
+                  )}
+                </div>
               </div>
 
               <div className="space-y-2 mt-4 pt-4 border-t text-sm">
@@ -251,12 +265,13 @@ const LicensePlateCheckDashboard = () => {
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
-                        className="inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                        className="inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-md bg-blue-50 text-foreground hover:bg-blue-100 transition-colors"
                         onClick={() =>
                           router.push(`/workflows/${check.workflow!.id}`)
                         }
                       >
                         {check.workflow.name}
+                        <ArrowUpRight className="h-3 w-3" />
                       </button>
                       {check.executions &&
                         check.executions.length > 0 &&
@@ -376,7 +391,6 @@ const LicensePlateCheckDashboard = () => {
                 {availableWorkflows.map((wf) => (
                   <SelectItem key={wf.id} value={wf.id}>
                     {wf.name}
-                    {wf.description ? ` — ${wf.description}` : ''}
                   </SelectItem>
                 ))}
               </SelectContent>

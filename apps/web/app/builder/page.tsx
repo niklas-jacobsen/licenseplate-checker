@@ -1,8 +1,9 @@
 'use client'
 
 import NavBar from '@/components/nav-bar'
-import { useCallback, useState, useEffect, Suspense } from 'react'
+import { useCallback, useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
+import { useAuth } from '@/lib/auth-context'
 import {
   ReactFlow,
   Background as BackgroundComponent,
@@ -19,13 +20,34 @@ import { nodeTypes } from './components/nodes'
 import { edgeTypes } from './components/edges'
 import { BottomPalette } from './components/bottom-palette'
 import { ExecutionErrorBanner } from './components/execution-error-banner'
+import { OutcomeToast } from './components/outcome-toast'
 import { useDragAndDrop } from './hooks/useDragAndDrop'
 
 import '@xyflow/react/dist/style.css'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Save, ArrowLeft, Loader2, Pencil, Check } from 'lucide-react'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { TestDialog } from './components/test-dialog'
+import {
+  Save,
+  ArrowLeft,
+  Loader2,
+  Pencil,
+  Check,
+  Upload,
+  CheckCircle,
+  XCircle,
+} from 'lucide-react'
 
 // biome-ignore lint/suspicious/noExplicitAny:
 const Background = BackgroundComponent as any
@@ -114,7 +136,17 @@ function BuilderToolbar() {
     isSaving,
     saveError,
     saveWorkflow,
+    saveWorkflowAndUnpublish,
+    checkHasContentChanges,
     renameWorkflow,
+    canPublish,
+    isPublished,
+    isPublishing,
+    originallyPublished,
+    testsRemaining,
+    publishWorkflow,
+    unpublishWorkflow,
+    isDirty,
   } = useBuilderStore(
     useShallow((s) => ({
       workflowId: s.workflowId,
@@ -122,9 +154,61 @@ function BuilderToolbar() {
       isSaving: s.isSaving,
       saveError: s.saveError,
       saveWorkflow: s.saveWorkflow,
+      saveWorkflowAndUnpublish: s.saveWorkflowAndUnpublish,
+      checkHasContentChanges: s.checkHasContentChanges,
       renameWorkflow: s.renameWorkflow,
+      canPublish: s.canPublish,
+      isPublished: s.isPublished,
+      isPublishing: s.isPublishing,
+      originallyPublished: s.originallyPublished,
+      testsRemaining: s.testsRemaining,
+      publishWorkflow: s.publishWorkflow,
+      unpublishWorkflow: s.unpublishWorkflow,
+      isDirty: s.isDirty,
     }))
   )
+
+  const [showSaveWarning, setShowSaveWarning] = useState(false)
+  const [showTestDialog, setShowTestDialog] = useState(false)
+  const [showLeaveWarning, setShowLeaveWarning] = useState(false)
+
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (isDirty) {
+        e.preventDefault()
+      }
+    }
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [isDirty])
+
+  const handleBack = () => {
+    if (isDirty) {
+      setShowLeaveWarning(true)
+    } else {
+      router.push(`/workflows/${workflowId}`)
+    }
+  }
+
+  const handleSaveClick = () => {
+    if (originallyPublished && checkHasContentChanges()) {
+      setShowSaveWarning(true)
+    } else {
+      saveWorkflow()
+    }
+  }
+
+  const [justSaved, setJustSaved] = useState(false)
+  const prevSavingRef = useRef(false)
+
+  useEffect(() => {
+    if (prevSavingRef.current && !isSaving && !saveError) {
+      setJustSaved(true)
+      const timer = setTimeout(() => setJustSaved(false), 2000)
+      return () => clearTimeout(timer)
+    }
+    prevSavingRef.current = isSaving
+  }, [isSaving, saveError])
 
   const [isEditingName, setIsEditingName] = useState(false)
   const [newName, setNewName] = useState('')
@@ -155,7 +239,7 @@ function BuilderToolbar() {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => router.push('/workflows')}
+          onClick={handleBack}
         >
           <ArrowLeft className="h-4 w-4 mr-1" />
           Back
@@ -221,23 +305,124 @@ function BuilderToolbar() {
           <span className="text-xs text-destructive">{saveError}</span>
         )}
         {workflowId && (
-          <Button size="sm" onClick={saveWorkflow} disabled={isSaving}>
-            {isSaving ? (
-              <Loader2 className="h-4 w-4 animate-spin mr-1" />
+          <>
+            <Button size="sm" onClick={handleSaveClick} disabled={isSaving}>
+              {isSaving ? (
+                <Loader2 className="h-4 w-4 animate-spin mr-1" />
+              ) : justSaved ? (
+                <Check className="h-4 w-4 mr-1" />
+              ) : (
+                <Save className="h-4 w-4 mr-1" />
+              )}
+              {justSaved ? 'Saved' : 'Save'}
+            </Button>
+            {isPublished ? (
+              <Button
+                size="sm"
+                variant="outline"
+                className="group/pub bg-teal-100 text-teal-800 border-teal-300 hover:bg-red-50 hover:text-red-700 hover:border-red-200"
+                onClick={unpublishWorkflow}
+                disabled={isPublishing}
+              >
+                {isPublishing ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                ) : (
+                  <>
+                    <CheckCircle className="h-4 w-4 mr-1 group-hover/pub:hidden" />
+                    <XCircle className="h-4 w-4 mr-1 hidden group-hover/pub:block" />
+                  </>
+                )}
+                <span className="group-hover/pub:hidden">Published</span>
+                <span className="hidden group-hover/pub:inline">Unpublish</span>
+              </Button>
             ) : (
-              <Save className="h-4 w-4 mr-1" />
+              <Button
+                size="sm"
+                onClick={publishWorkflow}
+                disabled={!canPublish || isPublishing}
+              >
+                {isPublishing ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                ) : (
+                  <Upload className="h-4 w-4 mr-1" />
+                )}
+                Publish
+              </Button>
             )}
-            Save
-          </Button>
+          </>
         )}
       </div>
+
+      <AlertDialog open={showSaveWarning} onOpenChange={setShowSaveWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Saving will unpublish this workflow</AlertDialogTitle>
+            <AlertDialogDescription>
+              This workflow is currently published. Saving your changes will unpublish it,
+              as the updated version has not been validated yet. You can run a test and
+              confirm the outcome to re-enable publishing.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col-reverse sm:flex-row gap-2">
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <Button
+              variant="outline"
+              disabled={testsRemaining === 0}
+              onClick={() => {
+                setShowSaveWarning(false)
+                setShowTestDialog(true)
+              }}
+            >
+              {testsRemaining === 0 ? 'No test executions remaining' : 'Test first'}
+            </Button>
+            <AlertDialogAction onClick={saveWorkflowAndUnpublish}>
+              Save & Unpublish
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <TestDialog open={showTestDialog} onOpenChange={setShowTestDialog} />
+
+      <AlertDialog open={showLeaveWarning} onOpenChange={setShowLeaveWarning}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Leave without saving?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have unsaved changes. Leaving now will discard them.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Stay</AlertDialogCancel>
+            <AlertDialogAction onClick={() => router.push(`/workflows/${workflowId}`)}>
+              Leave
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
 
 function BuilderContent() {
+  const { user, isLoading: authLoading } = useAuth()
+  const router = useRouter()
   const searchParams = useSearchParams()
   const workflowId = searchParams.get('id')
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push(`/auth/login?redirect=/builder${workflowId ? `?id=${workflowId}` : ''}`)
+    }
+  }, [user, authLoading, router, workflowId])
+
+  if (authLoading || !user) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
 
   return (
     <BuilderStoreProvider workflowId={workflowId}>
@@ -247,10 +432,12 @@ function BuilderContent() {
 }
 
 function BuilderInner() {
-  const { workflowId, isLoading, loadWorkflow } = useBuilderStore(
+  const router = useRouter()
+  const { workflowId, isLoading, notFound, loadWorkflow } = useBuilderStore(
     useShallow((s) => ({
       workflowId: s.workflowId,
       isLoading: s.isLoading,
+      notFound: s.notFound,
       loadWorkflow: s.loadWorkflow,
     }))
   )
@@ -261,7 +448,13 @@ function BuilderInner() {
     }
   }, [workflowId, loadWorkflow])
 
-  if (isLoading) {
+  useEffect(() => {
+    if (notFound) {
+      router.replace('/workflows')
+    }
+  }, [notFound, router])
+
+  if (isLoading || notFound) {
     return (
       <div className="flex h-screen w-screen items-center justify-center">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -279,6 +472,7 @@ function BuilderInner() {
           <FlowCanvas />
         </ReactFlowProvider>
       </div>
+      <OutcomeToast />
     </div>
   )
 }

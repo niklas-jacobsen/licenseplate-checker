@@ -33,7 +33,10 @@ describe('IrExecutor', () => {
   beforeEach(async () => {
     const mod = await import('./IrExecutor')
     IrExecutor = mod.IrExecutor
-    executor = new IrExecutor()
+    executor = new IrExecutor({
+      allowedDomains: ['niklas.to'],
+      cityName: 'Test',
+    })
 
     pageMock.goto.mockClear()
     pageMock.click.mockClear()

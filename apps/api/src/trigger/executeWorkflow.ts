@@ -16,6 +16,7 @@ interface ExecuteWorkflowPayload {
   callbackUrl: string
   callbackSecret: string
   allowedDomains: string[]
+  cityName: string
   variables?: VariableContext
   websiteUrl?: string
 }
@@ -64,7 +65,7 @@ export const executeWorkflow = task({
     maxTimeoutInMs: TRIGGER_WORKER_RETRY_MAX_TIMEOUT_MS,
   },
   run: async (payload: ExecuteWorkflowPayload) => {
-    const { ir, executionId, callbackUrl, callbackSecret, allowedDomains } = payload
+    const { ir, executionId, callbackUrl, callbackSecret, allowedDomains, cityName } = payload
     const startTime = Date.now()
 
     logger.info("Starting workflow execution", { executionId, entryBlockId: ir.entryBlockId })
@@ -73,6 +74,7 @@ export const executeWorkflow = task({
 
     const executor = new IrExecutor({
       allowedDomains,
+      cityName,
       variables: payload.variables,
       websiteUrl: payload.websiteUrl,
       onBlockStart: async (sourceNodeId: string) => {

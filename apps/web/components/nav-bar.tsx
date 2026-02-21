@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Car } from 'lucide-react'
+import Image from 'next/image'
 import AuthStatus from './auth-status'
 
 export default function NavBar() {
@@ -9,10 +9,13 @@ export default function NavBar() {
     <header className="bg-white border-b">
       <div className="container mx-auto px-4 py-4 flex items-center">
         <Link href="/" className="flex items-center no-underline">
-          <Car className="h-6 w-6 text-blue-600 mr-2" />
-          <h1 className="text-xl font-bold text-gray-900">
-            Licenseplate Checker
-          </h1>
+          <Image
+            src="/logotype.svg"
+            alt="Licenseplate Checker"
+            width={328}
+            height={34}
+            priority
+          />
         </Link>
         <nav className="ml-auto flex items-center">
           <ul className="hidden md:flex space-x-4 mr-4">

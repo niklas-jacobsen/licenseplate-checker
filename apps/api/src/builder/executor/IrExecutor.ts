@@ -27,6 +27,7 @@ import {
 
 export interface ExecutorOptions {
   allowedDomains?: string[]
+  cityName?: string
   variables?: VariableContext
   websiteUrl?: string
   onBlockStart?: (sourceNodeId: string) => Promise<void>
@@ -38,6 +39,7 @@ export class IrExecutor {
   private browser: Browser | null = null
   private page: Page | null = null
   private allowedDomains: string[]
+  private cityName: string
   private variables: VariableContext
   private websiteUrl?: string
   private onBlockStart?: ExecutorOptions['onBlockStart']
@@ -45,6 +47,7 @@ export class IrExecutor {
 
   constructor(options: ExecutorOptions = {}) {
     this.allowedDomains = options.allowedDomains ?? []
+    this.cityName = options.cityName ?? 'unknown'
     this.variables = options.variables ?? {}
     this.websiteUrl = options.websiteUrl
     this.onBlockStart = options.onBlockStart
@@ -94,15 +97,19 @@ export class IrExecutor {
       throw new Error(`Access to private host is blocked: ${hostname}`)
     }
 
-    if (this.allowedDomains.length > 0) {
-      const isAllowed = this.allowedDomains.some(
-        (domain) => hostname === domain || hostname.endsWith(`.${domain}`)
+    if (this.allowedDomains.length === 0) {
+      throw new Error(
+        `No allowed domains configured for ${this.cityName}. Cannot make external requests.`
       )
-      if (!isAllowed) {
-        throw new Error(
-          `The Address '${hostname}' is not in the list of allowed domains: ${this.allowedDomains.join(', ')}`
-        )
-      }
+    }
+
+    const isAllowed = this.allowedDomains.some(
+      (domain) => hostname === domain || hostname.endsWith(`.${domain}`)
+    )
+    if (!isAllowed) {
+      throw new Error(
+        `The address '${hostname}' is not allowed for ${this.cityName}`
+      )
     }
   }
 
@@ -239,6 +246,7 @@ export class IrExecutor {
       case 'click':
         this.log('info', `Clicking selector: ${op.selector}`)
         await this.page.click(op.selector)
+        await this.page.waitForLoadState('networkidle')
         break
 
       case 'typeText': {

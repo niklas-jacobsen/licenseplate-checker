@@ -367,7 +367,6 @@ export default function LicensePlateCheckForm() {
                       {workflows.map((wf) => (
                         <SelectItem key={wf.id} value={wf.id}>
                           {wf.name}
-                          {wf.description ? ` — ${wf.description}` : ''}
                         </SelectItem>
                       ))}
                     </SelectContent>

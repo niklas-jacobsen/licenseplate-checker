@@ -20,6 +20,7 @@ import {
   BadRequestError,
   ConflictError,
   InternalServerError,
+  NotFoundError,
 } from '@licenseplate-checker/shared/types'
 import WorkflowController from '../controllers/Workflow.controller'
 import {
@@ -32,6 +33,14 @@ import auth from '../middleware/auth'
 
 export const createBuilderRouter = (workflowController: WorkflowController) => {
   const router = new Hono()
+
+  async function getOwnedWorkflow(id: string, userId: string) {
+    const workflow = await workflowController.getById(id)
+    if (!workflow || workflow.authorId !== userId) {
+      throw new NotFoundError('Workflow not found', 'WORKFLOW_NOT_FOUND')
+    }
+    return workflow
+  }
 
   router.get('/registry', (c) =>
     c.json({
@@ -96,6 +105,8 @@ export const createBuilderRouter = (workflowController: WorkflowController) => {
   })
 
   router.post('/execute', auth, async (c) => {
+    // biome-ignore lint/suspicious/noExplicitAny:
+    const user = c.get('user' as any) as { id: string }
     let body: unknown
 
     try {
@@ -115,6 +126,8 @@ export const createBuilderRouter = (workflowController: WorkflowController) => {
     if (!workflowId) {
       throw new BadRequestError('workflowId is required', 'MISSING_WORKFLOW_ID')
     }
+
+    await getOwnedWorkflow(workflowId, user.id)
 
     let variables: VariableContext | undefined
     if (checkId) {
@@ -159,10 +172,9 @@ export const createBuilderRouter = (workflowController: WorkflowController) => {
     }
 
     // validate graph before execution
-    const workflow = await workflowController.getById(workflowId)
-    if (!workflow) {
-      throw new BadRequestError('Workflow not found', 'WORKFLOW_NOT_FOUND')
-    }
+    // biome-ignore lint/suspicious/noExplicitAny:
+    const user = c.get('user' as any) as { id: string }
+    const workflow = await getOwnedWorkflow(workflowId, user.id)
 
     const validation = validateGraph(workflow.definition)
     if (!validation.ok) {
@@ -315,18 +327,18 @@ export const createBuilderRouter = (workflowController: WorkflowController) => {
     )
   })
 
-  router.get('/workflow/:id', async (c) => {
+  router.get('/workflow/:id', auth, async (c) => {
+    // biome-ignore lint/suspicious/noExplicitAny:
+    const user = c.get('user' as any) as { id: string }
     const id = c.req.param('id')
-    const workflow = await workflowController.getById(id)
-
-    if (!workflow) {
-      throw new BadRequestError('Workflow not found', 'WORKFLOW_NOT_FOUND')
-    }
+    const workflow = await getOwnedWorkflow(id, user.id)
 
     return c.json({ workflow })
   })
 
   router.put('/workflow/:id', auth, async (c) => {
+    // biome-ignore lint/suspicious/noExplicitAny:
+    const user = c.get('user' as any) as { id: string }
     const id = c.req.param('id')
     let body: {
       definition?: unknown
@@ -343,10 +355,7 @@ export const createBuilderRouter = (workflowController: WorkflowController) => {
       )
     }
 
-    const existing = await workflowController.getById(id)
-    if (!existing) {
-      throw new BadRequestError('Workflow not found', 'WORKFLOW_NOT_FOUND')
-    }
+    const existing = await getOwnedWorkflow(id, user.id)
 
     if (body.name !== undefined) {
       const nameResult = zWorkflowNameSchema.safeParse(body.name)
@@ -412,6 +421,8 @@ export const createBuilderRouter = (workflowController: WorkflowController) => {
   })
 
   router.put('/workflow/:id/publish', auth, async (c) => {
+    // biome-ignore lint/suspicious/noExplicitAny:
+    const user = c.get('user' as any) as { id: string }
     const id = c.req.param('id')
     let body: { isPublished: boolean }
 
@@ -431,10 +442,7 @@ export const createBuilderRouter = (workflowController: WorkflowController) => {
       )
     }
 
-    const existing = await workflowController.getById(id)
-    if (!existing) {
-      throw new BadRequestError('Workflow not found', 'WORKFLOW_NOT_FOUND')
-    }
+    const existing = await getOwnedWorkflow(id, user.id)
 
     if (body.isPublished) {
       const validation = validateGraph(existing.definition)
@@ -465,23 +473,23 @@ export const createBuilderRouter = (workflowController: WorkflowController) => {
   })
 
   router.delete('/workflow/:id', auth, async (c) => {
+    // biome-ignore lint/suspicious/noExplicitAny:
+    const user = c.get('user' as any) as { id: string }
     const id = c.req.param('id')
 
-    const existing = await workflowController.getById(id)
-    if (!existing) {
-      throw new BadRequestError('Workflow not found', 'WORKFLOW_NOT_FOUND')
-    }
-
+    await getOwnedWorkflow(id, user.id)
     await workflowController.delete(id)
     return c.json({ message: 'Workflow deleted' })
   })
 
-  router.get('/execution/:id', async (c) => {
+  router.get('/execution/:id', auth, async (c) => {
+    // biome-ignore lint/suspicious/noExplicitAny:
+    const user = c.get('user' as any) as { id: string }
     const id = c.req.param('id')
     const execution = await workflowController.getExecution(id)
 
-    if (!execution) {
-      throw new BadRequestError('Execution not found', 'EXECUTION_NOT_FOUND')
+    if (!execution || execution.workflow.authorId !== user.id) {
+      throw new NotFoundError('Execution not found', 'EXECUTION_NOT_FOUND')
     }
 
     return c.json({ execution })

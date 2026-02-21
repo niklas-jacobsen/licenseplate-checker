@@ -1,5 +1,5 @@
 import { Position, type NodeProps } from '@xyflow/react'
-import { ListFilter } from 'lucide-react'
+import { ListChecks } from 'lucide-react'
 import type { SelectOptionConfig } from '@licenseplate-checker/shared/workflow-dsl/config'
 import { BaseNode, BaseNodeHeader, BaseNodeContent, type BuilderNode } from './base-node'
 import { BaseHandle } from './base-handle'
@@ -21,7 +21,7 @@ export function SelectOptionNode({ id, data }: NodeProps<BuilderNode>) {
   return (
     <BaseNode className="group/node">
       <BaseNodeHeader
-        icon={ListFilter}
+        icon={ListChecks}
         label={data.label}
         onDelete={() => removeNode(id)}
       />
