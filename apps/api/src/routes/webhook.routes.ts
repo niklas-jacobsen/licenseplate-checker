@@ -26,7 +26,7 @@ type CallbackBody = CompletionCallbackBody | ProgressCallbackBody
 
 export const createWebhookRouter = (
   workflowController: WorkflowController,
-  checkController: LicenseplateCheckController,
+  checkController: LicenseplateCheckController
 ) => {
   const router = new Hono()
 
@@ -58,6 +58,7 @@ export const createWebhookRouter = (
 
     await workflowController.updateExecution(body.executionId, {
       status: body.status as ExecutionStatus,
+      // biome-ignore lint/suspicious/noExplicitAny:
       logs: body.logs as any,
       result: body.error ? { error: body.error } : { success: true },
       errorNodeId: body.errorNodeId,
@@ -86,5 +87,5 @@ export const createWebhookRouter = (
 
 export const webhookRouter = createWebhookRouter(
   new WorkflowController(),
-  new LicenseplateCheckController(),
+  new LicenseplateCheckController()
 )
