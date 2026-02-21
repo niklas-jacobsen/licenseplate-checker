@@ -2,7 +2,7 @@
   "name": "licenseplate-checker",
   "private": true,
   "version": "1.0.0",
-  "packageManager": "bun@1.2.10",
+  "packageManager": "bun@1.3.9",
   "workspaces": ["apps/api", "apps/web", "packages/shared"],
   "scripts": {
     "dev": "turbo run dev",
