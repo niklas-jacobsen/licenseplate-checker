@@ -133,7 +133,9 @@ describe('License Plate Check Routes', () => {
         checkGetByUserIdSpy.mockResolvedValue([])
 
         const res = await app.request('/check/me')
-        expect(res.status).toBe(404)
+        expect(res.status).toBe(200)
+        const body = await res.json()
+        expect(body.checks).toHaveLength(0)
     })
   })
 
