@@ -89,7 +89,7 @@ function createNode(
         id,
         type: 'core.end',
         position,
-        data: { label, config: {} },
+        data: { label, config: { outcome: 'available' } },
       }
 
     default:
@@ -108,7 +108,7 @@ const DEFAULT_NODES: WorkflowNode[] = [
     id: 'end',
     type: 'core.end',
     position: { x: 560, y: 140 },
-    data: { label: 'End', config: {} },
+    data: { label: 'End', config: { outcome: 'available' } },
   },
 ]
 

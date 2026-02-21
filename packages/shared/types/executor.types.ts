@@ -12,6 +12,7 @@ export type ExecutionResult = {
   logs: ExecutionLog[]
   error?: string
   errorNodeId?: string
+  outcome?: string
 }
 
 export class BlockNotFoundError extends NotFoundError {

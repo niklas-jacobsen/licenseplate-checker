@@ -313,10 +313,12 @@ export function compileGraphToIr(input: unknown): BuilderIr {
 
     // terminal block
     if (node.type === 'core.end') {
+      const outcome = (node.data.config as { outcome: string }).outcome
       blocks[id] = {
         id,
         kind: 'end',
         sourceNodeId: node.id,
+        outcome: outcome as 'available' | 'unavailable',
       }
       continue
     }

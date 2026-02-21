@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { WorkflowOutcome } from '../workflow-dsl/config'
 
 export const IrVersionSchema = z.literal('v1')
 
@@ -60,6 +61,7 @@ export const IrEndBlockSchema = z.object({
   id: z.string().min(1),
   kind: z.literal('end'),
   sourceNodeId: z.string().min(1),
+  outcome: WorkflowOutcome,
 })
 
 export const IrActionBlockSchema = z.object({

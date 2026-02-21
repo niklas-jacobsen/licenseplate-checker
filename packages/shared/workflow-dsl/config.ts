@@ -69,7 +69,13 @@ export const SelectOptionNodeConfig = z.discriminatedUnion('mode', [
 
 //Start and End
 export const StartNodeConfig = z.object({})
-export const EndNodeConfig = z.object({})
+
+export const WorkflowOutcome = z.enum(['available', 'unavailable'])
+export type WorkflowOutcome = z.infer<typeof WorkflowOutcome>
+
+export const EndNodeConfig = z.object({
+  outcome: WorkflowOutcome,
+})
 
 //Export Types
 export type OpenPageConfig = z.infer<typeof OpenPageNodeConfig>
@@ -78,3 +84,4 @@ export type TypeTextConfig = z.infer<typeof TypeTextNodeConfig>
 export type ConditionalConfig = z.infer<typeof ConditionalNodeConfig>
 export type WaitConfig = z.infer<typeof WaitNodeConfig>
 export type SelectOptionConfig = z.infer<typeof SelectOptionNodeConfig>
+export type EndConfig = z.infer<typeof EndNodeConfig>

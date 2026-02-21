@@ -11,6 +11,7 @@ interface CompletionCallbackBody {
   logs: unknown[]
   error?: string
   errorNodeId?: string
+  outcome?: string
   duration: number
 }
 
@@ -66,7 +67,14 @@ export const createWebhookRouter = (
     })
 
     if (execution.checkId) {
-      const checkStatus = body.status === 'SUCCESS' ? 'AVAILABLE' : 'ERROR_DURING_CHECK'
+      let checkStatus: 'AVAILABLE' | 'NOT_AVAILABLE' | 'ERROR_DURING_CHECK'
+      if (body.status !== 'SUCCESS') {
+        checkStatus = 'ERROR_DURING_CHECK'
+      } else if (body.outcome === 'unavailable') {
+        checkStatus = 'NOT_AVAILABLE'
+      } else {
+        checkStatus = 'AVAILABLE'
+      }
       await checkController.updateStatus(execution.checkId, checkStatus)
     }
 

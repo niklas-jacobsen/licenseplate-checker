@@ -94,6 +94,7 @@ export const executeWorkflow = task({
       logs: result.logs,
       error: result.error,
       errorNodeId: result.errorNodeId,
+      outcome: result.outcome,
       duration,
     }
 

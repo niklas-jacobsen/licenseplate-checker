@@ -115,6 +115,7 @@ export class IrExecutor {
   async execute(ir: BuilderIr): Promise<ExecutionResult> {
     this.logs = []
     let errorNodeId: string | undefined
+    let outcome: string | undefined
 
     try {
       this.log('info', 'Starting execution', { entryBlockId: ir.entryBlockId })
@@ -149,6 +150,11 @@ export class IrExecutor {
         }
 
         try {
+          if (block.kind === 'end') {
+            outcome = block.outcome
+            this.log('info', `Workflow outcome: ${outcome}`)
+          }
+
           currentBlockId = await this.executeBlock(block, ir)
 
           if (this.onBlockComplete) {
@@ -164,7 +170,7 @@ export class IrExecutor {
       }
 
       this.log('info', 'Execution completed successfully')
-      return { success: true, logs: this.logs }
+      return { success: true, logs: this.logs, outcome }
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : String(error)
