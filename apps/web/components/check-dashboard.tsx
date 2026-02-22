@@ -177,6 +177,24 @@ const LicensePlateCheckDashboard = () => {
             Reserved
           </Badge>
         )
+      case 'NOT_AVAILABLE':
+        return (
+          <Badge
+            variant="outline"
+            className="bg-red-50 text-red-700 border-red-200 hover:bg-red-50 hover:text-red-700"
+          >
+            Not Available
+          </Badge>
+        )
+      case 'ERROR_DURING_CHECK':
+        return (
+          <Badge
+            variant="outline"
+            className="bg-red-50 text-red-700 border-red-200 hover:bg-red-50 hover:text-red-700"
+          >
+            Error
+          </Badge>
+        )
       default:
         return (
           <Badge
@@ -255,6 +273,22 @@ const LicensePlateCheckDashboard = () => {
                       <ArrowUpRight className="h-3 w-3" />
                     </a>
                   )}
+                  {check.status === 'ERROR_DURING_CHECK' &&
+                    check.workflow &&
+                    check.executions?.[0] && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          router.push(
+                            `/workflows/${check.workflow!.id}?run=${check.executions![0].id}`
+                          )
+                        }
+                        className="inline-flex items-center gap-1 text-xs font-medium text-red-700 hover:text-red-900 transition-colors cursor-pointer"
+                      >
+                        See why
+                        <ArrowUpRight className="h-3 w-3" />
+                      </button>
+                    )}
                 </div>
               </div>
 

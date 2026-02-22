@@ -23,10 +23,14 @@ export default function WorkflowsPage() {
       <NavBar />
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl font-bold text-center mb-2">Workflows</h2>
-          <p className="text-gray-600 text-center mb-8">
-            Create and manage your automation workflows
-          </p>
+          <div className="text-center mb-10">
+            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-3">
+              Workflows
+            </h1>
+            <p className="text-muted-foreground text-base max-w-md mx-auto">
+              Create and manage your automation workflows
+            </p>
+          </div>
           <WorkflowList />
         </div>
       </div>

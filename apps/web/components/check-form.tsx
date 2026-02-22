@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Combobox } from './ui/combobox'
+import CityPicker from './city-picker'
 import {
   Form,
   FormControl,
@@ -35,12 +35,12 @@ import {
   AlertDialogTitle,
 } from './ui/alert-dialog'
 import { Input } from './ui/input'
+import { Separator } from './ui/separator'
 import LicensePlatePreview from './plate-preview'
 import { useAuth } from '../lib/auth-context'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { checkService } from '../services/check.service'
-import { cityService } from '../services/city.service'
 import { workflowService } from '../services/workflow.service'
 import { usePersistedForm } from '../hooks/use-persisted-form'
 
@@ -60,8 +60,6 @@ export default function LicensePlateCheckForm() {
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
-  const [cities, setCities] = useState<{ value: string; label: string }[]>([])
-  const [isLoadingCities, setIsLoadingCities] = useState(true)
   const [workflows, setWorkflows] = useState<WorkflowOption[]>([])
   const [isLoadingWorkflows, setIsLoadingWorkflows] = useState(false)
   const [showNoWorkflowWarning, setShowNoWorkflowWarning] = useState(false)
@@ -80,28 +78,6 @@ export default function LicensePlateCheckForm() {
 
   // Use custom hook for persistence
   const { saveForm } = usePersistedForm(form, SAVED_FORM_KEY)
-
-  // Fetch Cities
-  useEffect(() => {
-    const fetchCities = async () => {
-      try {
-        const response = await cityService.getCities()
-        if (response.data && response.data.cities) {
-          const formattedCities = response.data.cities.map((city) => ({
-            value: city.id,
-            label: city.name,
-          }))
-          setCities(formattedCities)
-        }
-      } catch (error) {
-        console.error('Failed to fetch cities:', error)
-      } finally {
-        setIsLoadingCities(false)
-      }
-    }
-
-    fetchCities()
-  }, [])
 
   const city = form.watch('city')
   const letters = form.watch('letters')
@@ -252,28 +228,22 @@ export default function LicensePlateCheckForm() {
     <Card className="w-full">
       <CardContent className="pt-6">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <FormField
                 name="city"
                 control={form.control}
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="relative pb-5">
                     <FormLabel className="flex items-center">City</FormLabel>
                     <FormControl>
-                      <Combobox
+                      <CityPicker
                         value={field.value}
                         onChange={field.onChange}
                         error={!!form.formState.errors.city}
-                        items={cities}
-                        placeholder={
-                          isLoadingCities
-                            ? 'Loading cities...'
-                            : 'Select city...'
-                        }
                       />
                     </FormControl>
-                    <div className="min-h-5"></div>
+                    <FormMessage className="absolute bottom-0 left-0" />
                   </FormItem>
                 )}
               />
@@ -282,7 +252,7 @@ export default function LicensePlateCheckForm() {
                 control={form.control}
                 name="letters"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="relative pb-5">
                     <FormLabel className="flex items-center">Letters</FormLabel>
                     <FormControl>
                       <Input
@@ -298,9 +268,7 @@ export default function LicensePlateCheckForm() {
                         }}
                       />
                     </FormControl>
-                    <div className="min-h-5">
-                      <FormMessage />
-                    </div>
+                    <FormMessage className="absolute bottom-0 left-0" />
                   </FormItem>
                 )}
               />
@@ -309,7 +277,7 @@ export default function LicensePlateCheckForm() {
                 control={form.control}
                 name="numbers"
                 render={({ field }) => (
-                  <FormItem>
+                  <FormItem className="relative pb-5">
                     <FormLabel className="flex items-center">Numbers</FormLabel>
                     <FormControl>
                       <Input
@@ -328,59 +296,13 @@ export default function LicensePlateCheckForm() {
                         }}
                       />
                     </FormControl>
-                    <div className="min-h-5">
-                      <FormMessage />
-                    </div>
+                    <FormMessage className="absolute bottom-0 left-0" />
                   </FormItem>
                 )}
               />
             </div>
 
-            <FormField
-              control={form.control}
-              name="workflowId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="flex items-center gap-2">
-                    <Workflow className="h-4 w-4" />
-                    Automation Workflow
-                    <span className="text-xs font-normal text-muted-foreground">
-                      (optional)
-                    </span>
-                  </FormLabel>
-                  <Select
-                    value={field.value ?? ''}
-                    onValueChange={(val) =>
-                      field.onChange(val === 'none' ? undefined : val)
-                    }
-                    disabled={!city || isLoadingWorkflows}
-                  >
-                    <FormControl>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder={workflowPlaceholder} />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="none">
-                        Submit without automation (No checks will be executed)
-                      </SelectItem>
-                      {workflows.map((wf) => (
-                        <SelectItem key={wf.id} value={wf.id}>
-                          {wf.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <p className="text-xs text-muted-foreground">
-                    {city
-                      ? 'Workflows become visible after being published'
-                      : 'Choose a city to see available automation workflows.'}
-                  </p>
-                </FormItem>
-              )}
-            />
-
-            <div className="pt-4">
+            <div className="mt-2">
               <LicensePlatePreview
                 city={city}
                 letters={letters}
@@ -388,10 +310,56 @@ export default function LicensePlateCheckForm() {
               />
             </div>
 
-            <div className="pt-4 flex justify-center">
+            <Separator />
+
+            <div className="bg-muted/40 rounded-lg p-4">
+              <FormField
+                control={form.control}
+                name="workflowId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel className="flex items-center gap-2">
+                      <Workflow className="h-4 w-4" />
+                      Automation Workflow
+                    </FormLabel>
+                    <Select
+                      value={field.value ?? ''}
+                      onValueChange={(val) =>
+                        field.onChange(val === 'none' ? undefined : val)
+                      }
+                      disabled={!city || isLoadingWorkflows}
+                    >
+                      <FormControl>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder={workflowPlaceholder} />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="none">
+                          Submit without automation (No checks will be executed)
+                        </SelectItem>
+                        {workflows.map((wf) => (
+                          <SelectItem key={wf.id} value={wf.id}>
+                            {wf.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      {city
+                        ? 'Workflows become visible after being published'
+                        : 'Choose a city to see available automation workflows.'}
+                    </p>
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="border-t -mx-6 px-6 pt-4">
               <Button
                 type="submit"
-                className="w-full md:w-1/2"
+                className="w-full"
+                size="lg"
                 disabled={isSubmitting || !form.formState.isValid}
               >
                 {isSubmitting ? (
