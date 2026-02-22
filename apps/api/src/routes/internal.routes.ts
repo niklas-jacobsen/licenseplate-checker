@@ -1,13 +1,14 @@
-import { Hono } from 'hono'
 import { BadRequestError } from '@licenseplate-checker/shared/types'
-import WorkflowController from '../controllers/Workflow.controller'
+import { Hono } from 'hono'
 import LicenseplateCheckController from '../controllers/LicensePlateCheck.controller'
-import { executeWorkflowForCheck } from '../services/executeWorkflowForCheck'
+import WorkflowController from '../controllers/Workflow.controller'
 import { ENV } from '../env'
+import { executeWorkflowForCheck as defaultExecuteWorkflowForCheck } from '../services/executeWorkflowForCheck'
 
 export const createInternalRouter = (
   workflowController: WorkflowController,
   checkController: LicenseplateCheckController,
+  executeWorkflowForCheck = defaultExecuteWorkflowForCheck
 ) => {
   const router = new Hono()
 
@@ -26,13 +27,16 @@ export const createInternalRouter = (
     }
 
     if (!check.workflowId) {
-      throw new BadRequestError('Check has no linked workflow', 'MISSING_WORKFLOW')
+      throw new BadRequestError(
+        'Check has no linked workflow',
+        'MISSING_WORKFLOW'
+      )
     }
 
     const result = await executeWorkflowForCheck(
       workflowController,
       check.workflowId,
-      checkId,
+      checkId
     )
 
     return c.json(result, 202)
@@ -43,5 +47,5 @@ export const createInternalRouter = (
 
 export const internalRouter = createInternalRouter(
   new WorkflowController(),
-  new LicenseplateCheckController(),
+  new LicenseplateCheckController()
 )
