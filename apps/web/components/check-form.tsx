@@ -321,9 +321,6 @@ export default function LicensePlateCheckForm() {
                     <FormLabel className="flex items-center gap-2">
                       <Workflow className="h-4 w-4" />
                       Automation Workflow
-                      <span className="text-xs font-normal text-muted-foreground">
-                        (optional)
-                      </span>
                     </FormLabel>
                     <Select
                       value={field.value ?? ''}
