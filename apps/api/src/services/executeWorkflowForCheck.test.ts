@@ -1,4 +1,4 @@
-import { describe, expect, it, mock, beforeEach } from 'bun:test'
+import { beforeEach, describe, expect, it, mock } from 'bun:test'
 import {
   BadRequestError,
   InternalServerError,
@@ -7,10 +7,6 @@ import {
 const mockCompileGraphToIr = mock(() => ({
   entryBlockId: 'start',
   blocks: {},
-}))
-
-mock.module('../builder/compiler/GraphToIrCompiler', () => ({
-  compileGraphToIr: mockCompileGraphToIr,
 }))
 
 const mockTasksTrigger = mock()
@@ -26,11 +22,11 @@ mock.module('../env', () => ({
   },
 }))
 
+import { CompileError } from '../types/compiler.types'
 import {
   buildVariableContext,
   executeWorkflowForCheck,
 } from './executeWorkflowForCheck'
-import { CompileError } from '../types/compiler.types'
 
 const mockWorkflowController = {
   getById: mock(),
@@ -83,11 +79,23 @@ describe('executeWorkflowForCheck', () => {
     mockWorkflowController.getById.mockResolvedValue(null)
 
     await expect(
-      executeWorkflowForCheck(mockWorkflowController, 'nonexistent')
+      executeWorkflowForCheck(
+        mockWorkflowController,
+        'nonexistent',
+        undefined,
+        undefined,
+        mockCompileGraphToIr as any
+      )
     ).rejects.toThrow(BadRequestError)
 
     try {
-      await executeWorkflowForCheck(mockWorkflowController, 'nonexistent')
+      await executeWorkflowForCheck(
+        mockWorkflowController,
+        'nonexistent',
+        undefined,
+        undefined,
+        mockCompileGraphToIr as any
+      )
     } catch (err: any) {
       expect(err.code).toBe('WORKFLOW_NOT_FOUND')
     }
@@ -97,7 +105,13 @@ describe('executeWorkflowForCheck', () => {
     mockWorkflowController.getById.mockResolvedValue(unpublishedWorkflow)
 
     try {
-      await executeWorkflowForCheck(mockWorkflowController, 'wf-1')
+      await executeWorkflowForCheck(
+        mockWorkflowController,
+        'wf-1',
+        undefined,
+        undefined,
+        mockCompileGraphToIr as any
+      )
     } catch (err: any) {
       expect(err).toBeInstanceOf(BadRequestError)
       expect(err.code).toBe('WORKFLOW_NOT_PUBLISHED')
@@ -114,7 +128,8 @@ describe('executeWorkflowForCheck', () => {
       mockWorkflowController,
       'wf-1',
       undefined,
-      { skipPublishCheck: true }
+      { skipPublishCheck: true },
+      mockCompileGraphToIr as any
     )
 
     expect(result.executionId).toBe('exec-1')
@@ -130,7 +145,8 @@ describe('executeWorkflowForCheck', () => {
       mockWorkflowController,
       'wf-1',
       'check-1',
-      { variables: { 'plate.letters': 'AB' } }
+      { variables: { 'plate.letters': 'AB' } },
+      mockCompileGraphToIr as any
     )
 
     expect(result).toEqual({ executionId: 'exec-1', triggerRunId: 'run-abc' })
@@ -175,7 +191,13 @@ describe('executeWorkflowForCheck', () => {
     })
 
     await expect(
-      executeWorkflowForCheck(mockWorkflowController, 'wf-1')
+      executeWorkflowForCheck(
+        mockWorkflowController,
+        'wf-1',
+        undefined,
+        undefined,
+        mockCompileGraphToIr as any
+      )
     ).rejects.toBeInstanceOf(CompileError)
   })
 
@@ -188,7 +210,13 @@ describe('executeWorkflowForCheck', () => {
     )
 
     try {
-      await executeWorkflowForCheck(mockWorkflowController, 'wf-1')
+      await executeWorkflowForCheck(
+        mockWorkflowController,
+        'wf-1',
+        undefined,
+        undefined,
+        mockCompileGraphToIr as any
+      )
     } catch (err: any) {
       expect(err).toBeInstanceOf(InternalServerError)
       expect(err.code).toBe('EXECUTION_TRIGGER_ERROR')
