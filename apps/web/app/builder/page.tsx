@@ -47,6 +47,8 @@ import {
   Upload,
   CheckCircle,
   XCircle,
+  Undo2,
+  Redo2,
 } from 'lucide-react'
 
 // biome-ignore lint/suspicious/noExplicitAny:
@@ -64,6 +66,9 @@ function FlowCanvas() {
     onConnect,
     addNodeByType,
     setSelectedNodeId,
+    takeSnapshot,
+    undo,
+    redo,
   } = useBuilderStore(
     useShallow((s) => ({
       nodes: s.nodes,
@@ -73,8 +78,41 @@ function FlowCanvas() {
       onConnect: s.onConnect,
       addNodeByType: s.addNodeByType,
       setSelectedNodeId: s.setSelectedNodeId,
+      takeSnapshot: s.takeSnapshot,
+      undo: s.undo,
+      redo: s.redo,
     }))
   )
+
+  // Keyboard shortcuts for undo/redo
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement
+      if (
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.isContentEditable
+      ) {
+        return
+      }
+
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+        e.preventDefault()
+        if (e.shiftKey) {
+          redo()
+        } else {
+          undo()
+        }
+      }
+    }
+
+    document.addEventListener('keydown', onKeyDown)
+    return () => document.removeEventListener('keydown', onKeyDown)
+  }, [undo, redo])
+
+  const onNodeDragStart = useCallback(() => {
+    takeSnapshot()
+  }, [takeSnapshot])
 
   const onSelectionChange = useCallback(
     (payload: { nodes: Node[]; edges: Edge[] }) => {
@@ -114,6 +152,8 @@ function FlowCanvas() {
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         onSelectionChange={onSelectionChange}
+        onNodeDragStart={onNodeDragStart}
+        onSelectionDragStart={onNodeDragStart}
         onDrop={onDrop}
         onDragOver={onDragOver}
         fitView
@@ -147,6 +187,10 @@ function BuilderToolbar() {
     publishWorkflow,
     unpublishWorkflow,
     isDirty,
+    undo,
+    redo,
+    past,
+    future,
   } = useBuilderStore(
     useShallow((s) => ({
       workflowId: s.workflowId,
@@ -165,6 +209,10 @@ function BuilderToolbar() {
       publishWorkflow: s.publishWorkflow,
       unpublishWorkflow: s.unpublishWorkflow,
       isDirty: s.isDirty,
+      undo: s.undo,
+      redo: s.redo,
+      past: s.past,
+      future: s.future,
     }))
   )
 
@@ -300,13 +348,37 @@ function BuilderToolbar() {
         )}
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1">
         {saveError && (
-          <span className="text-xs text-destructive">{saveError}</span>
+          <span className="text-xs text-destructive mr-1">{saveError}</span>
         )}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-muted-foreground"
+          onClick={undo}
+          disabled={past.length === 0}
+        >
+          <Undo2 className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-muted-foreground"
+          onClick={redo}
+          disabled={future.length === 0}
+        >
+          <Redo2 className="h-4 w-4" />
+        </Button>
         {workflowId && (
           <>
-            <Button size="sm" onClick={handleSaveClick} disabled={isSaving}>
+            <div className="h-5 w-px bg-border mx-1" />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleSaveClick}
+              disabled={isSaving}
+            >
               {isSaving ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-1" />
               ) : justSaved ? (
@@ -318,9 +390,9 @@ function BuilderToolbar() {
             </Button>
             {isPublished ? (
               <Button
+                variant="ghost"
                 size="sm"
-                variant="outline"
-                className="group/pub bg-teal-100 text-teal-800 border-teal-300 hover:bg-red-50 hover:text-red-700 hover:border-red-200"
+                className="group/pub text-teal-700 hover:text-red-700 hover:bg-red-50"
                 onClick={unpublishWorkflow}
                 disabled={isPublishing}
               >
@@ -337,6 +409,7 @@ function BuilderToolbar() {
               </Button>
             ) : (
               <Button
+                variant="ghost"
                 size="sm"
                 onClick={publishWorkflow}
                 disabled={!canPublish || isPublishing}
