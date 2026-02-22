@@ -91,7 +91,7 @@ model LicenseplateCheck {
   city CityAbbreviation @relation(fields: [cityId], references: [id])
 
   workflowId String?
-  workflow   Workflow? @relation(fields: [workflowId], references: [id])
+  workflow   Workflow? @relation(fields: [workflowId], references: [id], onDelete: SetNull)
 
   // History of automation runs
   executions WorkflowExecution[]
@@ -117,7 +117,7 @@ model WorkflowExecution {
 
   // Relations
   workflowId String
-  workflow   Workflow @relation(fields: [workflowId], references: [id])
+  workflow   Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
 
   checkId String?
   check   LicenseplateCheck? @relation(fields: [checkId], references: [id])
