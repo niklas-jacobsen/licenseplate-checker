@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   ArrowLeft,
   Check,
+  ChevronDown,
   Clock,
   Edit,
   Globe,
@@ -53,14 +54,22 @@ import {
   WORKFLOW_DESCRIPTION_MAX_LENGTH,
 } from '@licenseplate-checker/shared/constants/limits'
 
+interface ExecutionLog {
+  timestamp: string
+  level: 'info' | 'warn' | 'error' | 'debug'
+  message: string
+  details?: unknown
+}
+
 interface Execution {
   id: string
   status: 'PENDING' | 'RUNNING' | 'SUCCESS' | 'FAILED'
   startedAt: string
   finishedAt?: string | null
   duration?: number
-  result?: { success?: boolean; error?: string } | null
+  result?: { success?: boolean; error?: string; outcome?: string } | null
   errorNodeId?: string | null
+  logs?: ExecutionLog[] | null
   check?: { cityId: string; letters: string; numbers: number } | null
 }
 
@@ -96,6 +105,7 @@ export default function WorkflowDetailPage({
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const [hideTestRuns, setHideTestRuns] = useState(true)
+  const [expandedRunId, setExpandedRunId] = useState<string | null>(null)
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -351,76 +361,129 @@ export default function WorkflowDetailPage({
                   <div className="divide-y">
                     {workflow.executions
                       .filter((exec) => !hideTestRuns || exec.check != null)
-                      .map((exec) => (
-                      <div
-                        key={exec.id}
-                        className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors gap-4"
-                      >
-                        <div className="flex items-center gap-4 min-w-0">
-                          {getStatusBadge(exec.status)}
-                          <div className="flex flex-col min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="font-medium text-sm">
-                                {format(new Date(exec.startedAt), 'PP p')}
-                              </span>
-                              <span className="text-xs text-muted-foreground">
-                                {formatDistanceToNow(new Date(exec.startedAt), {
-                                  addSuffix: true,
-                                })}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                              {exec.check ? (
-                                <span className="font-mono">
-                                  {exec.check.cityId.toUpperCase()}-
-                                  {exec.check.letters}-{exec.check.numbers}
-                                </span>
-                              ) : (
-                                <span className="text-amber-600 font-medium">
-                                  Test Run
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3 shrink-0 text-right">
-                          {exec.status === 'SUCCESS' && (
-                            <span className="text-xs text-green-600">
-                              Completed
-                            </span>
-                          )}
-                          {exec.status === 'FAILED' && (
-                            <span
-                              className="text-xs text-red-600 max-w-48 truncate"
-                              title={
-                                exec.errorNodeId
-                                  ? `Failed on node ${exec.errorNodeId}`
-                                  : exec.result?.error || 'Unknown error'
+                      .map((exec) => {
+                        const isExpanded = expandedRunId === exec.id
+                        return (
+                          <div key={exec.id}>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setExpandedRunId(isExpanded ? null : exec.id)
                               }
+                              className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors gap-4 w-full text-left cursor-pointer"
                             >
-                              {exec.errorNodeId
-                                ? `Failed on ${exec.errorNodeId}`
-                                : exec.result?.error || 'Failed'}
-                            </span>
-                          )}
-                          {exec.status === 'RUNNING' && (
-                            <span className="text-xs text-blue-600">
-                              Running
-                            </span>
-                          )}
-                          {exec.status === 'PENDING' && (
-                            <span className="text-xs text-muted-foreground">
-                              Pending
-                            </span>
-                          )}
-                          {exec.duration != null && (
-                            <span className="text-xs text-muted-foreground tabular-nums">
-                              {(exec.duration / 1000).toFixed(1)}s
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+                              <div className="flex items-center gap-4 min-w-0">
+                                {getStatusBadge(exec.status)}
+                                <div className="flex flex-col min-w-0">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="font-medium text-sm">
+                                      {format(new Date(exec.startedAt), 'PP p')}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground">
+                                      {formatDistanceToNow(
+                                        new Date(exec.startedAt),
+                                        { addSuffix: true }
+                                      )}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                    {exec.check ? (
+                                      <span className="font-mono">
+                                        {exec.check.cityId.toUpperCase()}-
+                                        {exec.check.letters}-
+                                        {exec.check.numbers}
+                                      </span>
+                                    ) : (
+                                      <span className="text-amber-600 font-medium">
+                                        Test Run
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-3 shrink-0">
+                                {exec.status === 'SUCCESS' && (
+                                  <span className="text-xs text-green-600">
+                                    Completed
+                                  </span>
+                                )}
+                                {exec.status === 'FAILED' && (
+                                  <span className="text-xs text-red-600 max-w-48 truncate">
+                                    {exec.errorNodeId
+                                      ? `Failed on ${exec.errorNodeId}`
+                                      : exec.result?.error || 'Failed'}
+                                  </span>
+                                )}
+                                {exec.status === 'RUNNING' && (
+                                  <span className="text-xs text-blue-600">
+                                    Running
+                                  </span>
+                                )}
+                                {exec.status === 'PENDING' && (
+                                  <span className="text-xs text-muted-foreground">
+                                    Pending
+                                  </span>
+                                )}
+                                {exec.duration != null && (
+                                  <span className="text-xs text-muted-foreground tabular-nums">
+                                    {(exec.duration / 1000).toFixed(1)}s
+                                  </span>
+                                )}
+                                <ChevronDown
+                                  className={`h-4 w-4 text-muted-foreground transition-transform ${
+                                    isExpanded ? 'rotate-180' : ''
+                                  }`}
+                                />
+                              </div>
+                            </button>
+
+                            {isExpanded && (
+                              <div className="px-4 pb-4 pt-0">
+                                <div className="bg-muted/40 rounded-lg p-4 space-y-3">
+                                  {/* summary */}
+                                  <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-muted-foreground">
+                                    {exec.result?.outcome && (
+                                      <span>
+                                        Outcome:{' '}
+                                        <span className="font-medium text-foreground capitalize">
+                                          {exec.result.outcome}
+                                        </span>
+                                      </span>
+                                    )}
+                                    {exec.finishedAt && (
+                                      <span>
+                                        Finished:{' '}
+                                        {format(
+                                          new Date(exec.finishedAt),
+                                          'PP p'
+                                        )}
+                                      </span>
+                                    )}
+                                    {exec.duration != null && (
+                                      <span>
+                                        Duration:{' '}
+                                        {(exec.duration / 1000).toFixed(1)}s
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  {/* errors */}
+                                  {exec.result?.error && (
+                                    <div className="text-xs bg-red-50 text-red-700 border border-red-200 rounded px-3 py-2">
+                                      {exec.errorNodeId && (
+                                        <span className="font-medium">
+                                          Node {exec.errorNodeId}:{' '}
+                                        </span>
+                                      )}
+                                      {exec.result.error}
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
                   </div>
                 )}
               </CardContent>
