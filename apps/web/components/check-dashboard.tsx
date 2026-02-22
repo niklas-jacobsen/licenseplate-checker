@@ -45,7 +45,7 @@ import {
 } from './ui/select'
 import { toTitleCase } from '@/lib/utils'
 
-function getNextCheckDate(hour: number, minute: number): Date {
+export function getNextCheckDate(hour: number, minute: number): Date {
   const now = new Date()
   const next = new Date(now)
   next.setHours(hour, minute, 0, 0)
