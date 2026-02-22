@@ -82,6 +82,7 @@ export default function CityPicker({
         variant="outline"
         role="combobox"
         aria-expanded={open}
+        aria-label="Select a city"
         disabled={disabled || loading}
         onClick={() => setOpen(!open)}
         className={cn(
