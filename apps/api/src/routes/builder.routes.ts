@@ -1,37 +1,40 @@
-import { Hono } from 'hono'
-import { Prisma } from '@prisma/client'
-import {
-  BUILDER_REGISTRY_VERSION,
-  nodeRegistry,
-} from '@licenseplate-checker/shared/node-registry'
 import {
   BUILDER_MAX_WORKFLOWS_PER_USER,
   BUILDER_TEST_EXECUTIONS_PER_DAY,
 } from '@licenseplate-checker/shared/constants/limits'
 import {
-  zWorkflowNameSchema,
-  zWorkflowDescriptionSchema,
-} from '@licenseplate-checker/shared/validators'
-import { validateGraph } from '../builder/validate/validateGraph'
-import type { ValidationIssue } from '../types/validate.types'
-import { compileGraphToIr } from '../builder/compiler/GraphToIrCompiler'
-import { CompileError } from '../types/compiler.types'
+  BUILDER_REGISTRY_VERSION,
+  nodeRegistry,
+} from '@licenseplate-checker/shared/node-registry'
+import type { VariableContext } from '@licenseplate-checker/shared/template-variables'
 import {
   BadRequestError,
   ConflictError,
   InternalServerError,
   NotFoundError,
 } from '@licenseplate-checker/shared/types'
-import WorkflowController from '../controllers/Workflow.controller'
 import {
-  executeWorkflowForCheck,
-  buildVariableContext,
-} from '../services/executeWorkflowForCheck'
+  zWorkflowDescriptionSchema,
+  zWorkflowNameSchema,
+} from '@licenseplate-checker/shared/validators'
+import { Prisma } from '@prisma/client'
+import { Hono } from 'hono'
 import { prisma } from '../../prisma/data-source'
-import type { VariableContext } from '@licenseplate-checker/shared/template-variables'
+import { compileGraphToIr } from '../builder/compiler/GraphToIrCompiler'
+import { validateGraph as defaultValidateGraph } from '../builder/validate/validateGraph'
+import WorkflowController from '../controllers/Workflow.controller'
 import auth from '../middleware/auth'
+import {
+  buildVariableContext,
+  executeWorkflowForCheck,
+} from '../services/executeWorkflowForCheck'
+import { CompileError } from '../types/compiler.types'
+import type { ValidationIssue } from '../types/validate.types'
 
-export const createBuilderRouter = (workflowController: WorkflowController) => {
+export const createBuilderRouter = (
+  workflowController: WorkflowController,
+  validateGraph = defaultValidateGraph
+) => {
   const router = new Hono()
 
   async function getOwnedWorkflow(id: string, userId: string) {
