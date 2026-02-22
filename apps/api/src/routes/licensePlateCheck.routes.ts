@@ -91,7 +91,7 @@ licensePlateCheckRouter.post(
           deduplicationKey: request.id,
         })
 
-        await checkController.updateScheduleId(request.id, schedule.id)
+        await checkController.updateScheduleId(request.id, schedule.id, hour, minute)
       }
 
       return c.json(
@@ -169,7 +169,7 @@ licensePlateCheckRouter.put('/:id/workflow', async (c: Context) => {
     externalId: checkId,
     deduplicationKey: checkId,
   })
-  await checkController.updateScheduleId(checkId, schedule.id)
+  await checkController.updateScheduleId(checkId, schedule.id, hour, minute)
 
   return c.json({ check: updated }, 200)
 })
