@@ -21,6 +21,11 @@ processes = ["app"]
 [[vm]]
 size = "shared-cpu-1x"
 memory = "512mb"
+processes = ["app"]
+
+[[vm]]
+size = "shared-cpu-1x"
+memory = "512mb"
 processes = ["fly_app_release_command"]
 
 [deploy]
