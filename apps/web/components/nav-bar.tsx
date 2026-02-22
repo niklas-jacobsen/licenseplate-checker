@@ -20,7 +20,7 @@ export default function NavBar() {
         <nav className="ml-auto flex items-center">
           <ul className="hidden md:flex space-x-4 mr-4">
             <li className="text-sm font-medium text-gray-700 hover:text-blue-600">
-              <Link href="/checks">My Requests</Link>
+              <Link href="/checks">Requests</Link>
             </li>
             <li className="text-sm font-medium text-gray-700 hover:text-blue-600">
               <Link href="/workflows">Workflows</Link>
