@@ -215,7 +215,7 @@ export default function WorkflowList() {
           {workflows.map((workflow) => (
             <Card
               key={workflow.id}
-              className="flex flex-col h-[180px] py-0 cursor-pointer hover:border-primary/50 transition-colors"
+              className="flex flex-col h-45 py-0 cursor-pointer hover:border-primary/50 transition-colors"
               onClick={() => router.push(`/workflows/${workflow.id}`)}
             >
               <CardContent className="py-4 flex-1 flex flex-col">

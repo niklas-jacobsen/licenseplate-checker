@@ -26,6 +26,12 @@ describe('GET /cities', () => {
   })
 
   it('handles errors', async () => {
+    //mock error to clean up scary error trace when running tests
+    const originalError = console.error
+    console.error = mock(() => {
+      /* comment to satisfy linter */
+    })
+
     mockController.getAll.mockImplementation(async () => {
       throw new Error('DB Error')
     })
@@ -35,5 +41,7 @@ describe('GET /cities', () => {
 
     const res = await app.request('/')
     expect(res.status).toBe(500)
+
+    console.error = originalError
   })
 })
