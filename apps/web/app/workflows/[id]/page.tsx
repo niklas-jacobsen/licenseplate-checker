@@ -363,6 +363,9 @@ export default function WorkflowDetailPage({
                       .filter((exec) => !hideTestRuns || exec.check != null)
                       .map((exec) => {
                         const isExpanded = expandedRunId === exec.id
+                        const infoLogs = exec.logs?.filter(
+                          (l) => l.level === 'info'
+                        )
                         return (
                           <div key={exec.id}>
                             <button
@@ -477,6 +480,44 @@ export default function WorkflowDetailPage({
                                       )}
                                       {exec.result.error}
                                     </div>
+                                  )}
+
+                                  {/* timeline */}
+                                  {infoLogs && infoLogs.length > 0 ? (
+                                    <div className="space-y-0">
+                                      <span className="text-xs font-medium text-muted-foreground">
+                                        Execution Log
+                                      </span>
+                                      <div className="mt-1.5">
+                                        {infoLogs.map((log, i) => (
+                                          <div
+                                            key={`${exec.id}-log-${i}`}
+                                            className="flex gap-3"
+                                          >
+                                            <div className="flex flex-col items-center w-2 shrink-0">
+                                              {i > 0 ? (
+                                                <div className="w-px flex-1 bg-muted-foreground/20" />
+                                              ) : (
+                                                <div className="flex-1" />
+                                              )}
+                                              <div className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50 shrink-0" />
+                                              {i < infoLogs.length - 1 ? (
+                                                <div className="w-px flex-1 bg-muted-foreground/20" />
+                                              ) : (
+                                                <div className="flex-1" />
+                                              )}
+                                            </div>
+                                            <span className="text-xs text-muted-foreground font-mono py-1">
+                                              {log.message}
+                                            </span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <p className="text-xs text-muted-foreground italic">
+                                      No logs available
+                                    </p>
                                   )}
                                 </div>
                               </div>
