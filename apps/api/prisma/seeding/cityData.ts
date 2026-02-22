@@ -507,6 +507,9 @@ export const cityData: CityDataEntry[] = [
   {
     id: 'DD',
     name: 'Dresden',
+    websiteUrl:
+      'https://wunschkennzeichen.dresden.de/wkz/?LICENSEIDENTIFIER=dresden',
+    allowedDomains: ['dresden.de'],
   },
   {
     id: 'DE',
@@ -1877,6 +1880,8 @@ export const cityData: CityDataEntry[] = [
   {
     id: 'N',
     name: 'Nürnberg',
+    websiteUrl: 'https://online-service2.nuernberg.de/wkz',
+    allowedDomains: ['nuernberg.de'],
   },
   {
     id: 'NAB',
@@ -2157,6 +2162,8 @@ export const cityData: CityDataEntry[] = [
   {
     id: 'P',
     name: 'Potsdam',
+    websiteUrl: 'https://egov.potsdam.de/wkz',
+    allowedDomains: ['potsdam.de'],
   },
   {
     id: 'PA',
@@ -2221,6 +2228,8 @@ export const cityData: CityDataEntry[] = [
   {
     id: 'PM',
     name: 'Potsdam-Mittelmark',
+    websiteUrl: 'https://ekol.potsdam-mittelmark.de/wkz',
+    allowedDomains: ['potsdam-mittelmark.de'],
   },
   {
     id: 'PN',
@@ -2897,6 +2906,8 @@ export const cityData: CityDataEntry[] = [
   {
     id: 'W',
     name: 'Wuppertal',
+    websiteUrl: 'https://wkz.wuppertal.de/wkz',
+    allowedDomains: ['wuppertal.de'],
   },
   {
     id: 'WA',
@@ -2929,6 +2940,9 @@ export const cityData: CityDataEntry[] = [
   {
     id: 'WB',
     name: 'Wittenberg',
+    websiteUrl:
+      'https://onlinezulassung.landkreis-wittenberg.de/verkehr-igv/servlet/Internetgeschaeftsvorfaelle?AUFRUF=WKZ',
+    allowedDomains: ['wittenberg.de'],
   },
   {
     id: 'WBS',
