@@ -11,6 +11,7 @@ PROJECT="api"
 
 [env]
 NODE_ENV = "production"
+SENTRY_ENVIRONMENT = "staging"
 
 [http_service]
 internal_port = 8080
