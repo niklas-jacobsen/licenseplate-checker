@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { Combobox } from './ui/combobox'
+import CityPicker from './city-picker'
 import {
   Form,
   FormControl,
@@ -40,7 +40,6 @@ import { useAuth } from '../lib/auth-context'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { checkService } from '../services/check.service'
-import { cityService } from '../services/city.service'
 import { workflowService } from '../services/workflow.service'
 import { usePersistedForm } from '../hooks/use-persisted-form'
 
@@ -60,8 +59,6 @@ export default function LicensePlateCheckForm() {
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
-  const [cities, setCities] = useState<{ value: string; label: string }[]>([])
-  const [isLoadingCities, setIsLoadingCities] = useState(true)
   const [workflows, setWorkflows] = useState<WorkflowOption[]>([])
   const [isLoadingWorkflows, setIsLoadingWorkflows] = useState(false)
   const [showNoWorkflowWarning, setShowNoWorkflowWarning] = useState(false)
@@ -80,28 +77,6 @@ export default function LicensePlateCheckForm() {
 
   // Use custom hook for persistence
   const { saveForm } = usePersistedForm(form, SAVED_FORM_KEY)
-
-  // Fetch Cities
-  useEffect(() => {
-    const fetchCities = async () => {
-      try {
-        const response = await cityService.getCities()
-        if (response.data && response.data.cities) {
-          const formattedCities = response.data.cities.map((city) => ({
-            value: city.id,
-            label: city.name,
-          }))
-          setCities(formattedCities)
-        }
-      } catch (error) {
-        console.error('Failed to fetch cities:', error)
-      } finally {
-        setIsLoadingCities(false)
-      }
-    }
-
-    fetchCities()
-  }, [])
 
   const city = form.watch('city')
   const letters = form.watch('letters')
@@ -261,16 +236,10 @@ export default function LicensePlateCheckForm() {
                   <FormItem>
                     <FormLabel className="flex items-center">City</FormLabel>
                     <FormControl>
-                      <Combobox
+                      <CityPicker
                         value={field.value}
                         onChange={field.onChange}
                         error={!!form.formState.errors.city}
-                        items={cities}
-                        placeholder={
-                          isLoadingCities
-                            ? 'Loading cities...'
-                            : 'Select city...'
-                        }
                       />
                     </FormControl>
                     <div className="min-h-5"></div>

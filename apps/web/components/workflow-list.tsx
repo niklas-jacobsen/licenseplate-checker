@@ -14,7 +14,6 @@ import {
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { workflowService } from '../services/workflow.service'
-import { cityService } from '../services/city.service'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,17 +31,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from './ui/dialog'
 import { Input } from './ui/input'
 import { Label } from './ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from './ui/select'
+import CityPicker from './city-picker'
 import { BUILDER_REGISTRY_VERSION } from '@licenseplate-checker/shared/node-registry'
 import { WORKFLOW_NAME_MAX_LENGTH } from '@licenseplate-checker/shared/constants/limits'
 import type { WorkflowNode } from '@licenseplate-checker/shared/workflow-dsl/types'
@@ -56,11 +48,6 @@ interface Workflow {
   createdAt: string
   updatedAt: string
   city: { name: string }
-}
-
-interface City {
-  id: string
-  name: string
 }
 
 const defaultNodes: WorkflowNode[] = [
@@ -81,7 +68,6 @@ const defaultNodes: WorkflowNode[] = [
 export default function WorkflowList() {
   const router = useRouter()
   const [workflows, setWorkflows] = useState<Workflow[]>([])
-  const [cities, setCities] = useState<City[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null)
@@ -99,17 +85,11 @@ export default function WorkflowList() {
 
     const fetchData = async () => {
       try {
-        const [workflowsRes, citiesRes] = await Promise.all([
-          workflowService.getMyWorkflows(controller.signal),
-          cityService.getCities(controller.signal),
-        ])
+        const workflowsRes = await workflowService.getMyWorkflows(controller.signal)
 
         if (controller.signal.aborted) return
         if (workflowsRes.data?.workflows) {
           setWorkflows(workflowsRes.data.workflows)
-        }
-        if (citiesRes.data?.cities) {
-          setCities(citiesRes.data.cities)
         }
       } catch (err) {
         if (!controller.signal.aborted) {
@@ -338,18 +318,7 @@ export default function WorkflowList() {
                 City
               </Label>
               <div className="col-span-3">
-                <Select value={newCityId} onValueChange={setNewCityId}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a city" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {cities.map((city) => (
-                      <SelectItem key={city.id} value={city.id}>
-                        {city.name} ({city.id})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <CityPicker value={newCityId} onChange={setNewCityId} />
               </div>
             </div>
             {createError && (
