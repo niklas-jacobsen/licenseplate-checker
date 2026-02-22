@@ -11,8 +11,8 @@ export default function SimpleNavBar() {
           <Image
             src="/logotype.svg"
             alt="Licenseplate Checker"
-            width={328}
-            height={34}
+            width={100}
+            height={44}
             priority
           />
         </Link>
