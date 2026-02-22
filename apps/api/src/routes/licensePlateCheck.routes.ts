@@ -5,6 +5,10 @@ import { schedules } from '@trigger.dev/sdk/v3'
 import CityController from '../controllers/City.controller'
 import WorkflowController from '../controllers/Workflow.controller'
 import LicenseplateCheckController from '../controllers/LicensePlateCheck.controller'
+import {
+  buildVariableContext,
+  executeWorkflowForCheck,
+} from '../services/executeWorkflowForCheck'
 
 export const licensePlateCheckRouter = new Hono()
 
@@ -91,7 +95,25 @@ licensePlateCheckRouter.post(
           deduplicationKey: request.id,
         })
 
-        await checkController.updateScheduleId(request.id, schedule.id, hour, minute)
+        await checkController.updateScheduleId(
+          request.id,
+          schedule.id,
+          hour,
+          minute
+        )
+
+        // run intitial check
+        const variables = buildVariableContext({
+          cityId: body.city,
+          letters: uppercaseLetters,
+          numbers: Number(body.numbers),
+        })
+        executeWorkflowForCheck(
+          workflowController,
+          body.workflowId,
+          request.id,
+          { variables }
+        ).catch((err) => console.error('Initial check execution failed:', err))
       }
 
       return c.json(
@@ -170,6 +192,16 @@ licensePlateCheckRouter.put('/:id/workflow', async (c: Context) => {
     deduplicationKey: checkId,
   })
   await checkController.updateScheduleId(checkId, schedule.id, hour, minute)
+
+  // run intitial check
+  const variables = buildVariableContext({
+    cityId: existingCheck.cityId,
+    letters: existingCheck.letters,
+    numbers: existingCheck.numbers,
+  })
+  executeWorkflowForCheck(workflowController, workflowId, checkId, {
+    variables,
+  }).catch((err) => console.error('Initial check execution failed:', err))
 
   return c.json({ check: updated }, 200)
 })
