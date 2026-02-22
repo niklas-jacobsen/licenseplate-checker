@@ -113,7 +113,7 @@ export const ReactFlowEdgeSchema = z.object({
 })
 
 export const WorkflowGraphSchema = z.object({
-  id: z.string().min(1),
+  id: z.string().min(1).optional(),
   name: z.string().optional(),
   registryVersion: RegistryVersionSchema,
   nodes: z.array(ReactFlowNodeSchema),
