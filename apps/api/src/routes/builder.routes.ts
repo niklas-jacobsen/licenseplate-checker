@@ -20,20 +20,22 @@ import {
 import { Prisma } from '@prisma/client'
 import { Hono } from 'hono'
 import { prisma } from '../../prisma/data-source'
-import { compileGraphToIr } from '../builder/compiler/GraphToIrCompiler'
+import { compileGraphToIr as defaultCompileGraphToIr } from '../builder/compiler/GraphToIrCompiler'
 import { validateGraph as defaultValidateGraph } from '../builder/validate/validateGraph'
 import WorkflowController from '../controllers/Workflow.controller'
 import auth from '../middleware/auth'
 import {
   buildVariableContext,
-  executeWorkflowForCheck,
+  executeWorkflowForCheck as defaultExecuteWorkflowForCheck,
 } from '../services/executeWorkflowForCheck'
 import { CompileError } from '../types/compiler.types'
 import type { ValidationIssue } from '../types/validate.types'
 
 export const createBuilderRouter = (
   workflowController: WorkflowController,
-  validateGraph = defaultValidateGraph
+  validateGraph = defaultValidateGraph,
+  compileGraphToIr = defaultCompileGraphToIr,
+  executeWorkflowForCheck = defaultExecuteWorkflowForCheck
 ) => {
   const router = new Hono()
 

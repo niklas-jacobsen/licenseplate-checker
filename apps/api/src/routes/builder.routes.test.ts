@@ -15,11 +15,6 @@ const compileGraphToIrMock = mock(() => ({
 }))
 import { CompileError } from '../types/compiler.types'
 
-mock.module('../builder/compiler/GraphToIrCompiler', () => ({
-  compileGraphToIr: compileGraphToIrMock,
-  CompileError,
-}))
-
 mock.module('../middleware/auth', () => ({
   default: mock(async (c: any, next: any) => {
     c.set('user', { id: 'test-user-id' })
@@ -57,7 +52,11 @@ function makeApp() {
   app.onError(errorHandler)
   app.route(
     '/builder',
-    createBuilderRouter(workflowControllerMock, validateGraphMock as any)
+    createBuilderRouter(
+      workflowControllerMock,
+      validateGraphMock as any,
+      compileGraphToIrMock as any
+    )
   )
   return app
 }
