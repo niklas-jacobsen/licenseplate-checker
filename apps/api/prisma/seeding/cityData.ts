@@ -149,7 +149,7 @@ export const cityData: CityDataEntry[] = [
   {
     id: 'B',
     name: 'Berlin',
-    websiteUrl: 'https://service.berlin.de/dienstleistung/121484/',
+    websiteUrl: 'https://service.berlin.de/dienstleistung/121484',
     allowedDomains: ['berlin.de', 'behoerden-serviceportal.de'],
   },
   {
@@ -455,6 +455,8 @@ export const cityData: CityDataEntry[] = [
   {
     id: 'COE',
     name: 'Coesfeld',
+    websiteUrl: 'https://app.kreis-coesfeld.de/wkz/?LICENSEIDENTIFIER=coe',
+    allowedDomains: ['coesfeld.de'],
   },
   {
     id: 'CR',
@@ -475,7 +477,7 @@ export const cityData: CityDataEntry[] = [
   {
     id: 'D',
     name: 'Düsseldorf',
-    websiteUrl: 'https://service.duesseldorf.de/wunschkennzeichen#/',
+    websiteUrl: 'https://service.duesseldorf.de/wunschkennzeichen',
     allowedDomains: ['duesseldorf.de'],
   },
   {
@@ -1141,7 +1143,7 @@ export const cityData: CityDataEntry[] = [
   {
     id: 'HH',
     name: 'Hansestadt Hamburg',
-    websiteUrl: 'https://www.hamburg.de/service/info/111146022/',
+    websiteUrl: 'https://www.hamburg.de/service/info/111146022',
     allowedDomains: ['hamburg.de', 'behoerden-serviceportal.de'],
   },
   {
@@ -1474,6 +1476,9 @@ export const cityData: CityDataEntry[] = [
   {
     id: 'L',
     name: 'Leipzig',
+    websiteUrl:
+      'https://kennzeichen.leipzig.de/wkz/?LICENSEIDENTIFIER=leipzig_stadt',
+    allowedDomains: ['leipzig.de'],
   },
   {
     id: 'LA',
@@ -1802,7 +1807,7 @@ export const cityData: CityDataEntry[] = [
   {
     id: 'MS',
     name: 'Münster',
-    websiteUrl: 'https://www.stadt-muenster.de/wkz/?LICENSEIDENTIFIER=ms/',
+    websiteUrl: 'https://www.stadt-muenster.de/wkz/?LICENSEIDENTIFIER=ms',
     allowedDomains: ['stadt-muenster.de'],
   },
   {
