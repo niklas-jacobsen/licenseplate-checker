@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, use } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import { workflowService } from '@/services/workflow.service'
 import { Button } from '@/components/ui/button'
@@ -93,6 +93,7 @@ export default function WorkflowDetailPage({
   const { id } = use(params)
   const { user, isLoading: authLoading } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [workflow, setWorkflow] = useState<Workflow | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -104,8 +105,10 @@ export default function WorkflowDetailPage({
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
-  const [hideTestRuns, setHideTestRuns] = useState(true)
-  const [expandedRunId, setExpandedRunId] = useState<string | null>(null)
+
+  const runParam = searchParams.get('run')
+  const [hideTestRuns, setHideTestRuns] = useState(!runParam)
+  const [expandedRunId, setExpandedRunId] = useState<string | null>(runParam)
 
   useEffect(() => {
     if (!authLoading && !user) {
