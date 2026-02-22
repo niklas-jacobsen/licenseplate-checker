@@ -188,6 +188,10 @@ export type BuilderState = {
 
   // dirty tracking
   isDirty: boolean
+
+  // undo/redo history
+  past: Array<{ nodes: WorkflowNode[]; edges: Edge[] }>
+  future: Array<{ nodes: WorkflowNode[]; edges: Edge[] }>
 }
 
 export type BuilderActions = {
@@ -234,6 +238,11 @@ export type BuilderActions = {
   saveWorkflowAndUnpublish: () => Promise<void>
   checkHasContentChanges: () => boolean
 
+  // undo/redo
+  takeSnapshot: () => void
+  undo: () => void
+  redo: () => void
+
   // getters
   getNodes: () => WorkflowNode[]
   getEdges: () => Edge[]
@@ -272,6 +281,8 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
       snapshotNodes: DEFAULT_NODES,
       snapshotEdges: DEFAULT_EDGES,
       isDirty: false,
+      past: [],
+      future: [],
       ...initialState,
 
       // reactflow handlers
@@ -293,6 +304,7 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
         const hasAnyChange = filtered.some(
           (c) => c.type !== 'select' && c.type !== 'dimensions'
         )
+        if (hasStructuralChange) get().takeSnapshot()
         set({
           nodes: applyNodeChanges(filtered, get().nodes) as WorkflowNode[],
           ...(hasStructuralChange && { canPublish: false }),
@@ -301,12 +313,14 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
       },
       onEdgesChange: (changes) => {
         const hasActualChange = changes.some((c) => c.type !== 'select')
+        if (hasActualChange) get().takeSnapshot()
         set({
           edges: applyEdgeChanges(changes, get().edges) as Edge[],
           ...(hasActualChange && { canPublish: false, isDirty: true }),
         })
       },
       onConnect: (connection) => {
+        get().takeSnapshot()
         // only one connection per handle -> replace existing
         const edges = get().edges.filter(
           (e) =>
@@ -330,13 +344,16 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
       },
 
       // node ops
-      addNode: (node) =>
+      addNode: (node) => {
+        get().takeSnapshot()
         set({
           nodes: [...get().nodes, node],
           canPublish: false,
           isDirty: true,
-        }),
+        })
+      },
       addNodeByType: (type, position) => {
+        get().takeSnapshot()
         const node = createNode(type, position)
         set({
           nodes: [...get().nodes, node],
@@ -347,6 +364,7 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
       removeNode: (nodeId) => {
         const node = get().nodes.find((n) => n.id === nodeId)
         if (node?.type === 'core.start' || node?.type === 'core.end') return
+        get().takeSnapshot()
         set({
           nodes: get().nodes.filter((n) => n.id !== nodeId),
           edges: get().edges.filter(
@@ -358,7 +376,8 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
           isDirty: true,
         })
       },
-      updateNodeConfig: (nodeId, config) =>
+      updateNodeConfig: (nodeId, config) => {
+        get().takeSnapshot()
         set({
           nodes: get().nodes.map((n) =>
             n.id === nodeId
@@ -370,15 +389,18 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
           ),
           canPublish: false,
           isDirty: true,
-        }),
+        })
+      },
 
       // edge ops
-      removeEdge: (edgeId) =>
+      removeEdge: (edgeId) => {
+        get().takeSnapshot()
         set({
           edges: get().edges.filter((e) => e.id !== edgeId),
           canPublish: false,
           isDirty: true,
-        }),
+        })
+      },
 
       // selection
       setSelectedNodeId: (id) => set({ selectedNodeId: id }),
@@ -685,6 +707,39 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
           executionId: null,
           executionError: null,
           nodeStatuses: {},
+        })
+      },
+
+      // undo/redo
+      takeSnapshot: () => {
+        const { nodes, edges, past } = get()
+        set({
+          past: [...past.slice(-(99)), { nodes, edges }],
+          future: [],
+        })
+      },
+      undo: () => {
+        const { past, nodes, edges } = get()
+        const prev = past[past.length - 1]
+        if (!prev) return
+        set({
+          past: past.slice(0, -1),
+          future: [...get().future, { nodes, edges }],
+          nodes: prev.nodes,
+          edges: prev.edges,
+          isDirty: true,
+        })
+      },
+      redo: () => {
+        const { future, nodes, edges } = get()
+        const next = future[future.length - 1]
+        if (!next) return
+        set({
+          future: future.slice(0, -1),
+          past: [...get().past, { nodes, edges }],
+          nodes: next.nodes,
+          edges: next.edges,
+          isDirty: true,
         })
       },
 
