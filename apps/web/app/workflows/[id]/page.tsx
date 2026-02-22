@@ -9,7 +9,6 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   ArrowLeft,
-  Calendar,
   Check,
   Clock,
   Edit,
@@ -17,7 +16,6 @@ import {
   GlobeLock,
   Loader2,
   MoreVertical,
-  Play,
   Trash2,
   X,
 } from 'lucide-react'
@@ -97,6 +95,7 @@ export default function WorkflowDetailPage({
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [hideTestRuns, setHideTestRuns] = useState(true)
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -326,6 +325,15 @@ export default function WorkflowDetailPage({
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold">Recent Runs</h2>
+              <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={hideTestRuns}
+                  onChange={(e) => setHideTestRuns(e.target.checked)}
+                  className="accent-primary h-3.5 w-3.5"
+                />
+                Hide test runs
+              </label>
             </div>
             <Card className="py-0">
               <CardContent className="p-0">
@@ -333,9 +341,17 @@ export default function WorkflowDetailPage({
                   <div className="text-center py-12 text-muted-foreground">
                     No executions recorded yet.
                   </div>
+                ) : workflow.executions.filter(
+                    (e) => !hideTestRuns || e.check != null
+                  ).length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    No production runs yet
+                  </div>
                 ) : (
                   <div className="divide-y">
-                    {workflow.executions.map((exec) => (
+                    {workflow.executions
+                      .filter((exec) => !hideTestRuns || exec.check != null)
+                      .map((exec) => (
                       <div
                         key={exec.id}
                         className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors gap-4"
@@ -354,10 +370,14 @@ export default function WorkflowDetailPage({
                               </span>
                             </div>
                             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                              {exec.check && (
+                              {exec.check ? (
                                 <span className="font-mono">
                                   {exec.check.cityId.toUpperCase()}-
                                   {exec.check.letters}-{exec.check.numbers}
+                                </span>
+                              ) : (
+                                <span className="text-amber-600 font-medium">
+                                  Test Run
                                 </span>
                               )}
                             </div>
