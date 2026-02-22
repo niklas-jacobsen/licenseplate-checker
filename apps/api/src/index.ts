@@ -1,3 +1,4 @@
+import './instrument'
 import app from './app'
 import { ENV } from './env'
 

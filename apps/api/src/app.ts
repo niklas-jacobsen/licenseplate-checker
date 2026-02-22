@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/bun'
 import { Hono, ErrorHandler } from 'hono'
 import { secureHeaders } from 'hono/secure-headers'
 import auth from './middleware/auth'
@@ -46,6 +47,7 @@ export const errorHandler: ErrorHandler = (err, c) => {
     )
   }
 
+  Sentry.captureException(err)
   console.error('Unhandled error:', err)
   return c.json(
     {
