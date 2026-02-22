@@ -9,7 +9,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { TEMPLATE_VARIABLES } from '@licenseplate-checker/shared/template-variables'
 import { useState } from 'react'
-import { useAuth } from '@/lib/auth-context'
+import { useAuth } from '@/components/auth-context'
 
 const USER_KEY_TO_FIELD: Record<string, string> = {
   'user.salutation': 'salutation',

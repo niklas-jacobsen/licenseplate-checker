@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import NavBar from '@/components/nav-bar'
-import { useAuth } from '@/lib/auth-context'
+import { useAuth } from '@/components/auth-context'
 import { useRouter } from 'next/navigation'
 import ProfileForm from '@/components/profile-form'
 
