@@ -149,7 +149,7 @@ export const cityData: CityDataEntry[] = [
   {
     id: 'B',
     name: 'Berlin',
-    websiteUrl: 'https://service.berlin.de/dienstleistung/121484/',
+    websiteUrl: 'https://service.berlin.de/dienstleistung/121484',
     allowedDomains: ['berlin.de', 'behoerden-serviceportal.de'],
   },
   {
@@ -455,6 +455,8 @@ export const cityData: CityDataEntry[] = [
   {
     id: 'COE',
     name: 'Coesfeld',
+    websiteUrl: 'https://app.kreis-coesfeld.de/wkz/?LICENSEIDENTIFIER=coe',
+    allowedDomains: ['coesfeld.de'],
   },
   {
     id: 'CR',
@@ -475,7 +477,7 @@ export const cityData: CityDataEntry[] = [
   {
     id: 'D',
     name: 'Düsseldorf',
-    websiteUrl: 'https://service.duesseldorf.de/wunschkennzeichen#/',
+    websiteUrl: 'https://service.duesseldorf.de/wunschkennzeichen',
     allowedDomains: ['duesseldorf.de'],
   },
   {
@@ -505,6 +507,9 @@ export const cityData: CityDataEntry[] = [
   {
     id: 'DD',
     name: 'Dresden',
+    websiteUrl:
+      'https://wunschkennzeichen.dresden.de/wkz/?LICENSEIDENTIFIER=dresden',
+    allowedDomains: ['dresden.de'],
   },
   {
     id: 'DE',
@@ -1141,7 +1146,7 @@ export const cityData: CityDataEntry[] = [
   {
     id: 'HH',
     name: 'Hansestadt Hamburg',
-    websiteUrl: 'https://www.hamburg.de/service/info/111146022/',
+    websiteUrl: 'https://www.hamburg.de/service/info/111146022',
     allowedDomains: ['hamburg.de', 'behoerden-serviceportal.de'],
   },
   {
@@ -1474,6 +1479,9 @@ export const cityData: CityDataEntry[] = [
   {
     id: 'L',
     name: 'Leipzig',
+    websiteUrl:
+      'https://kennzeichen.leipzig.de/wkz/?LICENSEIDENTIFIER=leipzig_stadt',
+    allowedDomains: ['leipzig.de'],
   },
   {
     id: 'LA',
@@ -1802,7 +1810,7 @@ export const cityData: CityDataEntry[] = [
   {
     id: 'MS',
     name: 'Münster',
-    websiteUrl: 'https://www.stadt-muenster.de/wkz/?LICENSEIDENTIFIER=ms/',
+    websiteUrl: 'https://www.stadt-muenster.de/wkz/?LICENSEIDENTIFIER=ms',
     allowedDomains: ['stadt-muenster.de'],
   },
   {
@@ -1872,6 +1880,8 @@ export const cityData: CityDataEntry[] = [
   {
     id: 'N',
     name: 'Nürnberg',
+    websiteUrl: 'https://online-service2.nuernberg.de/wkz',
+    allowedDomains: ['nuernberg.de'],
   },
   {
     id: 'NAB',
@@ -2152,6 +2162,8 @@ export const cityData: CityDataEntry[] = [
   {
     id: 'P',
     name: 'Potsdam',
+    websiteUrl: 'https://egov.potsdam.de/wkz',
+    allowedDomains: ['potsdam.de'],
   },
   {
     id: 'PA',
@@ -2216,6 +2228,8 @@ export const cityData: CityDataEntry[] = [
   {
     id: 'PM',
     name: 'Potsdam-Mittelmark',
+    websiteUrl: 'https://ekol.potsdam-mittelmark.de/wkz',
+    allowedDomains: ['potsdam-mittelmark.de'],
   },
   {
     id: 'PN',
@@ -2892,6 +2906,8 @@ export const cityData: CityDataEntry[] = [
   {
     id: 'W',
     name: 'Wuppertal',
+    websiteUrl: 'https://wkz.wuppertal.de/wkz',
+    allowedDomains: ['wuppertal.de'],
   },
   {
     id: 'WA',
@@ -2924,6 +2940,9 @@ export const cityData: CityDataEntry[] = [
   {
     id: 'WB',
     name: 'Wittenberg',
+    websiteUrl:
+      'https://onlinezulassung.landkreis-wittenberg.de/verkehr-igv/servlet/Internetgeschaeftsvorfaelle?AUFRUF=WKZ',
+    allowedDomains: ['wittenberg.de'],
   },
   {
     id: 'WBS',

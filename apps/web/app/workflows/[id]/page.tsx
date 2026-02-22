@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, use } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/lib/auth-context'
 import { workflowService } from '@/services/workflow.service'
 import { Button } from '@/components/ui/button'
@@ -9,15 +9,14 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   ArrowLeft,
-  Calendar,
   Check,
+  ChevronDown,
   Clock,
   Edit,
   Globe,
   GlobeLock,
   Loader2,
   MoreVertical,
-  Play,
   Trash2,
   X,
 } from 'lucide-react'
@@ -55,14 +54,22 @@ import {
   WORKFLOW_DESCRIPTION_MAX_LENGTH,
 } from '@licenseplate-checker/shared/constants/limits'
 
+interface ExecutionLog {
+  timestamp: string
+  level: 'info' | 'warn' | 'error' | 'debug'
+  message: string
+  details?: unknown
+}
+
 interface Execution {
   id: string
   status: 'PENDING' | 'RUNNING' | 'SUCCESS' | 'FAILED'
   startedAt: string
   finishedAt?: string | null
   duration?: number
-  result?: { success?: boolean; error?: string } | null
+  result?: { success?: boolean; error?: string; outcome?: string } | null
   errorNodeId?: string | null
+  logs?: ExecutionLog[] | null
   check?: { cityId: string; letters: string; numbers: number } | null
 }
 
@@ -86,6 +93,7 @@ export default function WorkflowDetailPage({
   const { id } = use(params)
   const { user, isLoading: authLoading } = useAuth()
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [workflow, setWorkflow] = useState<Workflow | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -97,6 +105,10 @@ export default function WorkflowDetailPage({
 
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+
+  const runParam = searchParams.get('run')
+  const [hideTestRuns, setHideTestRuns] = useState(!runParam)
+  const [expandedRunId, setExpandedRunId] = useState<string | null>(runParam)
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -326,6 +338,15 @@ export default function WorkflowDetailPage({
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold">Recent Runs</h2>
+              <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={hideTestRuns}
+                  onChange={(e) => setHideTestRuns(e.target.checked)}
+                  className="accent-primary h-3.5 w-3.5"
+                />
+                Hide test runs
+              </label>
             </div>
             <Card className="py-0">
               <CardContent className="p-0">
@@ -333,74 +354,180 @@ export default function WorkflowDetailPage({
                   <div className="text-center py-12 text-muted-foreground">
                     No executions recorded yet.
                   </div>
+                ) : workflow.executions.filter(
+                    (e) => !hideTestRuns || e.check != null
+                  ).length === 0 ? (
+                  <div className="text-center py-12 text-muted-foreground">
+                    No production runs yet
+                  </div>
                 ) : (
                   <div className="divide-y">
-                    {workflow.executions.map((exec) => (
-                      <div
-                        key={exec.id}
-                        className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors gap-4"
-                      >
-                        <div className="flex items-center gap-4 min-w-0">
-                          {getStatusBadge(exec.status)}
-                          <div className="flex flex-col min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="font-medium text-sm">
-                                {format(new Date(exec.startedAt), 'PP p')}
-                              </span>
-                              <span className="text-xs text-muted-foreground">
-                                {formatDistanceToNow(new Date(exec.startedAt), {
-                                  addSuffix: true,
-                                })}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                              {exec.check && (
-                                <span className="font-mono">
-                                  {exec.check.cityId.toUpperCase()}-
-                                  {exec.check.letters}-{exec.check.numbers}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-3 shrink-0 text-right">
-                          {exec.status === 'SUCCESS' && (
-                            <span className="text-xs text-green-600">
-                              Completed
-                            </span>
-                          )}
-                          {exec.status === 'FAILED' && (
-                            <span
-                              className="text-xs text-red-600 max-w-48 truncate"
-                              title={
-                                exec.errorNodeId
-                                  ? `Failed on node ${exec.errorNodeId}`
-                                  : exec.result?.error || 'Unknown error'
+                    {workflow.executions
+                      .filter((exec) => !hideTestRuns || exec.check != null)
+                      .map((exec) => {
+                        const isExpanded = expandedRunId === exec.id
+                        const infoLogs = exec.logs?.filter(
+                          (l) => l.level === 'info'
+                        )
+                        return (
+                          <div key={exec.id}>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setExpandedRunId(isExpanded ? null : exec.id)
                               }
+                              className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors gap-4 w-full text-left cursor-pointer"
                             >
-                              {exec.errorNodeId
-                                ? `Failed on ${exec.errorNodeId}`
-                                : exec.result?.error || 'Failed'}
-                            </span>
-                          )}
-                          {exec.status === 'RUNNING' && (
-                            <span className="text-xs text-blue-600">
-                              Running
-                            </span>
-                          )}
-                          {exec.status === 'PENDING' && (
-                            <span className="text-xs text-muted-foreground">
-                              Pending
-                            </span>
-                          )}
-                          {exec.duration != null && (
-                            <span className="text-xs text-muted-foreground tabular-nums">
-                              {(exec.duration / 1000).toFixed(1)}s
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+                              <div className="flex items-center gap-4 min-w-0">
+                                {getStatusBadge(exec.status)}
+                                <div className="flex flex-col min-w-0">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="font-medium text-sm">
+                                      {format(new Date(exec.startedAt), 'PP p')}
+                                    </span>
+                                    <span className="text-xs text-muted-foreground">
+                                      {formatDistanceToNow(
+                                        new Date(exec.startedAt),
+                                        { addSuffix: true }
+                                      )}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                    {exec.check ? (
+                                      <span className="font-mono">
+                                        {exec.check.cityId.toUpperCase()}-
+                                        {exec.check.letters}-
+                                        {exec.check.numbers}
+                                      </span>
+                                    ) : (
+                                      <span className="text-amber-600 font-medium">
+                                        Test Run
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-3 shrink-0">
+                                {exec.status === 'SUCCESS' && (
+                                  <span className="text-xs text-green-600">
+                                    Completed
+                                  </span>
+                                )}
+                                {exec.status === 'FAILED' && (
+                                  <span className="text-xs text-red-600 max-w-48 truncate">
+                                    {exec.errorNodeId
+                                      ? `Failed on ${exec.errorNodeId}`
+                                      : exec.result?.error || 'Failed'}
+                                  </span>
+                                )}
+                                {exec.status === 'RUNNING' && (
+                                  <span className="text-xs text-blue-600">
+                                    Running
+                                  </span>
+                                )}
+                                {exec.status === 'PENDING' && (
+                                  <span className="text-xs text-muted-foreground">
+                                    Pending
+                                  </span>
+                                )}
+                                {exec.duration != null && (
+                                  <span className="text-xs text-muted-foreground tabular-nums">
+                                    {(exec.duration / 1000).toFixed(1)}s
+                                  </span>
+                                )}
+                                <ChevronDown
+                                  className={`h-4 w-4 text-muted-foreground transition-transform ${
+                                    isExpanded ? 'rotate-180' : ''
+                                  }`}
+                                />
+                              </div>
+                            </button>
+
+                            {isExpanded && (
+                              <div className="px-4 pb-4 pt-0">
+                                <div className="bg-muted/40 rounded-lg p-4 space-y-3">
+                                  {/* summary */}
+                                  <div className="flex flex-wrap gap-x-6 gap-y-1 text-xs text-muted-foreground">
+                                    {exec.result?.outcome && (
+                                      <span>
+                                        Outcome:{' '}
+                                        <span className="font-medium text-foreground capitalize">
+                                          {exec.result.outcome}
+                                        </span>
+                                      </span>
+                                    )}
+                                    {exec.finishedAt && (
+                                      <span>
+                                        Finished:{' '}
+                                        {format(
+                                          new Date(exec.finishedAt),
+                                          'PP p'
+                                        )}
+                                      </span>
+                                    )}
+                                    {exec.duration != null && (
+                                      <span>
+                                        Duration:{' '}
+                                        {(exec.duration / 1000).toFixed(1)}s
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  {/* errors */}
+                                  {exec.result?.error && (
+                                    <div className="text-xs bg-red-50 text-red-700 border border-red-200 rounded px-3 py-2">
+                                      {exec.errorNodeId && (
+                                        <span className="font-medium">
+                                          Node {exec.errorNodeId}:{' '}
+                                        </span>
+                                      )}
+                                      {exec.result.error}
+                                    </div>
+                                  )}
+
+                                  {/* timeline */}
+                                  {infoLogs && infoLogs.length > 0 ? (
+                                    <div className="space-y-0">
+                                      <span className="text-xs font-medium text-muted-foreground">
+                                        Execution Log
+                                      </span>
+                                      <div className="mt-1.5">
+                                        {infoLogs.map((log, i) => (
+                                          <div
+                                            key={`${exec.id}-log-${i}`}
+                                            className="flex gap-3"
+                                          >
+                                            <div className="flex flex-col items-center w-2 shrink-0">
+                                              {i > 0 ? (
+                                                <div className="w-px flex-1 bg-muted-foreground/20" />
+                                              ) : (
+                                                <div className="flex-1" />
+                                              )}
+                                              <div className="h-1.5 w-1.5 rounded-full bg-muted-foreground/50 shrink-0" />
+                                              {i < infoLogs.length - 1 ? (
+                                                <div className="w-px flex-1 bg-muted-foreground/20" />
+                                              ) : (
+                                                <div className="flex-1" />
+                                              )}
+                                            </div>
+                                            <span className="text-xs text-muted-foreground font-mono py-1">
+                                              {log.message}
+                                            </span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  ) : (
+                                    <p className="text-xs text-muted-foreground italic">
+                                      No logs available
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )
+                      })}
                   </div>
                 )}
               </CardContent>
