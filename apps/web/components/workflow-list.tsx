@@ -85,7 +85,9 @@ export default function WorkflowList() {
 
     const fetchData = async () => {
       try {
-        const workflowsRes = await workflowService.getMyWorkflows(controller.signal)
+        const workflowsRes = await workflowService.getMyWorkflows(
+          controller.signal
+        )
 
         if (controller.signal.aborted) return
         if (workflowsRes.data?.workflows) {
@@ -163,11 +165,21 @@ export default function WorkflowList() {
   const deleteTarget = workflows.find((w) => w.id === deleteTargetId)
 
   if (loading) {
-    return <div className="p-4 text-center">Loading workflows...</div>
+    return (
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    )
   }
 
   if (error) {
-    return <div className="p-4 text-center text-red-500">{error}</div>
+    return (
+      <Card className="w-full">
+        <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+          <p className="text-sm text-destructive">{error}</p>
+        </CardContent>
+      </Card>
+    )
   }
 
   return (
@@ -248,8 +260,14 @@ export default function WorkflowList() {
                     <span>•</span>
                     <span>{format(new Date(workflow.updatedAt), 'PP')}</span>
                   </div>
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {workflow.description || (
+                  <p className="text-sm text-muted-foreground">
+                    {workflow.description ? (
+                      workflow.description.length > 30 ? (
+                        `${workflow.description.substring(0, 30)}…`
+                      ) : (
+                        workflow.description
+                      )
+                    ) : (
                       <span className="italic opacity-50">
                         No description provided
                       </span>
