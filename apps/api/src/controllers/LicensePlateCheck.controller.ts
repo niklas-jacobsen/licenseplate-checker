@@ -79,10 +79,19 @@ class LicenseplateCheckController {
     })
   }
 
-  async updateScheduleId(id: string, triggerScheduleId: string | null) {
+  async updateScheduleId(
+    id: string,
+    triggerScheduleId: string | null,
+    scheduledHour?: number,
+    scheduledMinute?: number
+  ) {
     return prisma.licenseplateCheck.update({
       where: { id },
-      data: { triggerScheduleId },
+      data: {
+        triggerScheduleId,
+        scheduledHour: scheduledHour ?? null,
+        scheduledMinute: scheduledMinute ?? null,
+      },
     })
   }
 

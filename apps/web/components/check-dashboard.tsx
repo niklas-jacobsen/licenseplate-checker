@@ -5,7 +5,7 @@ import LicensePlatePreview from './plate-preview'
 import { useRouter } from 'next/navigation'
 import { checkService } from '../services/check.service'
 import { workflowService } from '../services/workflow.service'
-import { format } from 'date-fns'
+import { format, formatDistanceToNow } from 'date-fns'
 import type { LicensePlateCheck } from '@licenseplate-checker/shared/types'
 import {
   Trash2,
@@ -44,6 +44,14 @@ import {
   SelectValue,
 } from './ui/select'
 import { toTitleCase } from '@/lib/utils'
+
+export function getNextCheckDate(hour: number, minute: number): Date {
+  const now = new Date()
+  const next = new Date(now)
+  next.setHours(hour, minute, 0, 0)
+  if (next <= now) next.setDate(next.getDate() + 1)
+  return next
+}
 
 const LicensePlateCheckDashboard = () => {
   const router = useRouter()
@@ -247,7 +255,7 @@ const LicensePlateCheckDashboard = () => {
         {checks.map((check) => (
           <Card
             key={check.id}
-            className="overflow-hidden flex flex-col h-full hover:border-primary/50 transition-colors py-0"
+            className="overflow-hidden flex flex-col h-full hover:border-primary/50 transition-colors py-0 gap-0"
           >
             <div className="p-6 flex-1">
               <div className="flex justify-between items-start mb-4">
@@ -336,6 +344,21 @@ const LicensePlateCheckDashboard = () => {
                       : 'Never'}
                   </span>
                 </div>
+                {check.scheduledHour != null &&
+                  check.scheduledMinute != null && (
+                    <div className="flex justify-between text-muted-foreground">
+                      <span>Next Check</span>
+                      <span className="font-medium text-foreground">
+                        {formatDistanceToNow(
+                          getNextCheckDate(
+                            check.scheduledHour,
+                            check.scheduledMinute
+                          ),
+                          { addSuffix: true }
+                        )}
+                      </span>
+                    </div>
+                  )}
               </div>
             </div>
 

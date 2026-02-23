@@ -3,7 +3,7 @@
 import NavBar from '@/components/nav-bar'
 import { useCallback, useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { useAuth } from '@/lib/auth-context'
+import { useAuth } from '@/components/auth-context'
 import {
   ReactFlow,
   Background as BackgroundComponent,

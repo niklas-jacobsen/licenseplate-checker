@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import NavBar from '@/components/nav-bar'
-import { useAuth } from '@/lib/auth-context'
+import { useAuth } from '@/components/auth-context'
 import WorkflowList from '@/components/workflow-list'
 
 export default function WorkflowsPage() {

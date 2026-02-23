@@ -7,8 +7,14 @@ import {
   useEffect,
   type ReactNode,
 } from 'react'
-import apiClient from './api-client'
-import { userService, type User } from '@/services/user.service'
+import defaultApiClient from '../lib/api-client'
+import {
+  userService as defaultUserService,
+  type User,
+} from '@/services/user.service'
+
+type UserService = typeof defaultUserService
+type ApiClient = typeof defaultApiClient
 
 interface AuthContextType {
   user: User | null
@@ -21,7 +27,17 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+interface AuthProviderProps {
+  children: ReactNode
+  userService?: UserService
+  apiClient?: ApiClient
+}
+
+export function AuthProvider({
+  children,
+  userService = defaultUserService,
+  apiClient = defaultApiClient,
+}: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
