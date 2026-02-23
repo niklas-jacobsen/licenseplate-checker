@@ -20,6 +20,7 @@
     "@hono/zod-validator": "^0.4.3",
     "@licenseplate-checker/shared": "*",
     "@prisma/client": "^5.22.0",
+    "@scalar/hono-api-reference": "^0.9.44",
     "@sentry/bun": "^10.39.0",
     "@trigger.dev/sdk": "4.4.1",
     "bcrypt": "^5.1.1",
