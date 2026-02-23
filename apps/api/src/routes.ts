@@ -7,6 +7,7 @@ import { builderRouter } from './routes/builder.routes'
 import { cityRouter } from './routes/city.routes'
 import { webhookRouter } from './routes/webhook.routes'
 import { internalRouter } from './routes/internal.routes'
+import { docsRouter, openapiRoute } from './routes/docs.routes'
 
 const router = new Hono()
 
@@ -18,5 +19,7 @@ router.route('/builder', builderRouter)
 router.route('/cities', cityRouter)
 router.route('/webhooks', webhookRouter)
 router.route('/internal', internalRouter)
+router.route('/openapi.json', openapiRoute)
+router.route('/docs', docsRouter)
 
 export default router
