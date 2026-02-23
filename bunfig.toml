@@ -47,7 +47,8 @@ coveragePathIgnorePatterns = [
   # apps/web
   "apps/web/src/env.ts",
   "apps/web/src/utils/**",
-  "apps/web/src/lib/**",
+  "apps/web/components/ui/**",
+  "apps/web/services/**",
 
   # packages/shared
   "packages/shared/lib/**",

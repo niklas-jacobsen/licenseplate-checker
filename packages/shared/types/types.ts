@@ -17,6 +17,8 @@ export interface LicensePlateCheck {
   updatedAt: string
   lastCheckedAt?: string
   workflowId?: string
+  scheduledHour?: number | null
+  scheduledMinute?: number | null
   city: {
     name: string
     websiteUrl?: string | null

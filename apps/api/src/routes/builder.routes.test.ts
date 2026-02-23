@@ -1,13 +1,10 @@
-import { describe, expect, it, mock, beforeEach } from 'bun:test'
+import { beforeEach, describe, expect, it, mock } from 'bun:test'
 import { Hono } from 'hono'
 
 const validateGraphMock = mock(() => ({
   ok: true as boolean,
   graph: {} as any,
   issues: [] as any[],
-}))
-mock.module('../builder/validate/validateGraph', () => ({
-  validateGraph: validateGraphMock,
 }))
 
 const compileGraphToIrMock = mock(() => ({
@@ -18,38 +15,11 @@ const compileGraphToIrMock = mock(() => ({
 }))
 import { CompileError } from '../types/compiler.types'
 
-mock.module('../builder/compiler/GraphToIrCompiler', () => ({
-  compileGraphToIr: compileGraphToIrMock,
-  CompileError,
-}))
-
 mock.module('../middleware/auth', () => ({
   default: mock(async (c: any, next: any) => {
     c.set('user', { id: 'test-user-id' })
     await next()
   }),
-}))
-
-mock.module('@licenseplate-checker/shared/node-registry', () => ({
-  BUILDER_REGISTRY_VERSION: 'v1',
-  nodeRegistry: {
-    'core.start': {
-      type: 'core.start',
-      label: 'Start',
-      category: 'Flow',
-      inputs: [],
-      outputs: [{ id: 'next' }],
-      propsSchema: {} as any,
-    },
-    'core.end': {
-      type: 'core.end',
-      label: 'End',
-      category: 'Flow',
-      inputs: [{ id: 'prev' }],
-      outputs: [],
-      propsSchema: {} as any,
-    },
-  },
 }))
 
 mock.module('@trigger.dev/sdk/v3', () => ({
@@ -65,9 +35,9 @@ mock.module('../env', () => ({
   },
 }))
 
+import { tasks } from '@trigger.dev/sdk/v3'
 import { errorHandler } from '../app'
 import { createBuilderRouter } from './builder.routes'
-import { tasks } from '@trigger.dev/sdk/v3'
 
 const workflowControllerMock = {
   create: mock(),
@@ -80,7 +50,14 @@ const workflowControllerMock = {
 function makeApp() {
   const app = new Hono()
   app.onError(errorHandler)
-  app.route('/builder', createBuilderRouter(workflowControllerMock))
+  app.route(
+    '/builder',
+    createBuilderRouter(
+      workflowControllerMock,
+      validateGraphMock as any,
+      compileGraphToIrMock as any
+    )
+  )
   return app
 }
 
@@ -96,9 +73,10 @@ describe('builder routes', () => {
       const res = await app.request('/builder/registry')
       expect(res.status).toBe(200)
       const body = await res.json()
-      expect(body.version).toBe('v1')
-      expect(body.nodes).toHaveLength(2)
-      expect(body.nodes[0].type).toBe('core.start')
+      expect(body.version).toBeDefined()
+      expect(body.nodes.length).toBeGreaterThanOrEqual(2)
+      expect(body.nodes.some((n: any) => n.type === 'core.start')).toBe(true)
+      expect(body.nodes.some((n: any) => n.type === 'core.end')).toBe(true)
     })
   })
 
@@ -191,7 +169,7 @@ describe('builder routes', () => {
       expect(body.ok).toBe(false)
       expect(body.error.code).toBe('COMPILE_ERROR')
       expect(body.error.details.issues).toEqual([
-         { type: 'node.missingNext', message: 'Missing next', nodeId: 'n1' },
+        { type: 'node.missingNext', message: 'Missing next', nodeId: 'n1' },
       ])
     })
 

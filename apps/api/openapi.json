@@ -1,0 +1,1025 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "License Plate Checker API",
+    "version": "1.0.0",
+    "description": "REST API for checking German license plate availability with automated workflow execution."
+  },
+  "servers": [
+    { "url": "http://api.lp-checker.com", "description": "Production" },
+    { "url": "http://staging.lp-checker.com", "description": "Staging" }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "properties": {
+          "message": { "type": "string" }
+        }
+      },
+      "AuthCredentials": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "password": {
+            "type": "string",
+            "minLength": 12,
+            "description": "Must contain at least one uppercase letter, one digit, and one special character."
+          }
+        }
+      },
+      "UserProfile": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "firstname": { "type": "string", "nullable": true },
+          "lastname": { "type": "string", "nullable": true },
+          "street": { "type": "string", "nullable": true },
+          "streetNumber": { "type": "string", "nullable": true },
+          "zipcode": { "type": "integer", "nullable": true },
+          "city": { "type": "string", "nullable": true }
+        }
+      },
+      "UserUpdate": {
+        "type": "object",
+        "properties": {
+          "email": { "type": "string", "format": "email" },
+          "firstname": { "type": "string", "minLength": 2 },
+          "lastname": { "type": "string", "minLength": 2 },
+          "street": { "type": "string", "minLength": 2 },
+          "streetNumber": { "type": "string", "minLength": 1 },
+          "zipCode": { "type": "string", "minLength": 5, "maxLength": 5 },
+          "city": { "type": "string", "minLength": 2 }
+        }
+      },
+      "CheckRequest": {
+        "type": "object",
+        "required": ["city", "letters", "numbers"],
+        "properties": {
+          "city": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 3,
+            "description": "City initials (1-3 letters, e.g. 'B' for Berlin)."
+          },
+          "letters": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2,
+            "description": "Letter portion of the plate (1-2 letters, A-Z)."
+          },
+          "numbers": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4,
+            "description": "Number portion of the plate (1-4 digits, no leading zero)."
+          },
+          "workflowId": {
+            "type": "string",
+            "description": "Optional workflow ID for automated daily checking."
+          }
+        }
+      },
+      "Check": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "cityId": { "type": "string" },
+          "letters": { "type": "string" },
+          "numbers": { "type": "integer" },
+          "userId": { "type": "string" },
+          "workflowId": { "type": "string", "nullable": true },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "AVAILABLE",
+              "NOT_AVAILABLE",
+              "ERROR_DURING_CHECK"
+            ]
+          },
+          "triggerScheduleId": { "type": "string", "nullable": true },
+          "scheduledHour": { "type": "integer", "nullable": true },
+          "scheduledMinute": { "type": "integer", "nullable": true },
+          "createdAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "WorkflowSummary": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "cityId": { "type": "string" },
+          "authorId": { "type": "string" },
+          "isPublished": { "type": "boolean" },
+          "description": { "type": "string", "nullable": true },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "updatedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "WorkflowCreate": {
+        "type": "object",
+        "required": ["name", "cityId", "definition"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1, "maxLength": 20 },
+          "cityId": { "type": "string" },
+          "definition": {
+            "type": "object",
+            "description": "Workflow graph definition (nodes and edges)."
+          },
+          "description": { "type": "string", "maxLength": 200 }
+        }
+      },
+      "WorkflowUpdate": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "minLength": 1, "maxLength": 20 },
+          "description": { "type": "string", "maxLength": 200 },
+          "definition": { "type": "object" }
+        }
+      },
+      "ValidationResult": {
+        "type": "object",
+        "properties": {
+          "ok": { "type": "boolean" },
+          "issues": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "nodeId": { "type": "string", "nullable": true },
+                "message": { "type": "string" },
+                "severity": { "type": "string", "enum": ["error", "warning"] }
+              }
+            }
+          }
+        }
+      },
+      "NodeRegistryEntry": {
+        "type": "object",
+        "properties": {
+          "type": { "type": "string" },
+          "label": { "type": "string" },
+          "category": { "type": "string" },
+          "inputs": { "type": "object" },
+          "outputs": { "type": "object" }
+        }
+      }
+    }
+  },
+  "tags": [
+    { "name": "Health", "description": "Health check endpoints" },
+    { "name": "Auth", "description": "Authentication (register and login)" },
+    { "name": "User", "description": "User profile management" },
+    {
+      "name": "Checks",
+      "description": "License plate check CRUD and workflow assignment"
+    },
+    {
+      "name": "Builder",
+      "description": "Workflow builder: validation, compilation, execution, CRUD"
+    },
+    { "name": "Cities", "description": "Available German city initials" },
+    { "name": "Webhooks", "description": "Trigger.dev execution callbacks" },
+    {
+      "name": "Internal",
+      "description": "Internal endpoints for scheduled tasks"
+    }
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Health check",
+        "description": "Returns a message indicating the API is running.",
+        "responses": {
+          "200": {
+            "description": "API is running",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Licenseplate-Checker Backend running"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Register a new user",
+        "description": "Creates a new user account with email and password. Returns a JWT token on success.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AuthCredentials" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User created and logged in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string" },
+                    "token": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "409": { "description": "User already exists" },
+          "500": { "description": "Internal server error" }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Log in",
+        "description": "Authenticates a user with email and password. Returns a JWT token on success.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/AuthCredentials" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User logged in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string" },
+                    "token": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "User not found or incorrect password" },
+          "500": { "description": "Internal server error" }
+        }
+      }
+    },
+    "/user/me": {
+      "get": {
+        "tags": ["User"],
+        "summary": "Get current user",
+        "description": "Returns the profile of the currently authenticated user.",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "User profile",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserProfile" }
+              }
+            }
+          },
+          "401": { "description": "Invalid or missing token" },
+          "404": { "description": "User not found" }
+        }
+      },
+      "put": {
+        "tags": ["User"],
+        "summary": "Update current user",
+        "description": "Updates profile fields (email, name, address) for the authenticated user. All fields are optional.",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/UserUpdate" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated user profile",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/UserProfile" }
+              }
+            }
+          },
+          "401": { "description": "Invalid or missing token" },
+          "404": { "description": "User not found" }
+        }
+      }
+    },
+    "/request/new": {
+      "post": {
+        "tags": ["Checks"],
+        "summary": "Create a new check",
+        "description": "Creates a license plate check for a given city, letters, and numbers. Optionally links a published workflow for automated daily execution.",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/CheckRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Check created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "checkId": { "type": "string" },
+                    "message": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid city, workflow not found, or workflow not published"
+          },
+          "500": { "description": "Internal server error" }
+        }
+      }
+    },
+    "/request/me": {
+      "get": {
+        "tags": ["Checks"],
+        "summary": "List my checks",
+        "description": "Returns all license plate checks belonging to the authenticated user.",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "List of checks",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "checks": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Check" }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Invalid or missing token" }
+        }
+      }
+    },
+    "/request/{id}/workflow": {
+      "put": {
+        "tags": ["Checks"],
+        "summary": "Assign workflow to check",
+        "description": "Links a published workflow to an existing check and creates a daily schedule for automated execution.",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["workflowId"],
+                "properties": {
+                  "workflowId": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Workflow assigned",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "check": { "$ref": "#/components/schemas/Check" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Workflow not found, not published, or check already has a workflow"
+          },
+          "404": { "description": "Check not found" }
+        }
+      }
+    },
+    "/request/delete/{id}": {
+      "delete": {
+        "tags": ["Checks"],
+        "summary": "Delete a check",
+        "description": "Deletes a license plate check and its associated Trigger.dev schedule.",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Check deleted" },
+          "404": { "description": "Check not found" }
+        }
+      }
+    },
+    "/builder/registry": {
+      "get": {
+        "tags": ["Builder"],
+        "summary": "Get node registry",
+        "description": "Returns the available node types for the workflow builder, including their inputs and outputs.",
+        "responses": {
+          "200": {
+            "description": "Node registry",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "version": { "type": "integer" },
+                    "nodes": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/NodeRegistryEntry"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/builder/validate": {
+      "post": {
+        "tags": ["Builder"],
+        "summary": "Validate workflow graph",
+        "description": "Validates a workflow graph definition and returns any issues found.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "Workflow graph definition"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Validation result",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ValidationResult" }
+              }
+            }
+          },
+          "400": { "description": "Invalid JSON or validation failed" }
+        }
+      }
+    },
+    "/builder/compile": {
+      "post": {
+        "tags": ["Builder"],
+        "summary": "Compile workflow graph",
+        "description": "Compiles a workflow graph definition into an intermediate representation (IR).",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "Workflow graph definition"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Compilation result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": { "type": "boolean" },
+                    "ir": { "type": "object" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Invalid JSON or compilation error" }
+        }
+      }
+    },
+    "/builder/execute": {
+      "post": {
+        "tags": ["Builder"],
+        "summary": "Execute workflow",
+        "description": "Triggers execution of a published workflow, optionally linked to a specific check for variable resolution.",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["workflowId"],
+                "properties": {
+                  "workflowId": { "type": "string" },
+                  "checkId": {
+                    "type": "string",
+                    "description": "Optional check ID for variable context."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": { "description": "Execution started" },
+          "400": { "description": "Missing workflowId" },
+          "404": { "description": "Workflow not found" }
+        }
+      }
+    },
+    "/builder/test-execute": {
+      "post": {
+        "tags": ["Builder"],
+        "summary": "Test-execute workflow",
+        "description": "Runs a test execution of a workflow (rate-limited per day). Validates and compiles the graph before running.",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["workflowId"],
+                "properties": {
+                  "workflowId": { "type": "string" },
+                  "variables": {
+                    "type": "object",
+                    "description": "Optional variable context for the execution."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Test execution started",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "testsRemaining": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation error, compilation error, or daily limit reached"
+          },
+          "404": { "description": "Workflow not found" }
+        }
+      }
+    },
+    "/builder/workflows": {
+      "get": {
+        "tags": ["Builder"],
+        "summary": "List published workflows by city",
+        "description": "Returns all published workflows for a given city.",
+        "parameters": [
+          {
+            "name": "cityId",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "City initials to filter by."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of published workflows",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "workflows": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/WorkflowSummary"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Missing cityId query parameter" }
+        }
+      }
+    },
+    "/builder/my-workflows": {
+      "get": {
+        "tags": ["Builder"],
+        "summary": "List my workflows",
+        "description": "Returns all workflows authored by the authenticated user.",
+        "security": [{ "BearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "List of workflows",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "workflows": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/WorkflowSummary"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/builder/workflow": {
+      "post": {
+        "tags": ["Builder"],
+        "summary": "Create workflow",
+        "description": "Creates a new workflow with a name, city, graph definition, and optional description.",
+        "security": [{ "BearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/WorkflowCreate" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Workflow created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "workflow": {
+                      "$ref": "#/components/schemas/WorkflowSummary"
+                    },
+                    "validation": {
+                      "$ref": "#/components/schemas/ValidationResult"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Missing fields, invalid name, or workflow limit reached"
+          }
+        }
+      }
+    },
+    "/builder/workflow/{id}": {
+      "get": {
+        "tags": ["Builder"],
+        "summary": "Get workflow by ID",
+        "description": "Returns a single workflow owned by the authenticated user, including its full definition.",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Workflow details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "workflow": {
+                      "$ref": "#/components/schemas/WorkflowSummary"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "description": "Workflow not found" }
+        }
+      },
+      "put": {
+        "tags": ["Builder"],
+        "summary": "Update workflow",
+        "description": "Updates the name, description, or definition of a workflow. All fields are optional.",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/WorkflowUpdate" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated workflow",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "workflow": {
+                      "$ref": "#/components/schemas/WorkflowSummary"
+                    },
+                    "validation": {
+                      "$ref": "#/components/schemas/ValidationResult"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Invalid name or description" },
+          "404": { "description": "Workflow not found" },
+          "409": { "description": "Duplicate workflow name for this city" }
+        }
+      },
+      "delete": {
+        "tags": ["Builder"],
+        "summary": "Delete workflow",
+        "description": "Deletes a workflow owned by the authenticated user.",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": { "description": "Workflow deleted" },
+          "404": { "description": "Workflow not found" }
+        }
+      }
+    },
+    "/builder/workflow/{id}/publish": {
+      "put": {
+        "tags": ["Builder"],
+        "summary": "Publish or unpublish workflow",
+        "description": "Sets the published state of a workflow. Publishing validates and compiles the graph first.",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["isPublished"],
+                "properties": {
+                  "isPublished": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Publish state updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "workflow": {
+                      "$ref": "#/components/schemas/WorkflowSummary"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Validation or compilation error" },
+          "404": { "description": "Workflow not found" }
+        }
+      }
+    },
+    "/builder/execution/{id}": {
+      "get": {
+        "tags": ["Builder"],
+        "summary": "Get execution details",
+        "description": "Returns the details and logs of a specific workflow execution.",
+        "security": [{ "BearerAuth": [] }],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Execution details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "execution": { "type": "object" }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "description": "Execution not found" }
+        }
+      }
+    },
+    "/cities/": {
+      "get": {
+        "tags": ["Cities"],
+        "summary": "List all cities",
+        "description": "Returns all available German cities with their initials.",
+        "responses": {
+          "200": {
+            "description": "List of cities",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "cities": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "string" },
+                          "name": { "type": "string" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/webhooks/trigger": {
+      "post": {
+        "tags": ["Webhooks"],
+        "summary": "Trigger.dev execution callback",
+        "description": "Receives execution progress and completion callbacks from Trigger.dev. Requires X-Webhook-Secret header.",
+        "parameters": [
+          {
+            "name": "X-Webhook-Secret",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "type": {
+                    "type": "string",
+                    "enum": ["progress", "completion"]
+                  },
+                  "executionId": { "type": "string" },
+                  "status": { "type": "string", "enum": ["SUCCESS", "FAILED"] },
+                  "currentNodeId": { "type": "string", "nullable": true },
+                  "completedNodes": {
+                    "type": "array",
+                    "items": { "type": "object" }
+                  },
+                  "logs": { "type": "array", "items": { "type": "object" } },
+                  "error": { "type": "string" },
+                  "errorNodeId": { "type": "string" },
+                  "outcome": { "type": "string" },
+                  "duration": { "type": "number" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Callback received" },
+          "401": { "description": "Unauthorized (invalid or missing secret)" },
+          "404": { "description": "Execution not found" }
+        }
+      }
+    },
+    "/internal/execute-check/{checkId}": {
+      "post": {
+        "tags": ["Internal"],
+        "summary": "Execute check (internal)",
+        "description": "Triggers workflow execution for a scheduled check. Called by Trigger.dev cron jobs.",
+        "parameters": [
+          {
+            "name": "checkId",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          },
+          {
+            "name": "X-Internal-Secret",
+            "in": "header",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "202": { "description": "Execution started" },
+          "400": { "description": "Check not found or no linked workflow" },
+          "401": { "description": "Unauthorized (invalid or missing secret)" }
+        }
+      }
+    }
+  }
+}

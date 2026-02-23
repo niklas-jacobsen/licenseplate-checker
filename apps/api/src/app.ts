@@ -17,9 +17,10 @@ app.use(
     xFrameOptions: false,
     contentSecurityPolicy: {
       defaultSrc: ["'self'"],
-      frameAncestors: ["'self'"],
-      fontSrc: ["'self'"],
-      imgSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net'],
+      styleSrc: ["'self'", "'unsafe-inline'", 'https://cdn.jsdelivr.net'],
+      fontSrc: ["'self'", 'https://fonts.gstatic.com', 'https://cdn.jsdelivr.net'],
+      imgSrc: ["'self'", 'data:'],
     },
   })
 )

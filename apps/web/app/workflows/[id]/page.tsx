@@ -2,7 +2,7 @@
 
 import { useEffect, useState, use } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useAuth } from '@/lib/auth-context'
+import { useAuth } from '@/components/auth-context'
 import { workflowService } from '@/services/workflow.service'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'

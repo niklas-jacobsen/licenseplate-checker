@@ -37,7 +37,7 @@ import {
 import { Input } from './ui/input'
 import { Separator } from './ui/separator'
 import LicensePlatePreview from './plate-preview'
-import { useAuth } from '../lib/auth-context'
+import { useAuth } from './auth-context'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { checkService } from '../services/check.service'

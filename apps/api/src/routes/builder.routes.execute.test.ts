@@ -1,13 +1,5 @@
-import { describe, expect, it, mock, beforeEach } from 'bun:test'
+import { beforeEach, describe, expect, it, mock } from 'bun:test'
 import { Hono } from 'hono'
-
-mock.module('../builder/compiler/GraphToIrCompiler', () => ({
-  compileGraphToIr: mock(() => ({ entryBlockId: 'start', blocks: {} })),
-}))
-
-mock.module('../types/compiler.types', () => ({
-  CompileError: class extends Error {},
-}))
 
 mock.module('@trigger.dev/sdk/v3', () => ({
   tasks: {
@@ -29,29 +21,35 @@ mock.module('../middleware/auth', () => ({
   }),
 }))
 
+import { BadRequestError } from '@licenseplate-checker/shared/types'
 import { errorHandler } from '../app'
 import { createBuilderRouter } from './builder.routes'
-import { tasks } from '@trigger.dev/sdk/v3'
+
+const executeWorkflowMock = mock()
 
 const mockWorkflowController = {
   getById: mock(),
-  createExecution: mock(),
-  updateExecution: mock(),
 } as any
 
 function makeApp() {
   const app = new Hono()
   app.onError(errorHandler)
-  app.route('/builder', createBuilderRouter(mockWorkflowController))
+  app.route(
+    '/builder',
+    createBuilderRouter(
+      mockWorkflowController,
+      undefined,
+      undefined,
+      executeWorkflowMock as any
+    )
+  )
   return app
 }
 
 describe('POST /builder/execute', () => {
   beforeEach(() => {
     mockWorkflowController.getById.mockReset()
-    mockWorkflowController.createExecution.mockReset()
-    mockWorkflowController.updateExecution.mockReset()
-    ;(tasks.trigger as any).mockReset()
+    executeWorkflowMock.mockReset()
   })
 
   it('returns 400 when request body is not JSON', async () => {
@@ -91,18 +89,15 @@ describe('POST /builder/execute', () => {
     expect(body.error.code).toBe('WORKFLOW_NOT_FOUND')
   })
 
-  it('returns 400 when workflow is not published', async () => {
+  it('returns 400 when executeWorkflowForCheck throws', async () => {
     const app = makeApp()
-    const wf = {
+    mockWorkflowController.getById.mockResolvedValueOnce({
       id: 'wf-1',
       authorId: 'test-user-id',
-      definition: { nodes: [], edges: [] },
-      isPublished: false,
-      city: { allowedDomains: ['example.com'] },
-    }
-    // called once in ownership check, once in execute workflow for check
-    mockWorkflowController.getById.mockResolvedValueOnce(wf)
-    mockWorkflowController.getById.mockResolvedValueOnce(wf)
+    })
+    executeWorkflowMock.mockRejectedValueOnce(
+      new BadRequestError('Workflow is not published', 'WORKFLOW_NOT_PUBLISHED')
+    )
 
     const res = await app.request('/builder/execute', {
       method: 'POST',
@@ -116,22 +111,14 @@ describe('POST /builder/execute', () => {
 
   it('triggers execution and returns 202', async () => {
     const app = makeApp()
-
-    const wf = {
+    mockWorkflowController.getById.mockResolvedValueOnce({
       id: 'wf-1',
       authorId: 'test-user-id',
-      definition: { nodes: [], edges: [] },
-      isPublished: true,
-      city: { allowedDomains: ['example.com'] },
-    }
-    // called once in ownership check, once in execute workflow for check
-    mockWorkflowController.getById.mockResolvedValueOnce(wf)
-    mockWorkflowController.getById.mockResolvedValueOnce(wf)
-    mockWorkflowController.createExecution.mockResolvedValueOnce({
-      id: 'exec-1',
     })
-    ;(tasks.trigger as any).mockResolvedValueOnce({ id: 'run-abc123' })
-    mockWorkflowController.updateExecution.mockResolvedValueOnce({})
+    executeWorkflowMock.mockResolvedValueOnce({
+      executionId: 'exec-1',
+      triggerRunId: 'run-abc123',
+    })
 
     const res = await app.request('/builder/execute', {
       method: 'POST',
@@ -144,18 +131,11 @@ describe('POST /builder/execute', () => {
     expect(body.executionId).toBe('exec-1')
     expect(body.triggerRunId).toBe('run-abc123')
 
-    expect(tasks.trigger).toHaveBeenCalledWith(
-      'execute-workflow',
-      {
-        ir: { entryBlockId: 'start', blocks: {} },
-        executionId: 'exec-1',
-        callbackUrl: 'http://localhost:8080/webhooks/trigger',
-        callbackSecret: 'test-secret',
-        allowedDomains: ['example.com'],
-      },
-      {
-        idempotencyKey: 'exec-1',
-      }
+    expect(executeWorkflowMock).toHaveBeenCalledWith(
+      mockWorkflowController,
+      'wf-1',
+      'check-1',
+      expect.objectContaining({})
     )
   })
 })
