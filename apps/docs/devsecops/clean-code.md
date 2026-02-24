@@ -20,22 +20,27 @@ Practices and tools applied throughout the project.
 
 ## Code Analysis Tools
 
-**Biome** — All-in-one linter and formatter that replaces the previous ESLint + Prettier setup. Runs on every commit and PR. Configuration in `biome.json`:
+**Biome** — All-in-one linter and formatter replacing ESLint + Prettier. Runs on every commit and PR. Configuration in `biome.json`:
 - Single quotes, 2-space indentation, 80-char line width
 - Trailing commas (ES5 style), semicolons as needed
-- Comprehensive lint rules for correctness, complexity, style, and suspicious patterns
+- Custom rule set with strict correctness, complexity, and suspicious pattern checks
 - Relaxed `noExplicitAny` rule for test files
 
-**TypeScript** — Strict mode enabled project-wide via `tsconfig.base.json`. All code is fully typed, with shared types from the monorepo's shared package.
+**TypeScript** — Strict mode enabled project-wide via `tsconfig.base.json`. All code is fully typed, with shared types from the monorepo's shared package. Path aliases (`@licenseplate-checker/shared/*`, `@shared/*`) simplify cross-package imports.
 
-**GitHub CodeQL** — Scans code for security vulnerabilities on every push, PR, and weekly. Prevents commits containing secrets and detects common vulnerability patterns.
+**CodeQL** — GitHub's default CodeQL setup scans for security vulnerabilities on PRs and on a weekly schedule. Also runs a separate typescript typecheck.
 
-**Dependabot** — Continuously checks for outdated and vulnerable dependencies. Creates automated PRs for updates.
+## Testing
+
+**Bun Test Runner** — All tests use Bun's native test framework with `.test.ts` suffix. Test files are co-located with the source they test (e.g., `auth.routes.test.ts` alongside `auth.routes.ts`).
+
+**Mock Database** — Tests run against `PrismockClient`, an in-memory Prisma mock, when `NODE_ENV=test`. No external database required for CI.
+
+**Dependency Injection** — Controllers accept dependencies as constructor parameters, making it straightforward to swap real implementations for mocks in tests.
 
 ## Monorepo Conventions
 
 - **Naming:** Scoped packages `@licenseplate-checker/{name}`, route files suffixed `.routes.ts`, controllers `.controller.ts`
 - **Validation:** Zod schemas shared between frontend and backend via `packages/shared/validators`
-- **Testing:** Bun test runner with `.unit.test.ts` and `.int.test.ts` conventions, dependency injection for mockable tests
-- **Scripts:** Every package includes `lint`, `format`, and `typecheck` scripts
+- **Scripts:** Every package includes `lint`, `format`, and `typecheck` scripts, orchestrated by Turborepo
 - **Formatting:** Biome handles both linting and formatting in a single tool

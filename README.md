@@ -6,6 +6,8 @@
 
 A system for automating the reservation of personalized German license plates. It monitors plate availability on city reservation websites using browser automation and informs you when your desired combination becomes available.
 
+![Workflow Builder](./apps/docs/public/builder.jpeg)
+
 ## How It Works
 
 1. **Create a check** — enter your desired city, letters, and number combination
