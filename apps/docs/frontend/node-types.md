@@ -2,11 +2,10 @@
 
 All available node types for the workflow builder. Each node belongs to a category and has specific configuration fields.
 
-<!-- TODO: Add a screenshot/diagram showing all node types in the palette -->
-
 ## Flow Nodes
 
 ### Start (`core.start`)
+![StartNode](/node_types/start_node.png)
 
 Entry point of every workflow. Automatically created and cannot be deleted.
 
@@ -16,6 +15,7 @@ Entry point of every workflow. Automatically created and cannot be deleted.
 - **Behavior:** Displays the target website URL from the city configuration. Includes a link to open the site in a new tab for reference while building.
 
 ### End (`core.end`)
+![EndNode](/node_types/end_node.png)
 
 Marks the completion of a workflow path. Automatically created and cannot be deleted. Every workflow path must terminate at an End node.
 
@@ -25,6 +25,7 @@ Marks the completion of a workflow path. Automatically created and cannot be del
 - **Behavior:** Sets the final result of the execution. This outcome determines the check status: `available` maps to `AVAILABLE`, `unavailable` maps to `NOT_AVAILABLE`.
 
 ### Wait (`core.wait`)
+![WaitNode](/node_types/wait_node.png)
 
 Pauses the workflow execution. Has three modes:
 
@@ -40,6 +41,7 @@ Pauses the workflow execution. Has three modes:
 ## Browser Nodes
 
 ### Click (`core.click`)
+![ClickNode](/node_types/click_node.png)
 
 Clicks a DOM element identified by a CSS selector.
 
@@ -48,6 +50,7 @@ Clicks a DOM element identified by a CSS selector.
 - **Config:** `selector` — CSS selector (e.g. `#submit-btn`, `.next-step`)
 
 ### Type Text (`core.typeText`)
+![TypeNode](/node_types/text_node.png)
 
 Types text into an input field. Supports [template variables](/frontend/builder#template-variables).
 
@@ -58,6 +61,7 @@ Types text into an input field. Supports [template variables](/frontend/builder#
   - `text` — Text to type (supports template variables like <code v-pre>{{plate.letters}}</code>, <code v-pre>{{user.firstname}}</code>, etc.)
 
 ### Open Page (`core.openPage`)
+![OpenPageNode](/node_types/open_page_node.png)
 
 Navigates the browser to a URL. Supports [template variables](/frontend/builder#template-variables).
 
@@ -71,6 +75,7 @@ OpenPage is currently disabled as changes to the functionality of the pipeline d
 :::
 
 ### Select Option (`core.selectOption`)
+![SelectOptionNode](/node_types/select_option_node.png)
 
 Selects an option from a `<select>` dropdown. Has three selection modes:
 
@@ -86,6 +91,7 @@ Selects an option from a `<select>` dropdown. Has three selection modes:
 ## Logic Nodes
 
 ### Conditional (`core.conditional`)
+![ConditionalNode](/node_types/conditional_node.png)
 
 Branches the workflow based on a condition. Has two output handles: **true** (green) and **false** (red).
 
