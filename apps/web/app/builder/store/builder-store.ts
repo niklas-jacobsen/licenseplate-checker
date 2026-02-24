@@ -353,6 +353,14 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
         })
       },
       addNodeByType: (type, position) => {
+        if (get().nodes.length >= BUILDER_MAX_NODES_PER_GRAPH) {
+          set({
+            executionError: {
+              message: `Node limit reached (max ${BUILDER_MAX_NODES_PER_GRAPH})`,
+            },
+          })
+          return
+        }
         get().takeSnapshot()
         const node = createNode(type, position)
         set({

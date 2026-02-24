@@ -1,4 +1,5 @@
 import {
+  BUILDER_MAX_NODES_PER_GRAPH,
   BUILDER_MAX_WORKFLOWS_PER_USER,
   BUILDER_TEST_EXECUTIONS_PER_DAY,
 } from '@licenseplate-checker/shared/constants/limits'
@@ -305,6 +306,14 @@ export const createBuilderRouter = (
       }
     }
 
+    const defNodes = (body.definition as { nodes?: unknown[] })?.nodes
+    if (Array.isArray(defNodes) && defNodes.length > BUILDER_MAX_NODES_PER_GRAPH) {
+      throw new BadRequestError(
+        `Graph exceeds maximum of ${BUILDER_MAX_NODES_PER_GRAPH} nodes`,
+        'NODE_LIMIT_EXCEEDED'
+      )
+    }
+
     const existingCount = await workflowController.countByAuthor(user.id)
     if (existingCount >= BUILDER_MAX_WORKFLOWS_PER_USER) {
       throw new BadRequestError(
@@ -378,6 +387,16 @@ export const createBuilderRouter = (
         throw new BadRequestError(
           descResult.error.issues[0].message,
           'INVALID_DESCRIPTION'
+        )
+      }
+    }
+
+    if (body.definition) {
+      const defNodes = (body.definition as { nodes?: unknown[] })?.nodes
+      if (Array.isArray(defNodes) && defNodes.length > BUILDER_MAX_NODES_PER_GRAPH) {
+        throw new BadRequestError(
+          `Graph exceeds maximum of ${BUILDER_MAX_NODES_PER_GRAPH} nodes`,
+          'NODE_LIMIT_EXCEEDED'
         )
       }
     }
