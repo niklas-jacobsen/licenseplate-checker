@@ -118,10 +118,31 @@ export function validateGraph(
     })
   }
 
-  if (ends.length < 1) {
+  if (ends.length < 2) {
     issues.push({
       type: 'graph.end.count',
-      message: 'Graph must contain at least one End node.',
+      message: 'Graph must contain at least two End nodes.',
+    })
+  }
+
+  const availableEnds = ends.filter(
+    (n) => (n.data.config as { outcome?: string })?.outcome === 'available'
+  )
+  const unavailableEnds = ends.filter(
+    (n) => (n.data.config as { outcome?: string })?.outcome === 'unavailable'
+  )
+
+  if (availableEnds.length < 1) {
+    issues.push({
+      type: 'graph.end.missingOutcome',
+      message: "Graph must contain at least one End node with outcome 'available'.",
+    })
+  }
+
+  if (unavailableEnds.length < 1) {
+    issues.push({
+      type: 'graph.end.missingOutcome',
+      message: "Graph must contain at least one End node with outcome 'unavailable'.",
     })
   }
 

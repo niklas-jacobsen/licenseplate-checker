@@ -60,8 +60,11 @@ function edge(
 function minimalGraph() {
   return {
     registryVersion: REGISTRY_VERSION,
-    nodes: [startNode(), endNode()],
-    edges: [edge('start-1', 'end-1', 'next', 'in')],
+    nodes: [startNode(), endNode('end-1', 'available'), endNode('end-2', 'unavailable')],
+    edges: [
+      edge('start-1', 'end-1', 'next', 'in'),
+      edge('start-1', 'end-2', 'next', 'in'),
+    ],
   }
 }
 
@@ -75,10 +78,11 @@ describe('validateGraph', () => {
   it('validates a start → click → end graph', () => {
     const result = validateGraph({
       registryVersion: REGISTRY_VERSION,
-      nodes: [startNode(), clickNode(), endNode()],
+      nodes: [startNode(), clickNode(), endNode('end-1', 'available'), endNode('end-2', 'unavailable')],
       edges: [
         edge('start-1', 'click-1', 'next', 'in'),
         edge('click-1', 'end-1', 'next', 'in'),
+        edge('click-1', 'end-2', 'next', 'in'),
       ],
     })
     expect(result.ok).toBe(true)
@@ -120,7 +124,7 @@ describe('validateGraph', () => {
     })
 
     it('flags graph exceeding max nodes', () => {
-      const nodes = [startNode(), endNode()]
+      const nodes = [startNode(), endNode('end-1', 'available'), endNode('end-2', 'unavailable')]
       for (let i = 0; i < BUILDER_MAX_NODES_PER_GRAPH; i++) {
         nodes.push(clickNode(`click-${i}`))
       }
@@ -137,7 +141,7 @@ describe('validateGraph', () => {
     it('flags graph with no start node', () => {
       const result = validateGraph({
         registryVersion: REGISTRY_VERSION,
-        nodes: [endNode('e1'), endNode('e2')],
+        nodes: [endNode('e1', 'available'), endNode('e2', 'unavailable')],
         edges: [],
       })
       expect(result.issues.some((issue) => issue.type === 'graph.start.count')).toBe(
@@ -148,10 +152,10 @@ describe('validateGraph', () => {
     it('flags graph with multiple start nodes', () => {
       const result = validateGraph({
         registryVersion: REGISTRY_VERSION,
-        nodes: [startNode('s1'), startNode('s2'), endNode()],
+        nodes: [startNode('s1'), startNode('s2'), endNode('end-1', 'available'), endNode('end-2', 'unavailable')],
         edges: [
           edge('s1', 'end-1', 'next', 'in'),
-          edge('s2', 'end-1', 'next', 'in'),
+          edge('s2', 'end-2', 'next', 'in'),
         ],
       })
       expect(result.issues.some((issue) => issue.type === 'graph.start.count')).toBe(
@@ -167,13 +171,46 @@ describe('validateGraph', () => {
       })
       expect(result.issues.some((issue) => issue.type === 'graph.end.count')).toBe(true)
     })
+
+    it('flags graph with only one end node', () => {
+      const result = validateGraph({
+        registryVersion: REGISTRY_VERSION,
+        nodes: [startNode(), endNode('end-1', 'available')],
+        edges: [edge('start-1', 'end-1', 'next', 'in')],
+      })
+      expect(result.issues.some((issue) => issue.type === 'graph.end.count')).toBe(true)
+    })
+
+    it('flags graph missing available outcome end node', () => {
+      const result = validateGraph({
+        registryVersion: REGISTRY_VERSION,
+        nodes: [startNode(), endNode('end-1', 'unavailable'), endNode('end-2', 'unavailable')],
+        edges: [
+          edge('start-1', 'end-1', 'next', 'in'),
+          edge('start-1', 'end-2', 'next', 'in'),
+        ],
+      })
+      expect(result.issues.some((issue) => issue.type === 'graph.end.missingOutcome')).toBe(true)
+    })
+
+    it('flags graph missing unavailable outcome end node', () => {
+      const result = validateGraph({
+        registryVersion: REGISTRY_VERSION,
+        nodes: [startNode(), endNode('end-1', 'available'), endNode('end-2', 'available')],
+        edges: [
+          edge('start-1', 'end-1', 'next', 'in'),
+          edge('start-1', 'end-2', 'next', 'in'),
+        ],
+      })
+      expect(result.issues.some((issue) => issue.type === 'graph.end.missingOutcome')).toBe(true)
+    })
   })
 
   describe('edge validation', () => {
     it('flags edge referencing missing node', () => {
       const result = validateGraph({
         registryVersion: REGISTRY_VERSION,
-        nodes: [startNode(), endNode()],
+        nodes: [startNode(), endNode('end-1', 'available'), endNode('end-2', 'unavailable')],
         edges: [
           edge('start-1', 'end-1', 'next', 'in'),
           edge('start-1', 'nonexistent', 'next', 'in'),
@@ -187,7 +224,7 @@ describe('validateGraph', () => {
     it('flags invalid source handle', () => {
       const result = validateGraph({
         registryVersion: REGISTRY_VERSION,
-        nodes: [startNode(), endNode()],
+        nodes: [startNode(), endNode('end-1', 'available'), endNode('end-2', 'unavailable')],
         edges: [edge('start-1', 'end-1', 'bad-handle', 'in')],
       })
       expect(result.issues.some((issue) => issue.type === 'edge.invalidHandle')).toBe(
@@ -198,7 +235,7 @@ describe('validateGraph', () => {
     it('flags invalid target handle', () => {
       const result = validateGraph({
         registryVersion: REGISTRY_VERSION,
-        nodes: [startNode(), endNode()],
+        nodes: [startNode(), endNode('end-1', 'available'), endNode('end-2', 'unavailable')],
         edges: [edge('start-1', 'end-1', 'next', 'bad-handle')],
       })
       expect(result.issues.some((issue) => issue.type === 'edge.invalidHandle')).toBe(
@@ -209,7 +246,7 @@ describe('validateGraph', () => {
     it('flags edge with missing handles', () => {
       const result = validateGraph({
         registryVersion: REGISTRY_VERSION,
-        nodes: [startNode(), endNode()],
+        nodes: [startNode(), endNode('end-1', 'available'), endNode('end-2', 'unavailable')],
         edges: [edge('start-1', 'end-1')],
       })
       expect(result.issues.some((issue) => issue.type === 'edge.invalidHandle')).toBe(
@@ -222,8 +259,11 @@ describe('validateGraph', () => {
     it('flags unreachable nodes', () => {
       const result = validateGraph({
         registryVersion: REGISTRY_VERSION,
-        nodes: [startNode(), endNode(), clickNode('orphan')],
-        edges: [edge('start-1', 'end-1', 'next', 'in')],
+        nodes: [startNode(), endNode('end-1', 'available'), endNode('end-2', 'unavailable'), clickNode('orphan')],
+        edges: [
+          edge('start-1', 'end-1', 'next', 'in'),
+          edge('start-1', 'end-2', 'next', 'in'),
+        ],
       })
       expect(
         result.issues.some(

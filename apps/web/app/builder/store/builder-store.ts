@@ -18,6 +18,7 @@ import {
   nodeRegistry,
   BUILDER_REGISTRY_VERSION,
 } from '@licenseplate-checker/shared/node-registry'
+import { BUILDER_MAX_NODES_PER_GRAPH } from '@licenseplate-checker/shared/constants/limits'
 import { workflowService } from '@/services/workflow.service'
 
 // compare two graphs ignoring node positions
@@ -133,24 +134,20 @@ const DEFAULT_NODES: WorkflowNode[] = [
     data: { label: 'Start', config: {} },
   },
   {
-    id: 'end',
+    id: 'end-available',
     type: 'core.end',
-    position: { x: 560, y: 140 },
+    position: { x: 560, y: 40 },
     data: { label: 'End', config: { outcome: 'available' } },
+  },
+  {
+    id: 'end-unavailable',
+    type: 'core.end',
+    position: { x: 560, y: 240 },
+    data: { label: 'End', config: { outcome: 'unavailable' } },
   },
 ]
 
-const DEFAULT_EDGES: Edge[] = [
-  {
-    id: 'start-end',
-    source: 'start',
-    target: 'end',
-    sourceHandle: 'next',
-    targetHandle: 'in',
-    type: 'workflow',
-    animated: true,
-  },
-]
+const DEFAULT_EDGES: Edge[] = []
 
 export type BuilderState = {
   nodes: WorkflowNode[]
@@ -287,11 +284,20 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
 
       // reactflow handlers
       onNodesChange: (changes) => {
-        // prevent deletion of start/end nodes
+        const nodes = get().nodes
         const filtered = changes.filter((c) => {
           if (c.type === 'remove') {
-            const node = get().nodes.find((n) => n.id === c.id)
-            return node?.type !== 'core.start' && node?.type !== 'core.end'
+            const node = nodes.find((n) => n.id === c.id)
+            if (node?.type === 'core.start') return false
+            if (node?.type === 'core.end') {
+              const outcome = (node.data.config as { outcome?: string }).outcome
+              const sameOutcomeCount = nodes.filter(
+                (n) =>
+                  n.type === 'core.end' &&
+                  (n.data.config as { outcome?: string }).outcome === outcome
+              ).length
+              return sameOutcomeCount > 1
+            }
           }
           return true
         })
@@ -371,7 +377,23 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
       },
       removeNode: (nodeId) => {
         const node = get().nodes.find((n) => n.id === nodeId)
-        if (node?.type === 'core.start' || node?.type === 'core.end') return
+        if (node?.type === 'core.start') return
+        if (node?.type === 'core.end') {
+          const outcome = (node.data.config as { outcome?: string }).outcome
+          const sameOutcomeCount = get().nodes.filter(
+            (n) =>
+              n.type === 'core.end' &&
+              (n.data.config as { outcome?: string }).outcome === outcome
+          ).length
+          if (sameOutcomeCount <= 1) {
+            set({
+              executionError: {
+                message: 'Must keep at least one end node of each outcome',
+              },
+            })
+            return
+          }
+        }
         get().takeSnapshot()
         set({
           nodes: get().nodes.filter((n) => n.id !== nodeId),

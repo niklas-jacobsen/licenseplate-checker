@@ -58,10 +58,16 @@ const defaultNodes: WorkflowNode[] = [
     data: { label: 'Start', config: {} },
   },
   {
-    id: 'end',
+    id: 'end-available',
     type: 'core.end',
-    position: { x: 560, y: 140 },
+    position: { x: 560, y: 40 },
     data: { label: 'End', config: { outcome: 'available' } },
+  },
+  {
+    id: 'end-unavailable',
+    type: 'core.end',
+    position: { x: 560, y: 240 },
+    data: { label: 'End', config: { outcome: 'unavailable' } },
   },
 ]
 
@@ -133,16 +139,7 @@ export default function WorkflowList() {
       const definition = {
         registryVersion: BUILDER_REGISTRY_VERSION,
         nodes: defaultNodes,
-        edges: [
-          {
-            id: 'start-end',
-            source: 'start',
-            target: 'end',
-            sourceHandle: 'next',
-            targetHandle: 'in',
-            type: 'smoothstep',
-          },
-        ],
+        edges: [],
       }
 
       const response = await workflowService.create({
