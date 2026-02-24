@@ -32,13 +32,13 @@ The API uses a multi-stage Dockerfile based on `oven/bun:1.3`:
 
 ## Git Workflow
 
-![Git Workflow](/git_workflow.png)
+![Git Workflow](/diagrams/git_workflow.png)
 
 The project uses a three-branch strategy: `dev` → `staging` → `main`. PRs to `staging` and `main` trigger automated checks (lint, tests). Merges into `staging` and `main` trigger deployments.
 
 ## CI/CD Pipeline
 
-![Deployment Pipeline](/deployment_pipeline.png)
+![Deployment Pipeline](/diagrams/deployment_pipeline.png)
 
 All CI/CD is handled by GitHub Actions.
 

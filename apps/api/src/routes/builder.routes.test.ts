@@ -14,6 +14,8 @@ const compileGraphToIrMock = mock(() => ({
   blocks: {},
 }))
 import { CompileError } from '../types/compiler.types'
+import { validateGraph as realValidateGraph } from '../builder/validate/validateGraph'
+import { compileGraphToIr as realCompileGraphToIr } from '../builder/compiler/GraphToIrCompiler'
 
 mock.module('../middleware/auth', () => ({
   default: mock(async (c: any, next: any) => {
@@ -193,5 +195,98 @@ describe('builder routes', () => {
       expect(body.ok).toBe(true)
       expect(body.ir.irVersion).toBe('v1')
     })
+  })
+})
+
+describe('integration: validate and compile real graph', () => {
+  const minimalGraph = {
+    registryVersion: '1',
+    nodes: [
+      {
+        id: 'start-1',
+        type: 'core.start',
+        position: { x: 0, y: 0 },
+        data: { label: 'Start', config: {} },
+      },
+      {
+        id: 'cond-1',
+        type: 'core.conditional',
+        position: { x: 100, y: 0 },
+        data: { label: 'Check', config: { operator: 'exists', selector: '#el' } },
+      },
+      {
+        id: 'end-1',
+        type: 'core.end',
+        position: { x: 200, y: 0 },
+        data: { label: 'Available', config: { outcome: 'available' } },
+      },
+      {
+        id: 'end-2',
+        type: 'core.end',
+        position: { x: 200, y: 100 },
+        data: { label: 'Unavailable', config: { outcome: 'unavailable' } },
+      },
+    ],
+    edges: [
+      { id: 'e1', source: 'start-1', target: 'cond-1', sourceHandle: 'next', targetHandle: 'in' },
+      { id: 'e2', source: 'cond-1', target: 'end-1', sourceHandle: 'true', targetHandle: 'in' },
+      { id: 'e3', source: 'cond-1', target: 'end-2', sourceHandle: 'false', targetHandle: 'in' },
+    ],
+  }
+
+  function makeIntegrationApp() {
+    const app = new Hono()
+    app.onError(errorHandler)
+    app.route(
+      '/builder',
+      createBuilderRouter(
+        workflowControllerMock,
+        realValidateGraph,
+        realCompileGraphToIr
+      )
+    )
+    return app
+  }
+
+  it('validates a real start → end graph through the route', async () => {
+    const app = makeIntegrationApp()
+    const res = await app.request('/builder/validate', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(minimalGraph),
+    })
+
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.ok).toBe(true)
+    expect(body.issues).toHaveLength(0)
+  })
+
+  it('compiles a real start → end graph through the route', async () => {
+    const app = makeIntegrationApp()
+    const res = await app.request('/builder/compile', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(minimalGraph),
+    })
+
+    expect(res.status).toBe(200)
+    const body = await res.json()
+    expect(body.ok).toBe(true)
+    expect(body.ir.entryBlockId).toBeDefined()
+    expect(Object.keys(body.ir.blocks).length).toBeGreaterThanOrEqual(1)
+  })
+
+  it('rejects an unparseable graph through the route', async () => {
+    const app = makeIntegrationApp()
+    const res = await app.request('/builder/validate', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify('not a graph'),
+    })
+
+    expect(res.status).toBe(400)
+    const body = await res.json()
+    expect(body.error.code).toBe('VALIDATION_ERROR')
   })
 })

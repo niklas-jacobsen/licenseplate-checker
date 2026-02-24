@@ -96,4 +96,4 @@ PostgreSQL hosted on [Supabase](https://supabase.com/) (Frankfurt region). Uses 
 | `Workflow` | Automation definitions with name, city, graph definition (JSON), and publish state |
 | `WorkflowExecution` | Execution history with status, logs, outcome, duration, and error details |
 
-![Database Schema](/database_diagram.png)
+![Database Schema](/diagrams/database_diagram.png)

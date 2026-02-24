@@ -18,7 +18,7 @@ export function ClickNode({ id, data }: NodeProps<BuilderNode>) {
       <BaseNodeContent>
         <label className="text-xs text-muted-foreground">Selector</label>
         <input
-          className="nodrag w-full text-xs border rounded px-2 py-1 bg-background"
+          className={`nodrag w-full text-xs border rounded px-2 py-1 bg-background ${!(data.config as { selector: string }).selector ? 'border-destructive' : ''}`}
           value={(data.config as { selector: string }).selector}
           onChange={(e) => updateConfig(id, { selector: e.target.value })}
           placeholder="#submit-btn"

@@ -2,6 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'bun:test'
 import { Hono } from 'hono'
 import { ENV } from '../env'
 import { authRouter } from './auth.routes'
+import { userRouter } from './user.routes'
 
 import { errorHandler } from '../app'
 
@@ -169,5 +170,57 @@ describe('POST /auth/login', () => {
   afterAll(() => {
     ENV.JWT_SECRET = jwtSecret
     ENV.ALLOWED_ORIGINS = allowedOrigins
+  })
+})
+
+describe('e2e: register → login → get profile', () => {
+  const e2eApp = new Hono()
+  e2eApp.onError(errorHandler)
+  e2eApp.route('/auth', authRouter)
+  e2eApp.route('/user', userRouter)
+
+  const email = `e2e-${Date.now()}@example.com`
+  const password = 'E2ePassword123$'
+  let token: string
+
+  beforeAll(() => {
+    ENV.JWT_SECRET = 'e2e-jwt-secret'
+  })
+
+  it('registers a new user', async () => {
+    const res = await e2eApp.request('/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    })
+
+    expect(res.status).toBe(200)
+    const json = await res.json()
+    expect(json.token).toBeDefined()
+    token = json.token
+  })
+
+  it('logs in with the same credentials', async () => {
+    const res = await e2eApp.request('/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    })
+
+    expect(res.status).toBe(200)
+    const json = await res.json()
+    expect(json.token).toBeDefined()
+    token = json.token
+  })
+
+  it('fetches the authenticated user profile', async () => {
+    const res = await e2eApp.request('/user/me', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+
+    expect(res.status).toBe(200)
+    const json = await res.json()
+    expect(json.email).toBe(email)
+    expect(json.password).toBeUndefined()
   })
 })

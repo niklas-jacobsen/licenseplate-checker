@@ -50,7 +50,7 @@ export function ConditionalNode({ id, data }: NodeProps<BuilderNode>) {
         <div>
           <label className="text-xs text-muted-foreground">Selector</label>
           <input
-            className="nodrag w-full text-xs border rounded px-2 py-1 bg-background"
+            className={`nodrag w-full text-xs border rounded px-2 py-1 bg-background ${!config.selector ? 'border-destructive' : ''}`}
             value={config.selector}
             onChange={(e) => updateConfig(id, { selector: e.target.value })}
             placeholder="#element"
@@ -67,6 +67,7 @@ export function ConditionalNode({ id, data }: NodeProps<BuilderNode>) {
               placeholder="expected text"
               nodeId={id}
               configKey="value"
+              error={!config.value}
             />
           </div>
         )}

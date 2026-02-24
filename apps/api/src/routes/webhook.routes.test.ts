@@ -1,4 +1,4 @@
-import { describe, expect, it, mock, beforeEach } from 'bun:test'
+import { beforeAll, describe, expect, it, mock, beforeEach } from 'bun:test'
 import { Hono } from 'hono'
 
 mock.module('../env', () => ({
@@ -6,6 +6,9 @@ mock.module('../env', () => ({
 }))
 
 import { createWebhookRouter } from './webhook.routes'
+import { prisma } from '../../prisma/data-source'
+import WorkflowController from '../controllers/Workflow.controller'
+import LicenseplateCheckController from '../controllers/LicensePlateCheck.controller'
 
 const mockWorkflowController = {
   updateExecution: mock(),
@@ -220,5 +223,99 @@ describe('POST /webhooks/trigger', () => {
       expect(res.status).toBe(200)
       expect(mockCheckController.updateStatus).not.toHaveBeenCalled()
     })
+  })
+})
+
+describe('integration: webhook updates database state', () => {
+  const realWorkflowCtrl = new WorkflowController()
+  const realCheckCtrl = new LicenseplateCheckController()
+
+  function makeIntegrationApp() {
+    const app = new Hono()
+    app.route('/webhooks', createWebhookRouter(realWorkflowCtrl, realCheckCtrl))
+    return app
+  }
+
+  function intPost(app: Hono, body: object) {
+    return app.request('/webhooks/trigger', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Webhook-Secret': 'test-secret',
+      },
+      body: JSON.stringify(body),
+    })
+  }
+
+  let executionId: string
+  let checkId: string
+
+  beforeAll(async () => {
+    const city = await prisma.cityAbbreviation.create({
+      data: { id: 'WH', name: 'Webhook City' },
+    })
+    const user = await prisma.user.create({
+      data: { email: 'webhook-int@test.com', password: 'hashed' },
+    })
+    const workflow = await prisma.workflow.create({
+      data: {
+        name: 'Webhook Test WF',
+        cityId: city.id,
+        authorId: user.id,
+        definition: {},
+      },
+    })
+    const check = await prisma.licenseplateCheck.create({
+      data: {
+        cityId: city.id,
+        letters: 'WH',
+        numbers: 1,
+        userId: user.id,
+        workflowId: workflow.id,
+      },
+    })
+    checkId = check.id
+
+    const execution = await realWorkflowCtrl.createExecution(workflow.id, check.id)
+    executionId = execution.id
+  })
+
+  it('progress webhook sets execution to RUNNING', async () => {
+    const app = makeIntegrationApp()
+
+    const res = await intPost(app, {
+      type: 'progress',
+      executionId,
+      currentNodeId: 'n1',
+      completedNodes: [{ nodeId: 'n0', status: 'success' }],
+    })
+
+    expect(res.status).toBe(200)
+
+    const execution = await realWorkflowCtrl.getExecution(executionId)
+    expect(execution?.status).toBe('RUNNING')
+    expect(execution?.currentNodeId).toBe('n1')
+  })
+
+  it('completion webhook sets execution to SUCCESS and check to AVAILABLE', async () => {
+    const app = makeIntegrationApp()
+
+    const res = await intPost(app, {
+      type: 'completion',
+      executionId,
+      status: 'SUCCESS',
+      outcome: 'available',
+      logs: [{ step: 'done' }],
+      duration: 3000,
+    })
+
+    expect(res.status).toBe(200)
+
+    const execution = await realWorkflowCtrl.getExecution(executionId)
+    expect(execution?.status).toBe('SUCCESS')
+    expect(execution?.duration).toBe(3000)
+
+    const check = await prisma.licenseplateCheck.findUnique({ where: { id: checkId } })
+    expect(check?.status).toBe('AVAILABLE')
   })
 })

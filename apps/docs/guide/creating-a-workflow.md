@@ -6,17 +6,23 @@ This guide walks through building a workflow that checks license plate availabil
 
 - A registered account
 - Familiarity with CSS selectors (browser DevTools → right-click → "Copy selector")
+- A city with an online reservation website, see currently [Supported Cities](/appendix/supported-cities) for a list of confirmed working cities
 
 ## Step 1: Create a New Workflow
 
 1. Navigate to **Workflows** from the navigation bar
-2. Click **Create Workflow**
+![Guide-1](../public/guide/homepage.png)
+
+2. Click **New Workflow**
+![Guide-2](../public/guide/new_workflow.png)
+
 3. Enter a name and select the target city
-4. Click **Create** — the builder canvas opens
+![Guide-3](../public/guide/workflow_dialog_1.png)
 
-<!-- TODO: Add a screenshot of the create workflow dialog -->
+4. Click **Create & Edit** — the builder canvas opens
+![Guide-4](../public/guide/workflow_dialog_2.png)
 
-The canvas starts with a **Start** node (showing the city's website URL) connected to an **End** node.
+The canvas starts with a **Start** node (showing the city's website URL) and two **End** nodes, one for each possible outcome.
 
 ## Step 2: Plan Your Flow
 
@@ -30,45 +36,25 @@ Before adding nodes, open the target city's reservation website in another tab. 
 
 ## Step 3: Add Nodes
 
-Drag nodes from the **bottom palette** onto the canvas. Common patterns:
+You can add nodes either by clicking or dragging them from the **bottom palette** onto the canvas.
+![Guide-5](/guide/drag_drop.png)
 
-### Filling in a form field
 
-Use a **Type Text** node:
-1. Set the `selector` to the input field's CSS selector
-2. Set the `text` — use template variables like <code v-pre>{{plate.letters}}</code> so the workflow works for any check
+The most commonly used nodes are:
 
-### Clicking a button
+- **Type Text** — fill in form fields using CSS selectors and template variables like <code v-pre>{{plate.letters}}</code>
+- **Click** — click buttons and links
+- **Select Option** — pick an option from a `<select>` dropdown (by text, value, or index)
+- **Wait** — pause for a duration, wait for an element to appear, or wait for a new tab
+- **Conditional** — branch the flow based on whether an element exists or contains specific text
 
-Use a **Click** node with the button's CSS selector.
-
-### Selecting from a dropdown
-
-Use a **Select Option** node:
-- **By text** if you want to match the visible label (e.g., "Berlin")
-- **By value** if you know the `value` attribute
-- **By index** for position-based selection
-
-### Waiting for page loads
-
-Use a **Wait** node:
-- **Duration** for a fixed delay (e.g., 2 seconds after clicking submit)
-- **For element** to wait until a specific element appears (more reliable)
-- **For new tab** if the site opens results in a new tab
-
-### Checking the result
-
-Use a **Conditional** node to branch based on what appears on the page:
-- **exists** — Check if a success/error message element is present
-- **textIncludes** — Check if an element's text contains "available" or "reserved"
-
-Connect the **true** output to an End node with outcome `available`, and the **false** output to an End node with outcome `unavailable`.
+For a full reference of all node types and their configuration options, see [Node Types](/frontend/node-types).
 
 ## Step 4: Connect Nodes
 
 Drag from an output handle (bottom of a node) to an input handle (top of another node). Each output can only connect to one input.
 
-<!-- TODO: Add a screenshot showing edge creation between two nodes -->
+![Guide-6](/guide/edge_example.png)
 
 ## Step 5: Test the Workflow
 
@@ -90,15 +76,15 @@ After a successful test, click **Publish** in the toolbar. The workflow is now a
 
 A typical workflow for a city that has a simple form:
 
-<!-- TODO: Add a screenshot of a complete example workflow -->
+![Workflow Example](../public/guide/example_flow.png)
 
 ```
 Start
   → Type Text (selector: "#letters", text: "{{plate.letters}}")
   → Type Text (selector: "#numbers", text: "{{plate.numbers}}")
   → Click (selector: "#submit-btn")
-  → Wait (mode: For element, selector: ".result-message")
-  → Conditional (operator: textIncludes, selector: ".result-message", value: "verfügbar")
+  → Wait (mode: For element, selector: "#results")
+  → Conditional (operator: exists, selector: "#results-item")
     → true: End (outcome: available)
     → false: End (outcome: unavailable)
 ```
@@ -108,4 +94,4 @@ Start
 - **Use `Wait for element`** instead of fixed duration waits — it's more reliable and faster
 - **Test with real plate numbers** to see both the available and unavailable paths
 - **Check both branches** of a Conditional node to make sure both outcomes are handled
-- **Use browser DevTools** to find the right CSS selectors — right-click an element → Inspect → right-click the HTML → Copy → Copy selector
+- **Use browser DevTools** to find the right CSS selectors — right-click an element → Inspect → right-click the HTML → Copy → Copy selector. You can also use a browser extensions to help with this.

@@ -26,12 +26,10 @@ import { Input } from '@/components/ui/input'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useAuth } from '@/components/auth-context'
 import { zUserUpdateScheme } from '@licenseplate-checker/shared/validators'
-import ProfileUpdateModal from '@/components/profile-update-modal'
 
 export default function ProfileForm() {
   const [isSaving, setIsSaving] = useState(false)
   const [isSaved, setIsSaved] = useState(false)
-  const [showUpdateModal, setShowUpdateModal] = useState(false)
   const { user, updateUser } = useAuth()
 
   const form = useForm<z.infer<typeof zUserUpdateScheme>>({
@@ -47,31 +45,16 @@ export default function ProfileForm() {
     },
   })
 
-  const [formValues, setFormValues] = useState<z.infer<
-    typeof zUserUpdateScheme
-  > | null>(null)
-
-  const handleConfirmedSave = async () => {
-    if (!formValues) return
-    setShowUpdateModal(false)
+  async function onSubmit(values: z.infer<typeof zUserUpdateScheme>) {
     setIsSaving(true)
-
     try {
-      await updateUser(formValues)
+      await updateUser(values)
       setIsSaved(true)
     } catch (error) {
       console.error('Update failed', error)
     } finally {
       setIsSaving(false)
     }
-  }
-
-  function onSubmit(values: z.infer<typeof zUserUpdateScheme>) {
-    // Show confirmation modal before saving
-    setShowUpdateModal(true)
-
-    // Save when the user confirms in the modal
-    setFormValues(values)
   }
 
   return (
@@ -218,11 +201,6 @@ export default function ProfileForm() {
         </CardFooter>
       </Card>
 
-      <ProfileUpdateModal
-        open={showUpdateModal}
-        onClose={() => setShowUpdateModal(false)}
-        onConfirm={handleConfirmedSave}
-      />
     </>
   )
 }
