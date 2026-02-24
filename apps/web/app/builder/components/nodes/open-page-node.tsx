@@ -39,7 +39,7 @@ export function OpenPageNode({ id, data }: NodeProps<BuilderNode>) {
         <div className="flex items-center gap-1">
           <input
             ref={inputRef}
-            className="nodrag w-full text-xs border rounded px-2 py-1 bg-background"
+            className={`nodrag w-full text-xs border rounded px-2 py-1 bg-background ${!(data.config as { url: string }).url ? 'border-destructive' : ''}`}
             value={(data.config as { url: string }).url}
             onChange={(e) => updateConfig(id, { url: e.target.value })}
             placeholder="https://example.com"

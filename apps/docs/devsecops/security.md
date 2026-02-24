@@ -44,7 +44,7 @@
 
 ## Threat Model
 
-![Threat Model](/threat_model.png)
+![Threat Model](/diagrams/threat_model.png)
 
 ### Potential Security Concerns
 

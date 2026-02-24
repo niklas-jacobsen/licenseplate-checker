@@ -47,10 +47,12 @@ export function VariableInput({
   value,
   onChange,
   placeholder,
+  error,
 }: {
   value: string
   onChange: (value: string) => void
   placeholder?: string
+  error?: boolean
 }) {
   const segments = useMemo(() => parseTemplate(value), [value])
 
@@ -88,7 +90,7 @@ export function VariableInput({
     segments[0].value === ''
 
   return (
-    <div className="nodrag flex items-center flex-wrap gap-0 border rounded px-1.5 py-0.5 bg-background min-h-7 focus-within:ring-1 focus-within:ring-ring flex-1">
+    <div className={`nodrag flex items-center flex-wrap gap-0 border rounded px-1.5 py-0.5 bg-background min-h-7 focus-within:ring-1 focus-within:ring-ring flex-1 ${error ? 'border-destructive' : ''}`}>
       {segments.map((seg, i) =>
         seg.type === 'text' ? (
           <input
@@ -129,12 +131,14 @@ export function VariableField({
   placeholder,
   nodeId,
   configKey,
+  error,
 }: {
   value: string
   onChange: (value: string) => void
   placeholder?: string
   nodeId: string
   configKey: string
+  error?: boolean
 }) {
   const disabledKeys = useUsedVariableKeys(nodeId, configKey)
   const variableCount = extractVariableKeys(value).length
@@ -145,6 +149,7 @@ export function VariableField({
         value={value}
         onChange={onChange}
         placeholder={placeholder}
+        error={error}
       />
       <VariablePicker
         onInsert={(template) => onChange(value + template)}

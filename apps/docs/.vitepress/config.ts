@@ -42,7 +42,10 @@ export default withMermaid(
         },
         {
           text: 'Appendix',
-          items: [{ text: 'Capstone Changes', link: '/appendix/capstone-changes' }],
+          items: [
+            { text: 'Capstone Changes', link: '/appendix/capstone-changes' },
+            { text: 'Supported Cities', link: '/appendix/supported-cities' },
+          ],
         },
       ],
       socialLinks: [

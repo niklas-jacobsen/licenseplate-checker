@@ -72,7 +72,7 @@ export function SelectOptionNode({ id, data }: NodeProps<BuilderNode>) {
         <div>
           <label className="text-xs text-muted-foreground">Selector</label>
           <input
-            className="nodrag w-full text-xs border rounded px-2 py-1 bg-background"
+            className={`nodrag w-full text-xs border rounded px-2 py-1 bg-background ${!config.selector ? 'border-destructive' : ''}`}
             value={config.selector}
             onChange={(e) => updateConfig(id, { selector: e.target.value })}
             placeholder="select#dropdown"
@@ -88,6 +88,7 @@ export function SelectOptionNode({ id, data }: NodeProps<BuilderNode>) {
               placeholder="Option label..."
               nodeId={id}
               configKey="text"
+              error={!config.text}
             />
           </div>
         )}
@@ -101,6 +102,7 @@ export function SelectOptionNode({ id, data }: NodeProps<BuilderNode>) {
               placeholder="option-value"
               nodeId={id}
               configKey="value"
+              error={!config.value}
             />
           </div>
         )}
