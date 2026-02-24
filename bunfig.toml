@@ -1,6 +1,9 @@
 [test]
 preload = ["./apps/web/tests/happydom.ts", "./apps/web/tests/testing-library.ts"]
 
+[test.env]
+NODE_ENV = "test"
+
 coveragePathIgnorePatterns = [
   # Test files
   "**/*.test.ts",
