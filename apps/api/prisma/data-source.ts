@@ -8,7 +8,7 @@ declare global {
 
 let prisma: PrismaClient
 
-if (ENV.NODE_ENV === 'test') {
+if (process.env.NODE_ENV === 'test') {
   console.log('Using mock client')
   prisma = new PrismockClient()
 } else if (ENV.NODE_ENV === 'production') {
