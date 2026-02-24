@@ -25,21 +25,27 @@
 
 3. **Configure environment**
 
-   Create `.env` files based on the provided examples:
+   **Backend** (`apps/api/.env`):
 
    ```bash
    cp apps/api/.env.example apps/api/.env
    ```
 
-   Key variables:
+   | Variable | Description |
+   |---|---|
+   | `PORT` | Server port (default: `8080`) |
+   | `DATABASE_URL` | PostgreSQL connection string (default in `docker-compose.yml`) |
+   | `JWT_SECRET` | Secret for signing JWT tokens |
+   | `ALLOWED_ORIGINS` | Comma-separated frontend URLs for CORS |
+   | `API_BASE_URL` | Base URL of the API for Trigger.dev callbacks (default: `http://localhost:8080`) |
+
+   **Frontend** (`apps/web/.env.local`):
 
    | Variable | Description |
    |---|---|
-   | `PORT` | Default: 8080 |
-   | `DATABASE_URL` | PostgreSQL connection string (pooled) |
-   | `JWT_SECRET` | Secret for signing JWT tokens |
-   | `ALLOWED_ORIGINS` | Comma-separated frontend URLs for CORS |
-   | `NEXT_PUBLIC_BACKEND_URL` | Backend URL sent to trigger for webhook repsonse |
+   | `NEXT_PUBLIC_BACKEND_URL` | Backend API URL (default: `http://localhost:8080`) |
+
+   For more info on environment variables, see [Environment Variables](../devsecops/deployment.md#environment-variables)
 
 4. **Install dependencies**
 

@@ -6,7 +6,7 @@
 |---|---|---|
 | Backend API | [Fly.io](https://fly.io/) | Frankfurt (fra) |
 | Database | [Supabase](https://supabase.com/) PostgreSQL | Frankfurt |
-| Frontend | Deployed separately (Next.js) | — |
+| Frontend | [Vercel](https://vercel.com/) | Global |
 
 ## Fly.io Configuration
 
@@ -15,7 +15,6 @@
 - **App:** `licenseplate-checker`
 - **Machine:** shared-cpu-2x, 512MB RAM
 - **Min machines:** 1 (always running)
-- **Port:** 8080 with force HTTPS
 - **Release command:** `release.sh` (runs migrations + seed)
 
 ### Staging (`fly.staging.toml`)
@@ -23,7 +22,6 @@
 - **App:** `licenseplate-checker-staging`
 - **Machine:** shared-cpu-1x, 512MB RAM
 - **Min machines:** 0 (scales to zero when inactive)
-- **Sentry environment:** `staging`
 
 ## Docker
 
@@ -32,7 +30,15 @@ The API uses a multi-stage Dockerfile based on `oven/bun:1.3`:
 1. **Base stage:** Installs dependencies and generates Prisma client
 2. **Release stage:** Copies build artifacts, runs as non-root `bun` user
 
+## Git Workflow
+
+![Git Workflow](/git_workflow.png)
+
+The project uses a three-branch strategy: `dev` → `staging` → `main`. PRs to `staging` and `main` trigger automated checks (lint, tests). Merges into `staging` and `main` trigger deployments.
+
 ## CI/CD Pipeline
+
+![Deployment Pipeline](/deployment_pipeline.png)
 
 All CI/CD is handled by GitHub Actions.
 
@@ -42,9 +48,11 @@ All CI/CD is handled by GitHub Actions.
 - Lint with Biome
 - Run unit and integration tests
 - Type checking
+- Check if trigger execution deployment is successful
 
 **PR → Main** (`pr-main.yml`):
 - Same checks as staging PR
+- Check if frontend, backend and trigger execution deploys are successful
 
 ### Deployment
 
@@ -104,4 +112,4 @@ Migrations live in `apps/api/prisma/migrations/` and are applied automatically d
 ## Monitoring
 
 - **Sentry** (`@sentry/bun`): Captures unhandled exceptions in production. Only enabled when `NODE_ENV=production`.
-- **Fly.io Dashboard**: Machine health, logs, and metrics.
+- **Fly.io Dashboard & Grafana**: Machine health, logs, and metrics.
