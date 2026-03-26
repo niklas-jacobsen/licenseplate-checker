@@ -87,6 +87,9 @@ describe('POST /internal/execute-check/:checkId', () => {
     mockCheckController.getById.mockResolvedValue({
       id: 'check-1',
       workflowId: 'wf-1',
+      cityId: 'B',
+      letters: 'AB',
+      numbers: 1234,
     })
     executeWorkflowMock.mockResolvedValue({
       executionId: 'exec-1',
@@ -100,7 +103,15 @@ describe('POST /internal/execute-check/:checkId', () => {
     expect(executeWorkflowMock).toHaveBeenCalledWith(
       mockWorkflowController,
       'wf-1',
-      'check-1'
+      'check-1',
+      {
+        variables: {
+          'plate.letters': 'AB',
+          'plate.numbers': '1234',
+          'plate.cityId': 'B',
+          'plate.fullPlate': 'B AB 1234',
+        },
+      }
     )
   })
 })
