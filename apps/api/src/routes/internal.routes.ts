@@ -3,7 +3,10 @@ import { Hono } from 'hono'
 import LicenseplateCheckController from '../controllers/LicensePlateCheck.controller'
 import WorkflowController from '../controllers/Workflow.controller'
 import { ENV } from '../env'
-import { executeWorkflowForCheck as defaultExecuteWorkflowForCheck } from '../services/executeWorkflowForCheck'
+import {
+  buildVariableContext,
+  executeWorkflowForCheck as defaultExecuteWorkflowForCheck,
+} from '../services/executeWorkflowForCheck'
 
 export const createInternalRouter = (
   workflowController: WorkflowController,
@@ -33,10 +36,17 @@ export const createInternalRouter = (
       )
     }
 
+    const variables = buildVariableContext({
+      cityId: check.cityId,
+      letters: check.letters,
+      numbers: check.numbers,
+    })
+
     const result = await executeWorkflowForCheck(
       workflowController,
       check.workflowId,
-      checkId
+      checkId,
+      { variables }
     )
 
     return c.json(result, 202)
