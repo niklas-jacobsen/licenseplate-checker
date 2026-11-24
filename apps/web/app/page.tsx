@@ -65,9 +65,6 @@ export default function LandingPage() {
               <Button size="lg" asChild>
                 <Link href="/auth/register?redirect=/checks/new">Create a request</Link>
               </Button>
-              <Button size="lg" variant="outline" asChild>
-                <a href="#how-it-works">How it works</a>
-              </Button>
             </div>
           </div>
 
