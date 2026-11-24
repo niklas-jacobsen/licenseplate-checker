@@ -119,22 +119,6 @@ export default function LandingPage() {
         </ul>
       </section>
 
-      <section className="container mx-auto px-4 pb-16">
-        <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border bg-white p-6">
-          <p className="text-[15px] text-muted-foreground">
-            Requests and workflows are stored per account.
-          </p>
-          <div className="flex gap-2">
-            <Button variant="outline" asChild>
-              <a href="https://docs.lp-checker.com">Read the docs</a>
-            </Button>
-            <Button asChild>
-              <Link href="/auth/register?redirect=/checks/new">Sign up</Link>
-            </Button>
-          </div>
-        </div>
-      </section>
-
       <footer className="border-t bg-white">
         <div className="container mx-auto flex flex-wrap items-center justify-between gap-4 px-4 py-6 text-sm text-muted-foreground">
           <Image src="/logotype.svg" alt="Licenseplate Checker" width={70} height={30} />
