@@ -58,7 +58,7 @@ export const createWebhookRouter = (
 
     await workflowController.updateExecution(body.executionId, {
       status: body.status as ExecutionStatus,
-      // biome-ignore lint/suspicious/noExplicitAny:
+      // biome-ignore lint/suspicious/noExplicitAny: logs are stored as untyped JSON
       logs: body.logs as any,
       result: body.error
         ? { error: body.error, outcome: body.outcome }

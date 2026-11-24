@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "devDependencies": {
     "typescript": "^5.9.3",
-    "@biomejs/biome": "^1.9.4",
+    "@biomejs/biome": "^2.6.8",
     "tailwindcss": "^4.1.18"
   },
   "exports": {
@@ -25,7 +25,7 @@
     "format": "biome format --write ."
   },
   "dependencies": {
-    "@tailwindcss/postcss": "^4.1.18",
+    "@tailwindcss/postcss": "^4.3.5",
     "postcss": "^8.5.6"
   }
 }
