@@ -6,6 +6,7 @@ import { schedules } from '@trigger.dev/sdk/v3'
 import CityController from '../controllers/City.controller'
 import WorkflowController from '../controllers/Workflow.controller'
 import LicenseplateCheckController from '../controllers/LicensePlateCheck.controller'
+import { requireParam } from '../utils/requireParam'
 import {
   buildVariableContext,
   executeWorkflowForCheck,
@@ -157,7 +158,7 @@ licensePlateCheckRouter.get('/me', async (c: Context) => {
 licensePlateCheckRouter.put('/:id/workflow', async (c: Context) => {
   const user = c.get('user')
   const userId = user.id
-  const checkId = c.req.param('id')
+  const checkId = requireParam(c.req.param('id'), 'id')
   const { workflowId } = await c.req.json<{ workflowId: string }>()
 
   if (!workflowId) {
@@ -210,7 +211,7 @@ licensePlateCheckRouter.put('/:id/workflow', async (c: Context) => {
 licensePlateCheckRouter.delete('/delete/:id', async (c: Context) => {
   const user = c.get('user')
   const userId = user.id
-  const checkId = c.req.param('id')
+  const checkId = requireParam(c.req.param('id'), 'id')
 
   if (!userId) {
     return c.json({ error: 'Invalid user ID in token' }, 401)
