@@ -51,7 +51,7 @@ import {
   Redo2,
 } from 'lucide-react'
 
-// biome-ignore lint/suspicious/noExplicitAny:
+// biome-ignore lint/suspicious/noExplicitAny: React Flow Background props are not typed for this usage
 const Background = BackgroundComponent as any
 
 function FlowCanvas() {

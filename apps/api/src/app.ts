@@ -32,7 +32,7 @@ app.use('/request/*', auth)
 import { AppError } from '@licenseplate-checker/shared/types'
 
 export const errorHandler: ErrorHandler = (err, c) => {
-  // biome-ignore lint/suspicious/noExplicitAny:
+  // biome-ignore lint/suspicious/noExplicitAny: error may carry non-standard fields from any library
   const appError = err as any
   if (err instanceof AppError || (appError.statusCode && appError.code)) {
     return c.json(
