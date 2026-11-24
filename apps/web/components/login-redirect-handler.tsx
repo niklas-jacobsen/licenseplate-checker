@@ -11,7 +11,7 @@ export default function LoginRedirect({
   const searchParams = useSearchParams()
 
   useEffect(() => {
-    const redirect = searchParams.get('redirect') || '/'
+    const redirect = searchParams.get('redirect') || '/checks/new'
     onResolve(redirect)
   }, [searchParams, onResolve]) // ✅ ensure effect runs when params change
 

@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { LogOut, User, ClipboardList, Workflow } from 'lucide-react'
+import { LogOut, User, ClipboardList, Workflow, Plus } from 'lucide-react'
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
 
@@ -61,6 +61,16 @@ export default function AuthStatus() {
         <DropdownMenuSeparator />
         <div className="block md:hidden">
           {/* Mobile navigation items */}
+          <DropdownMenuItem asChild>
+            <Link
+              href="/checks/new"
+              className="cursor-pointer flex w-full items-center"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              <span>New Request</span>
+            </Link>
+          </DropdownMenuItem>
+
           <DropdownMenuItem asChild>
             <Link
               href="/checks"

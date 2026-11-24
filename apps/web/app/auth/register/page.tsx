@@ -46,7 +46,7 @@ export default function SignUpPage() {
   const router = useRouter()
   const { signUp, user } = useAuth()
 
-  const [redirect, setRedirect] = useState('/')
+  const [redirect, setRedirect] = useState('/checks/new')
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
