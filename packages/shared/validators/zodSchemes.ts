@@ -36,42 +36,51 @@ export const zWorkflowMetaScheme = z.object({
   description: zWorkflowDescriptionSchema.optional(),
 })
 
-export const zUserScheme = z
-  .object({
+// zod 4 removed the message argument of .strict(); scope the custom message to
+// unrecognized keys so other object-level issues keep zod's default wording.
+const tooManyArguments = (issue: { code?: string }) =>
+  issue.code === 'unrecognized_keys'
+    ? 'Request contains too many arguments'
+    : undefined
+
+export const zUserScheme = z.strictObject(
+  {
     email: z.string().email({ message: 'Invalid email address' }),
     password: zPasswordSchema,
-  })
-  .strict({ message: 'Request contains too many arguments' })
+  },
+  { error: tooManyArguments }
+)
 
-export const zUserUpdateScheme = z
-  .object({
+export const zUserUpdateScheme = z.strictObject(
+  {
     firstname: z
       .string()
       .min(2, { message: 'First name must be at least two characters' })
-      .or(z.undefined()),
+      .optional(),
     lastname: z
       .string()
       .min(2, { message: 'Last name must be at least two characters' })
-      .or(z.undefined()),
+      .optional(),
     email: z
       .string()
       .email({ message: 'Please enter a valid email address' })
-      .or(z.undefined()),
+      .optional(),
     street: z
       .string()
       .min(2, { message: 'Street must be at least two characters' })
-      .or(z.undefined()),
+      .optional(),
     streetNumber: z
       .string()
       .min(1, { message: 'House number is required' })
-      .or(z.undefined()),
+      .optional(),
     zipCode: z
       .string()
       .length(5, { message: 'Zip Code must be five characters' })
-      .or(z.undefined()),
+      .optional(),
     city: z
       .string()
       .min(2, { message: 'City must be at least two characters' })
-      .or(z.undefined()),
-  })
-  .strict({ message: 'Request contains too many arguments' })
+      .optional(),
+  },
+  { error: tooManyArguments }
+)
