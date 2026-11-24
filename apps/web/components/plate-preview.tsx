@@ -1,8 +1,4 @@
-import localFont from 'next/font/local'
-
-const euroPlate = localFont({
-  src: '../public/fonts/EuroPlate-new.ttf',
-})
+import { euroPlate } from '@/lib/plate-font'
 
 interface LicensePlatePreviewProps {
   city: string

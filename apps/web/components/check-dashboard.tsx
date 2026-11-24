@@ -241,7 +241,7 @@ const LicensePlateCheckDashboard = () => {
             You haven't submitted any license plate checks yet. Create your
             first request to get started!
           </p>
-          <Button onClick={() => router.push('/')}>
+          <Button onClick={() => router.push('/checks/new')}>
             Make Your First Request
           </Button>
         </CardContent>

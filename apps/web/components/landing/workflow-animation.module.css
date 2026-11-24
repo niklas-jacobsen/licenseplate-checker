@@ -1,0 +1,70 @@
+/*
+ * Hero animation: one 10s loop of a workflow run. Each step has a "running"
+ * window (blue ring, as in the builder's NodeStatusIndicator) followed by a
+ * "done" state (emerald ring, green edge) that holds until the loop resets.
+ */
+
+.canvas {
+  background-color: #fafafa;
+  background-image: radial-gradient(#d4d4d8 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.ring {
+  position: absolute;
+  inset: -3px;
+  border-radius: 10px;
+  border: 2px solid;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.running {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 4px color-mix(in oklab, #60a5fa 18%, transparent);
+}
+
+.done {
+  border-color: #10b981;
+}
+
+.r0 { animation: r0 10s linear infinite; }
+.d0 { animation: d0 10s linear infinite; }
+.r1 { animation: r1 10s linear infinite; }
+.d1 { animation: d1 10s linear infinite; }
+.r2 { animation: r2 10s linear infinite; }
+.d2 { animation: d2 10s linear infinite; }
+.r3 { animation: r3 10s linear infinite; }
+.d3 { animation: d3 10s linear infinite; }
+.r4 { animation: r4 10s linear infinite; }
+.d4 { animation: d4 10s linear infinite; }
+.r5 { animation: r5 10s linear infinite; }
+.d5 { animation: d5 10s linear infinite; }
+
+@keyframes r0 { 0%, 1.9% { opacity: 0 } 2%, 6.9% { opacity: 1 } 7%, 100% { opacity: 0 } }
+@keyframes d0 { 0%, 6.9% { opacity: 0 } 7%, 94% { opacity: 1 } 97%, 100% { opacity: 0 } }
+@keyframes r1 { 0%, 7.9% { opacity: 0 } 8%, 21.9% { opacity: 1 } 22%, 100% { opacity: 0 } }
+@keyframes d1 { 0%, 21.9% { opacity: 0 } 22%, 94% { opacity: 1 } 97%, 100% { opacity: 0 } }
+@keyframes r2 { 0%, 22.9% { opacity: 0 } 23%, 37.9% { opacity: 1 } 38%, 100% { opacity: 0 } }
+@keyframes d2 { 0%, 37.9% { opacity: 0 } 38%, 94% { opacity: 1 } 97%, 100% { opacity: 0 } }
+@keyframes r3 { 0%, 38.9% { opacity: 0 } 39%, 51.9% { opacity: 1 } 52%, 100% { opacity: 0 } }
+@keyframes d3 { 0%, 51.9% { opacity: 0 } 52%, 94% { opacity: 1 } 97%, 100% { opacity: 0 } }
+@keyframes r4 { 0%, 52.9% { opacity: 0 } 53%, 65.9% { opacity: 1 } 66%, 100% { opacity: 0 } }
+@keyframes d4 { 0%, 65.9% { opacity: 0 } 66%, 94% { opacity: 1 } 97%, 100% { opacity: 0 } }
+@keyframes r5 { 0%, 66.9% { opacity: 0 } 67%, 71.9% { opacity: 1 } 72%, 100% { opacity: 0 } }
+@keyframes d5 { 0%, 71.9% { opacity: 0 } 72%, 94% { opacity: 1 } 97%, 100% { opacity: 0 } }
+
+.toast { animation: toast 10s cubic-bezier(0.2, 0.8, 0.2, 1) infinite; }
+@keyframes toast {
+  0%, 72% { opacity: 0; transform: translateY(12px) }
+  75%, 94% { opacity: 1; transform: translateY(0) }
+  97%, 100% { opacity: 0 }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ring, .toast, .canvas path {
+    animation: none !important;
+  }
+  .running { opacity: 0; }
+  .done, .toast, .canvas path { opacity: 1; }
+}

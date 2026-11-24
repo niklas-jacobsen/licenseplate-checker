@@ -115,7 +115,7 @@ export default function LicensePlateCheckForm() {
     if (!user) {
       // Save data and redirect
       saveForm(values)
-      router.push('/auth/login?redirect=/checks?fromLogin=true')
+      router.push('/auth/login?redirect=/checks/new')
       return
     }
 
