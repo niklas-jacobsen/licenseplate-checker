@@ -19,7 +19,7 @@
   "dependencies": {
     "@hono/zod-validator": "^0.9.1",
     "@licenseplate-checker/shared": "*",
-    "@prisma/client": "^5.22.0",
+    "@prisma/client": "^7.10.1",
     "@scalar/hono-api-reference": "^0.9.44",
     "@sentry/bun": "^10.39.0",
     "@trigger.dev/sdk": "4.8.10",
