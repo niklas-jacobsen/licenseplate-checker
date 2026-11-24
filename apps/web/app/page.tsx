@@ -9,26 +9,24 @@ import {
   type LucideIcon,
   MousePointerClick,
 } from 'lucide-react'
-import { TEMPLATE_VARIABLES } from '@licenseplate-checker/shared/template-variables'
 import LandingNav from '@/components/landing/landing-nav'
 import WorkflowAnimation from '@/components/landing/workflow-animation'
 import animationStyles from '@/components/landing/workflow-animation.module.css'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { euroPlate } from '@/lib/plate-font'
 
 const steps = [
   {
-    title: 'Create a check',
-    body: "Enter the city, letters and numbers you'd like on your plate.",
+    title: 'Create a request',
+    body: 'Enter the city code, letters and numbers of the plate you want.',
   },
   {
-    title: 'Build a workflow',
-    body: "Drag nodes onto the canvas to describe the steps your city's reservation website needs.",
+    title: 'Pick or build a workflow',
+    body: "A workflow is the sequence of steps the city's reservation site needs, built from nodes on a canvas.",
   },
   {
-    title: 'Let it run',
-    body: "It runs daily in a headless browser. You're told when your plate is available.",
+    title: 'Daily runs',
+    body: 'The workflow runs once a day in a headless browser. Each result is logged under Requests.',
   },
 ]
 
@@ -55,43 +53,21 @@ export default function LandingPage() {
       <section className={cn('border-b', animationStyles.canvas)}>
         <div className="container mx-auto grid items-center gap-8 px-4 py-8 lg:grid-cols-[minmax(0,1fr)_640px]">
           <div className="relative z-10 rounded-2xl bg-[#fafafa]/85 py-6 pr-6">
-            <span className="inline-flex items-center gap-1.5 rounded-full border bg-white px-2.5 py-1 text-xs font-medium text-gray-700">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-              Runs every day, automatically
-            </span>
-            <h1 className="mt-4 text-4xl font-extrabold leading-[1.04] tracking-tight sm:text-5xl lg:text-[54px]">
-              Get the plate you want the day it frees up.
+            <h1 className="text-3xl font-extrabold leading-[1.1] tracking-tight sm:text-4xl lg:text-[44px]">
+              Automated availability checks for German license plates.
             </h1>
             <p className="mt-4 max-w-xl text-[17px] leading-relaxed text-muted-foreground">
-              Build a workflow for your city's reservation website once.
-              Licenseplate Checker runs it daily in a headless browser and tells
-              you when your combination is available.
+              Describe your city's reservation site as a workflow. Each request
+              runs it once a day in a headless browser and records whether the
+              plate is available.
             </p>
             <div className="mt-6 flex flex-wrap gap-2.5">
               <Button size="lg" asChild>
-                <Link href="/auth/register?redirect=/checks/new">Start a check</Link>
+                <Link href="/auth/register?redirect=/checks/new">Create a request</Link>
               </Button>
               <Button size="lg" variant="outline" asChild>
                 <a href="#how-it-works">How it works</a>
               </Button>
-            </div>
-            <div className="mt-7 flex max-w-[420px] items-center gap-3 rounded-lg border bg-white px-3 py-2.5">
-              <span
-                aria-hidden="true"
-                className="flex h-[30px] shrink-0 overflow-hidden rounded border-[1.5px] border-black"
-              >
-                <span className="w-3 bg-blue-600" />
-                <span
-                  className={`${euroPlate.className} flex items-center gap-1.5 px-2 text-xl`}
-                >
-                  <span>HH</span>
-                  <span>NJ</span>
-                  <span>42</span>
-                </span>
-              </span>
-              <span className="text-[13px] text-gray-600">
-                Hamburg · next run tomorrow, 07:00
-              </span>
             </div>
           </div>
 
@@ -125,22 +101,12 @@ export default function LandingPage() {
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div className="max-w-xl">
             <h2 className="text-3xl font-extrabold leading-tight tracking-tight">
-              Every city's site is different. The builder handles that.
+              Workflow nodes
             </h2>
             <p className="mt-3 leading-relaxed text-muted-foreground">
-              Each node is one thing you'd do in the browser yourself. Your
-              plate's values go in through template variables.
+              Each node is one browser action. The plate's city, letters and
+              numbers are filled in when the workflow runs.
             </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {TEMPLATE_VARIABLES.map((v) => (
-              <code
-                key={v.key}
-                className="rounded-md bg-blue-50 px-2 py-1 font-mono text-xs text-blue-700"
-              >
-                {`{{ ${v.key} }}`}
-              </code>
-            ))}
           </div>
         </div>
         <ul className="mt-7 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -157,18 +123,18 @@ export default function LandingPage() {
       </section>
 
       <section className="container mx-auto px-4 pb-16">
-        <div className="flex flex-wrap items-center justify-between gap-6 rounded-2xl bg-neutral-900 p-8 text-neutral-50 md:p-10">
-          <div>
-            <h2 className="text-2xl font-extrabold tracking-tight md:text-[28px]">
-              Which plate are you after?
-            </h2>
-            <p className="mt-1.5 text-[15px] text-neutral-400">
-              Create a free account and start your first check.
-            </p>
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border bg-white p-6">
+          <p className="text-[15px] text-muted-foreground">
+            Requests and workflows are stored per account.
+          </p>
+          <div className="flex gap-2">
+            <Button variant="outline" asChild>
+              <a href="https://docs.lp-checker.com">Read the docs</a>
+            </Button>
+            <Button asChild>
+              <Link href="/auth/register?redirect=/checks/new">Sign up</Link>
+            </Button>
           </div>
-          <Button size="lg" variant="secondary" asChild>
-            <Link href="/auth/register?redirect=/checks/new">Start a check</Link>
-          </Button>
         </div>
       </section>
 

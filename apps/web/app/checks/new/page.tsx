@@ -21,15 +21,14 @@ export default function NewCheckPage() {
   return (
     <main className="min-h-screen bg-gray-50">
       <NavBar />
-      <div className="container mx-auto px-4 py-8">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-10">
-            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-3">
+      <div className="container mx-auto px-4 py-10">
+        <div className="mx-auto max-w-[1080px]">
+          <div className="mb-7">
+            <h1 className="text-3xl font-extrabold tracking-tight">
               New Request
             </h1>
-            <p className="text-muted-foreground text-base max-w-md mx-auto">
-              Enter your desired license plate and we'll automatically check its
-              availability for you.
+            <p className="mt-1.5 text-muted-foreground">
+              Tell us the plate, then how it should be checked.
             </p>
           </div>
           <LicensePlateCheckForm />

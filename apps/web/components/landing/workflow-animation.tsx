@@ -154,7 +154,7 @@ export default function WorkflowAnimation() {
       <EdgeLabel x={414} y={320}>true</EdgeLabel>
       <EdgeLabel x={552} y={404}>false</EdgeLabel>
 
-      <FlowNode x={20} y={40} icon={Play} label="Start · 07:00" handles={['bottom']} step={0} />
+      <FlowNode x={20} y={40} icon={Play} label="Start · daily" handles={['bottom']} step={0} />
       <FlowNode
         x={20}
         y={120}
@@ -218,8 +218,8 @@ export default function WorkflowAnimation() {
           <Check className="h-3.5 w-3.5" strokeWidth={3} />
         </span>
         <span>
-          <span className="block text-sm font-semibold">HH NJ 42 is available</span>
-          <span className="block text-[13px] text-muted-foreground">Today's run found it.</span>
+          <span className="block text-sm font-semibold">HH NJ 42: available</span>
+          <span className="block text-[13px] text-muted-foreground">Run finished, result logged</span>
         </span>
       </div>
     </div>
