@@ -5,7 +5,7 @@ const zBirthdateSchema = z.date().superRefine((val, ctx) => {
   const today = new Date()
   if (val > today) {
     ctx.addIssue({
-      code: z.ZodIssueCode.custom,
+      code: 'custom',
       message: 'Birthdate cannot be in the future',
     })
   }
@@ -14,7 +14,7 @@ const zBirthdateSchema = z.date().superRefine((val, ctx) => {
   const oldestDate = new Date(1900, 0, 1)
   if (val < oldestDate) {
     ctx.addIssue({
-      code: z.ZodIssueCode.custom,
+      code: 'custom',
       message: 'You are not that old!',
     })
   }

@@ -4,7 +4,7 @@ const zPasswordSchema = z.string().superRefine((val, ctx) => {
   // Check for minimum length of 12 characters
   if (val.length < 12) {
     ctx.addIssue({
-      code: z.ZodIssueCode.custom,
+      code: 'custom',
       message: 'Password must be at least 12 characters long',
     })
   }
@@ -12,7 +12,7 @@ const zPasswordSchema = z.string().superRefine((val, ctx) => {
   // Check for at least one uppercase letter
   if (!/[A-Z]/.test(val)) {
     ctx.addIssue({
-      code: z.ZodIssueCode.custom,
+      code: 'custom',
       message: 'Password must contain at least one uppercase letter',
     })
   }
@@ -20,7 +20,7 @@ const zPasswordSchema = z.string().superRefine((val, ctx) => {
   // Check for at least one digit
   if (!/[0-9]/.test(val)) {
     ctx.addIssue({
-      code: z.ZodIssueCode.custom,
+      code: 'custom',
       message: 'Password must contain at least one number',
     })
   }
@@ -28,7 +28,7 @@ const zPasswordSchema = z.string().superRefine((val, ctx) => {
   // Check for at least one special character
   if (!/[^A-Za-z0-9]/.test(val)) {
     ctx.addIssue({
-      code: z.ZodIssueCode.custom,
+      code: 'custom',
       message: 'Password must contain at least one special character',
     })
   }

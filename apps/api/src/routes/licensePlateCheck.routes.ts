@@ -1,4 +1,5 @@
 import { zValidator } from '@hono/zod-validator'
+import { zodErrorHook } from '../middleware/zodErrorHook'
 import { zCheckRequestScheme } from '@licenseplate-checker/shared/validators'
 import { Context, Hono } from 'hono'
 import { schedules } from '@trigger.dev/sdk/v3'
@@ -40,7 +41,7 @@ const checkController = new LicenseplateCheckController()
  */
 licensePlateCheckRouter.post(
   '/new',
-  zValidator('json', zCheckRequestScheme),
+  zValidator('json', zCheckRequestScheme, zodErrorHook),
   async (c: Context) => {
     try {
       const user = c.get('user')

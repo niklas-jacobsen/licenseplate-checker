@@ -4,7 +4,7 @@ const zLicensePlateCitySchema = z.string().superRefine((val, ctx) => {
   // Check for length constraints
   if (val.length < 1 || val.length > 3) {
     ctx.addIssue({
-      code: z.ZodIssueCode.custom,
+      code: 'custom',
       message: 'City code must be 1-3 characters long.',
     })
     return
@@ -13,7 +13,7 @@ const zLicensePlateCitySchema = z.string().superRefine((val, ctx) => {
   // Check for valid characters (letters A-Z, ÄÖÜ)
   if (!/^[a-zA-ZÄÖÜäöü]+$/.test(val)) {
     ctx.addIssue({
-      code: z.ZodIssueCode.custom,
+      code: 'custom',
       message: 'City code must only consist of letters.',
     })
     return

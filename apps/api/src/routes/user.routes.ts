@@ -2,6 +2,7 @@ import { Hono, Context } from 'hono'
 import UserController from '../controllers/User.controller'
 import auth from '../middleware/auth'
 import { zValidator } from '@hono/zod-validator'
+import { zodErrorHook } from '../middleware/zodErrorHook'
 import { zUserUpdateScheme } from '@licenseplate-checker/shared/validators'
 
 export const userRouter = new Hono()
@@ -42,7 +43,7 @@ userRouter.get('/me', auth, async (c: Context) => {
 userRouter.put(
   '/me',
   auth,
-  zValidator('json', zUserUpdateScheme),
+  zValidator('json', zUserUpdateScheme, zodErrorHook),
   async (c: Context) => {
     const {
       email,
