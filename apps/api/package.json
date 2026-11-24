@@ -24,7 +24,7 @@
     "@sentry/bun": "^10.39.0",
     "@trigger.dev/sdk": "4.8.10",
     "bcrypt": "^5.1.1",
-    "dotenv": "^17.3.1",
+    "dotenv": "^18.0.10",
     "hono": "^4.11.4",
     "hono-rate-limiter": "^0.4.2",
     "jsonwebtoken": "^9.0.3",
