@@ -1,13 +1,11 @@
 import { createStore } from 'zustand/vanilla'
 import { subscribeWithSelector } from 'zustand/middleware'
 import {
-  applyNodeChanges,
-  applyEdgeChanges,
+  NodeChangeset,
+  EdgeChangeset,
   addEdge as rfAddEdge,
   type Edge,
   type Connection,
-  type NodeChange,
-  type EdgeChange,
 } from '@xyflow/react'
 import type {
   WorkflowNode,
@@ -193,8 +191,8 @@ export type BuilderState = {
 
 export type BuilderActions = {
   // reactfflow event handlers
-  onNodesChange: (changes: NodeChange[]) => void
-  onEdgesChange: (changes: EdgeChange[]) => void
+  onNodesChange: (changes: NodeChangeset<WorkflowNode>) => void
+  onEdgesChange: (changes: EdgeChangeset<Edge>) => void
   onConnect: (connection: Connection) => void
 
   // node ops
@@ -285,7 +283,7 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
       // reactflow handlers
       onNodesChange: (changes) => {
         const nodes = get().nodes
-        const filtered = changes.filter((c) => {
+        const filtered = changes.toArray().filter((c) => {
           if (c.type === 'remove') {
             const node = nodes.find((n) => n.id === c.id)
             if (node?.type === 'core.start') return false
@@ -312,16 +310,18 @@ export const createBuilderStore = (initialState?: Partial<BuilderState>) => {
         )
         if (hasStructuralChange) get().takeSnapshot()
         set({
-          nodes: applyNodeChanges(filtered, get().nodes) as WorkflowNode[],
+          nodes: new NodeChangeset(filtered).applyTo(get().nodes),
           ...(hasStructuralChange && { canPublish: false }),
           ...(hasAnyChange && { isDirty: true }),
         })
       },
       onEdgesChange: (changes) => {
-        const hasActualChange = changes.some((c) => c.type !== 'select')
+        const hasActualChange = changes
+          .toArray()
+          .some((c) => c.type !== 'select')
         if (hasActualChange) get().takeSnapshot()
         set({
-          edges: applyEdgeChanges(changes, get().edges) as Edge[],
+          edges: changes.applyTo(get().edges),
           ...(hasActualChange && { canPublish: false, isDirty: true }),
         })
       },
