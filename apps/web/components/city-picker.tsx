@@ -20,6 +20,8 @@ interface CityPickerProps {
   error?: boolean
   disabled?: boolean
   cities?: City[]
+  /** set while the parent is still fetching `cities` */
+  loading?: boolean
 }
 
 export default function CityPicker({
@@ -28,10 +30,12 @@ export default function CityPicker({
   error,
   disabled,
   cities: externalCities,
+  loading: externalLoading = false,
 }: CityPickerProps) {
   const [open, setOpen] = useState(false)
   const [internalCities, setInternalCities] = useState<City[]>([])
-  const [loading, setLoading] = useState(!externalCities)
+  const [internalLoading, setLoading] = useState(!externalCities)
+  const loading = externalLoading || internalLoading
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {

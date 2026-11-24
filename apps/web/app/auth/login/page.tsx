@@ -35,7 +35,7 @@ export default function LogInPage() {
   const router = useRouter()
   const { logIn, user } = useAuth()
 
-  const [redirect, setRedirect] = useState('/')
+  const [redirect, setRedirect] = useState('/checks/new')
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
