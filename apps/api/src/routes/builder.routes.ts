@@ -18,7 +18,7 @@ import {
   zWorkflowDescriptionSchema,
   zWorkflowNameSchema,
 } from '@licenseplate-checker/shared/validators'
-import { Prisma } from '@prisma/client'
+import { Prisma } from '../generated/prisma/client'
 import { Hono } from 'hono'
 import { prisma } from '../../prisma/data-source'
 import { compileGraphToIr as defaultCompileGraphToIr } from '../builder/compiler/GraphToIrCompiler'

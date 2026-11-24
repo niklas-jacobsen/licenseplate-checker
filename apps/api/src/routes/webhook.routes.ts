@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 import WorkflowController from '../controllers/Workflow.controller'
 import LicenseplateCheckController from '../controllers/LicensePlateCheck.controller'
 import { ENV } from '../env'
-import type { ExecutionStatus, Prisma } from '@prisma/client'
+import type { ExecutionStatus, Prisma } from '../generated/prisma/client'
 
 interface CompletionCallbackBody {
   type: 'completion'

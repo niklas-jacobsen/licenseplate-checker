@@ -30,8 +30,5 @@
     "next": "^16.4.6",
     "supabase": "^2.76.9",
     "tailwind-variants": "^4.0.2"
-  },
-  "prisma": {
-    "schema": "apps/api/prisma/schema.prisma"
   }
 }

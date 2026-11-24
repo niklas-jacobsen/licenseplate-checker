@@ -2,7 +2,8 @@
 set -euo pipefail
 
 echo "Running Prisma migrations..."
-bunx prisma migrate deploy --schema prisma/schema.prisma
+# Uses prisma.config.ts, which connects over DIRECT_DATABASE_URL (not the pooler).
+bunx prisma migrate deploy
 
 echo "Running seed script..."
 bun run db:seed
