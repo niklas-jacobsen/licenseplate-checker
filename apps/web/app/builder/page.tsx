@@ -157,7 +157,8 @@ function FlowCanvas() {
         onDrop={onDrop}
         onDragOver={onDragOver}
         fitView
-        attributionPosition="bottom-right"
+        forceColorMode="light"
+        proOptions={{ hideAttribution: true }}
       >
         <Background gap={18} />
         <ExecutionErrorBanner />
