@@ -1,4 +1,4 @@
-import { CheckStatus } from '@prisma/client'
+import { CheckStatus } from '../generated/prisma/client'
 import { prisma } from '../../prisma/data-source'
 
 export interface LicensePlateCheckInput {

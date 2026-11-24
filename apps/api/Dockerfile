@@ -8,9 +8,9 @@ RUN apt-get update && apt-get install -y openssl
 COPY . .
 RUN bun install
 
-ARG DATABASE_URL
-ENV DATABASE_URL=$DATABASE_URL
-RUN bunx prisma generate --schema apps/api/prisma/schema.prisma
+# Prisma 7 reads its CLI config from apps/api/prisma.config.ts, so generate
+# from that directory. Generating needs no database connection.
+RUN cd apps/api && bunx prisma generate
 
 # Final release stage
 FROM base AS release

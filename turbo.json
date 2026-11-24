@@ -25,7 +25,7 @@
       "outputs": []
     },
     "db:generate": {
-      "outputs": ["node_modules/.prisma/**"]
+      "outputs": ["src/generated/prisma/**"]
     },
     "db:migrate": {
       "dependsOn": ["db:generate"],

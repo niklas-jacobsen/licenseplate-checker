@@ -10,6 +10,7 @@
     "lint": "biome lint --write src/**/*.ts",
     "test:unit": "bun test src/**/*.unit.test.ts",
     "test:int": "bun test src/**/*.int.test.ts",
+    "postinstall": "prisma generate",
     "db:format": "prisma format",
     "db:generate": "bun run db:format && prisma generate",
     "db:migrate": "bun run db:generate && prisma migrate dev --name migration && bun run db:seed",
@@ -19,7 +20,8 @@
   "dependencies": {
     "@hono/zod-validator": "^0.9.1",
     "@licenseplate-checker/shared": "*",
-    "@prisma/client": "^5.22.0",
+    "@prisma/adapter-pg": "^7.10.1",
+    "@prisma/client": "^7.10.1",
     "@scalar/hono-api-reference": "^0.12.23",
     "@sentry/bun": "^10.39.0",
     "@trigger.dev/sdk": "4.8.10",
@@ -29,19 +31,18 @@
     "hono-rate-limiter": "^0.5.4",
     "jsonwebtoken": "^9.0.3",
     "playwright": "^1.65.1",
-    "prisma": "^5.22.0",
+    "prisma": "^7.10.1",
     "zod": "^4.6.7"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.6.8",
+    "@prisma/internals": "5.22.0",
     "@trigger.dev/build": "4.8.10",
     "@types/bcrypt": "^5.0.2",
     "@types/bun": "^1.4.5",
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/pg": "^8.23.1",
     "prismock": "^1.35.4",
     "typescript": "^5.9.3"
-  },
-  "prisma": {
-    "schema": "prisma/schema.prisma"
   }
 }
