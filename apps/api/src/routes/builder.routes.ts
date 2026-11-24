@@ -112,7 +112,7 @@ export const createBuilderRouter = (
   })
 
   router.post('/execute', auth, async (c) => {
-    // biome-ignore lint/suspicious/noExplicitAny:
+    // biome-ignore lint/suspicious/noExplicitAny: the auth middleware sets user, which the router does not type
     const user = c.get('user' as any) as { id: string }
     let body: unknown
 
@@ -179,7 +179,7 @@ export const createBuilderRouter = (
     }
 
     // validate graph before execution
-    // biome-ignore lint/suspicious/noExplicitAny:
+    // biome-ignore lint/suspicious/noExplicitAny: the auth middleware sets user, which the router does not type
     const user = c.get('user' as any) as { id: string }
     const workflow = await getOwnedWorkflow(workflowId, user.id)
 
@@ -257,14 +257,14 @@ export const createBuilderRouter = (
   })
 
   router.get('/my-workflows', auth, async (c) => {
-    // biome-ignore lint/suspicious/noExplicitAny:
+    // biome-ignore lint/suspicious/noExplicitAny: the auth middleware sets user, which the router does not type
     const user = c.get('user' as any) as { id: string }
     const workflows = await workflowController.getByAuthor(user.id)
     return c.json({ workflows })
   })
 
   router.post('/workflow', auth, async (c) => {
-    // biome-ignore lint/suspicious/noExplicitAny:
+    // biome-ignore lint/suspicious/noExplicitAny: the auth middleware sets user, which the router does not type
     const user = c.get('user' as any) as { id: string }
     let body: {
       name: string
@@ -343,7 +343,7 @@ export const createBuilderRouter = (
   })
 
   router.get('/workflow/:id', auth, async (c) => {
-    // biome-ignore lint/suspicious/noExplicitAny:
+    // biome-ignore lint/suspicious/noExplicitAny: the auth middleware sets user, which the router does not type
     const user = c.get('user' as any) as { id: string }
     const id = requireParam(c.req.param('id'), 'id')
     const workflow = await getOwnedWorkflow(id, user.id)
@@ -352,7 +352,7 @@ export const createBuilderRouter = (
   })
 
   router.put('/workflow/:id', auth, async (c) => {
-    // biome-ignore lint/suspicious/noExplicitAny:
+    // biome-ignore lint/suspicious/noExplicitAny: the auth middleware sets user, which the router does not type
     const user = c.get('user' as any) as { id: string }
     const id = requireParam(c.req.param('id'), 'id')
     let body: {
@@ -446,7 +446,7 @@ export const createBuilderRouter = (
   })
 
   router.put('/workflow/:id/publish', auth, async (c) => {
-    // biome-ignore lint/suspicious/noExplicitAny:
+    // biome-ignore lint/suspicious/noExplicitAny: the auth middleware sets user, which the router does not type
     const user = c.get('user' as any) as { id: string }
     const id = requireParam(c.req.param('id'), 'id')
     let body: { isPublished: boolean }
@@ -498,7 +498,7 @@ export const createBuilderRouter = (
   })
 
   router.delete('/workflow/:id', auth, async (c) => {
-    // biome-ignore lint/suspicious/noExplicitAny:
+    // biome-ignore lint/suspicious/noExplicitAny: the auth middleware sets user, which the router does not type
     const user = c.get('user' as any) as { id: string }
     const id = requireParam(c.req.param('id'), 'id')
 
@@ -508,7 +508,7 @@ export const createBuilderRouter = (
   })
 
   router.get('/execution/:id', auth, async (c) => {
-    // biome-ignore lint/suspicious/noExplicitAny:
+    // biome-ignore lint/suspicious/noExplicitAny: the auth middleware sets user, which the router does not type
     const user = c.get('user' as any) as { id: string }
     const id = requireParam(c.req.param('id'), 'id')
     const execution = await workflowController.getExecution(id)

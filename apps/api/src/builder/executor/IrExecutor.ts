@@ -225,7 +225,7 @@ export class IrExecutor {
       }
 
       default:
-        // biome-ignore lint/suspicious/noExplicitAny:
+        // biome-ignore lint/suspicious/noExplicitAny: block is never here, read kind for the error message
         throw new UnknownBlockKindError((block as any).kind)
     }
   }
