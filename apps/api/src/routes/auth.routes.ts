@@ -1,4 +1,5 @@
 import { zValidator } from '@hono/zod-validator'
+import { zodErrorHook } from '../middleware/zodErrorHook'
 import { zUserScheme } from '@licenseplate-checker/shared/validators'
 import { Hono } from 'hono'
 import AuthController from '../controllers/Authorization.controller'
@@ -31,39 +32,43 @@ const authController = new AuthController()
  * @param {Context} c - The context for the request. Contains the request parameters.
  * @returns {Promise<Response>} The response object.
  */
-authRouter.post('/register', zValidator('json', zUserScheme), async (c) => {
-  try {
-    const { email, password } = await c.req.json<{
-      email: string
-      password: string
-    }>()
+authRouter.post(
+  '/register',
+  zValidator('json', zUserScheme, zodErrorHook),
+  async (c) => {
+    try {
+      const { email, password } = await c.req.json<{
+        email: string
+        password: string
+      }>()
 
-    // Check if the user already exists
-    const userExists = await userController.getByEmail(email)
-    if (userExists) {
-      throw new ConflictError('User already exists', 'USER_ALREADY_EXISTS')
+      // Check if the user already exists
+      const userExists = await userController.getByEmail(email)
+      if (userExists) {
+        throw new ConflictError('User already exists', 'USER_ALREADY_EXISTS')
+      }
+
+      // Create a new user with a hashed password
+      const user = await userController.create({
+        email: email,
+        password: await authController.hashPassword(password),
+      })
+
+      const token = await authController.generateJWT(user.id)
+
+      return c.json(
+        {
+          message: 'User created and logged in',
+          token: token,
+        },
+        200
+      )
+    } catch (error) {
+      if (error instanceof AppError) throw error
+      throw new InternalServerError('Error during Sign Up', 'SIGNUP_ERROR', { originalError: error })
     }
-
-    // Create a new user with a hashed password
-    const user = await userController.create({
-      email: email,
-      password: await authController.hashPassword(password),
-    })
-
-    const token = await authController.generateJWT(user.id)
-
-    return c.json(
-      {
-        message: 'User created and logged in',
-        token: token,
-      },
-      200
-    )
-  } catch (error) {
-    if (error instanceof AppError) throw error
-    throw new InternalServerError('Error during Sign Up', 'SIGNUP_ERROR', { originalError: error })
   }
-})
+)
 
 /**
  * POST /login
@@ -86,38 +91,42 @@ authRouter.post('/register', zValidator('json', zUserScheme), async (c) => {
  * @param {Context} c - The context for the request. Contains request parameters.
  * @returns {Promise<Response>} The response object.
  */
-authRouter.post('/login', zValidator('json', zUserScheme), async (c) => {
-  try {
-    const { email, password } = await c.req.json<{
-      email: string
-      password: string
-    }>()
+authRouter.post(
+  '/login',
+  zValidator('json', zUserScheme, zodErrorHook),
+  async (c) => {
+    try {
+      const { email, password } = await c.req.json<{
+        email: string
+        password: string
+      }>()
 
-    // Check whether user exists
-    const user = await userController.getByEmail(email)
-    if (!user) {
-      throw new BadRequestError('User does not exist', 'USER_NOT_FOUND')
+      // Check whether user exists
+      const user = await userController.getByEmail(email)
+      if (!user) {
+        throw new BadRequestError('User does not exist', 'USER_NOT_FOUND')
+      }
+
+      // Verify the provided password
+      const passwordResult = await authController.verifyPassword(
+        password,
+        user.password
+      )
+      if (!passwordResult) {
+        throw new BadRequestError('Incorrect password', 'INCORRECT_PASSWORD')
+      }
+
+      // Generate a JWT token for the user
+      return c.json(
+        {
+          message: 'User logged in',
+          token: await authController.generateJWT(user.id),
+        },
+        200
+      )
+    } catch (error) {
+      if (error instanceof AppError) throw error
+      throw new InternalServerError('Error logging in user', 'LOGIN_ERROR', { originalError: error })
     }
-
-    // Verify the provided password
-    const passwordResult = await authController.verifyPassword(
-      password,
-      user.password
-    )
-    if (!passwordResult) {
-      throw new BadRequestError('Incorrect password', 'INCORRECT_PASSWORD')
-    }
-
-    // Generate a JWT token for the user
-    return c.json(
-      {
-        message: 'User logged in',
-        token: await authController.generateJWT(user.id),
-      },
-      200
-    )
-  } catch (error) {
-    if (error instanceof AppError) throw error
-    throw new InternalServerError('Error logging in user', 'LOGIN_ERROR', { originalError: error })
   }
-})
+)
