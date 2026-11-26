@@ -23,7 +23,7 @@
     "@prisma/adapter-pg": "^7.10.1",
     "@prisma/client": "^7.10.1",
     "@scalar/hono-api-reference": "^0.12.23",
-    "@sentry/bun": "^10.39.0",
+    "@sentry/bun": "^11.17.0",
     "@trigger.dev/sdk": "4.8.10",
     "bcrypt": "^5.1.1",
     "dotenv": "^18.0.10",
