@@ -2,7 +2,7 @@
   "name": "@licenseplate-checker/shared",
   "version": "1.0.0",
   "devDependencies": {
-    "typescript": "^5.9.3",
+    "typescript": "^7.0.2",
     "@biomejs/biome": "^2.6.8",
     "tailwindcss": "^4.1.18"
   },
