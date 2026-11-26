@@ -36,7 +36,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.6.8",
-    "@prisma/internals": "5.22.0",
+    "@prisma/internals": "7.10.1",
     "@trigger.dev/build": "4.8.10",
     "@types/bcrypt": "^5.0.2",
     "@types/bun": "^1.4.5",
