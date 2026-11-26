@@ -22,7 +22,7 @@
     "typescript": "^5.9.3"
   },
   "dependencies": {
-    "@emnapi/wasi-threads": "^1.1.0",
+    "@emnapi/wasi-threads": "^2.2.0",
     "@licenseplate-checker/shared": "*",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
