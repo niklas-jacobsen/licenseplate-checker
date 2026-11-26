@@ -43,6 +43,6 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/pg": "^8.23.1",
     "prismock": "^1.35.4",
-    "typescript": "^5.9.3"
+    "typescript": "^7.0.2"
   }
 }
