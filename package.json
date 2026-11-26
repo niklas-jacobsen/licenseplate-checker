@@ -28,7 +28,7 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "next": "^16.4.6",
-    "supabase": "^2.76.9",
+    "supabase": "^3.3.0",
     "tailwind-variants": "^4.0.2"
   }
 }
